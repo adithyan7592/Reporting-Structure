@@ -18,12 +18,10 @@ export default function Login() {
       const data = await response.json();
 
       if (response.ok) {
-        // 1. Store credentials
         localStorage.setItem('token', data.token);
         localStorage.setItem('dept', data.department);
         localStorage.setItem('role', data.role);
 
-        // 2. Immediate Redirect based on role returned from server
         if (data.role === 'superadmin') {
           navigate('/admin');
         } else {
@@ -38,34 +36,73 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col justify-center py-12 px-4 sm:px-6 lg:px-8">
-      <div className="sm:mx-auto sm:w-full sm:max-w-md bg-white py-8 px-10 shadow-xl rounded-xl border border-slate-100">
-        <h2 className="text-center text-3xl font-extrabold text-slate-900 mb-6">Department Portal</h2>
-        <form className="space-y-6" onSubmit={handleLogin}>
-          <div>
-            <label className="block text-sm font-medium text-slate-700">Email Address</label>
-            <input 
-              type="email" 
-              required 
-              className="mt-1 block w-full px-3 py-2 border border-slate-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-              placeholder="admin@system.com"
-              onChange={(e) => setEmail(e.target.value)} 
-            />
+    <div className="min-h-screen bg-slate-900 flex items-center justify-center p-4">
+      {/* Decorative Background Element */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute -top-[10%] -left-[10%] w-[40%] h-[40%] bg-blue-600/20 rounded-full blur-[120px]"></div>
+        <div className="absolute -bottom-[10%] -right-[10%] w-[40%] h-[40%] bg-blue-900/40 rounded-full blur-[120px]"></div>
+      </div>
+
+      <div className="relative w-full max-w-md">
+        {/* Logo/Header Area */}
+        <div className="text-center mb-8">
+          <div className="inline-flex items-center justify-center w-16 h-16 bg-blue-600 rounded-2xl shadow-lg shadow-blue-500/30 mb-4">
+            <span className="text-white text-3xl font-bold">R</span>
           </div>
-          <div>
-            <label className="block text-sm font-medium text-slate-700">Password</label>
-            <input 
-              type="password" 
-              required 
-              className="mt-1 block w-full px-3 py-2 border border-slate-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-              placeholder="••••••••"
-              onChange={(e) => setPassword(e.target.value)} 
-            />
+          <h2 className="text-3xl font-extrabold text-white tracking-tight">
+            Department Portal
+          </h2>
+          <p className="mt-2 text-slate-400 text-sm">
+            Internal Reporting System v2.0
+          </p>
+        </div>
+
+        {/* Login Card */}
+        <div className="bg-slate-800/50 backdrop-blur-xl py-8 px-10 shadow-2xl rounded-3xl border border-slate-700/50">
+          <form className="space-y-6" onSubmit={handleLogin}>
+            <div>
+              <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">
+                Email Address
+              </label>
+              <input 
+                type="email" 
+                required 
+                className="w-full bg-slate-900/50 border border-slate-700 text-white px-4 py-3 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all placeholder:text-slate-600"
+                placeholder="admin@system.com"
+                onChange={(e) => setEmail(e.target.value)} 
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">
+                Password
+              </label>
+              <input 
+                type="password" 
+                required 
+                className="w-full bg-slate-900/50 border border-slate-700 text-white px-4 py-3 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all placeholder:text-slate-600"
+                placeholder="••••••••"
+                onChange={(e) => setPassword(e.target.value)} 
+              />
+            </div>
+
+            <div className="pt-2">
+              <button 
+                type="submit" 
+                className="w-full py-3.5 px-4 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-xl shadow-lg shadow-blue-600/20 transition-all active:scale-[0.98]"
+              >
+                Sign In to Portal
+              </button>
+            </div>
+          </form>
+          
+          <div className="mt-8 pt-6 border-t border-slate-700/50 text-center">
+            <p className="text-slate-500 text-xs">
+              Authorized Personnel Only. <br/>
+              © 2026 Reporting Structure
+            </p>
           </div>
-          <button type="submit" className="w-full py-2 px-4 bg-blue-600 text-white font-semibold rounded-md hover:bg-blue-700 transition">
-            Sign In
-          </button>
-        </form>
+        </div>
       </div>
     </div>
   );

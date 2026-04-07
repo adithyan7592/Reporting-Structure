@@ -1,11 +1,11 @@
 const mongoose = require('mongoose');
 
-const ReportSchema = new mongoose.Schema({
-  title: String,
-  data: Object, // Flexible object to store your specific form fields
-  department: String,
-  createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
-  createdAt: { type: Date, default: Date.now }
+const reportSchema = new mongoose.Schema({
+  title: { type: String, required: true },
+  staffName: { type: String, required: true }, 
+  department: { type: String, required: true }, 
+  data: { type: Object, default: {} },
+  createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }
 }, { timestamps: true });
 
-module.exports = mongoose.model('Report', ReportSchema);
+module.exports = mongoose.model('Report', reportSchema);

@@ -44,7 +44,6 @@ app.post('/api/login', async (req, res) => {
   const { email, password } = req.body;
   
   try {
-    // Case-insensitive search
     const user = await User.findOne({ email: { $regex: new RegExp(`^${email}$`, 'i') } });
 
     if (!user) {
@@ -55,10 +54,13 @@ app.post('/api/login', async (req, res) => {
     if (!isMatch) {
       return res.status(400).json({ msg: "Invalid credentials" });
     }
-
-    // Generate Token
     const token = jwt.sign(
-      { id: user._id, role: user.role, department: user.department }, 
+      { 
+        id: user._id, 
+        role: user.role, 
+        department: user.department,
+        name: user.name 
+      }, 
       process.env.JWT_SECRET,
       { expiresIn: '1d' }
     );
@@ -121,7 +123,6 @@ app.get('/api/reports', protect, async (req, res) => {
   try {
     let query = {};
     
-    // Logic: If not superadmin, only show reports from their own department
     if (req.user.role !== 'superadmin') {
       query.department = req.user.department;
     }
@@ -143,7 +144,8 @@ app.post('/api/reports', protect, async (req, res) => {
 
     const newReport = new Report({
       title,
-      data,
+      data: data || {},
+      staffName: req.user.name || "Unknown Staff", 
       department: req.user.department,
       createdBy: req.user.id
     });
@@ -151,11 +153,10 @@ app.post('/api/reports', protect, async (req, res) => {
     await newReport.save();
     res.status(201).json(newReport);
   } catch (err) {
-    console.error(err);
+    console.error("Save Error:", err);
     res.status(500).json({ msg: "Error saving report" });
   }
 });
-
 
 // TEMPORARY ROUTE TO FIX YOUR DATABASE PASSWORD
 app.get('/api/fix-my-password', async (req, res) => {
