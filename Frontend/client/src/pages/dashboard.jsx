@@ -8,9 +8,11 @@ export default function Dashboard() {
   const [selectedReport, setSelectedReport] = useState(null);
   const [reportTitle, setReportTitle] = useState('');
   const [dynamicData, setDynamicData] = useState({});
-
-  // NEW: State for Filtering Departments (Superadmin only)
   const [activeTab, setActiveTab] = useState('All');
+  const [searchQuery, setSearchQuery] = useState('');
+  
+  // NEW: State for Date Filtering
+  const [selectedDate, setSelectedDate] = useState('');
 
   const dept = localStorage.getItem('dept');
   const role = localStorage.getItem('role');
@@ -56,6 +58,7 @@ export default function Dashboard() {
     ],
     'Media': [
       { label: 'Campaign Name', type: 'text' },
+      { label: 'Platform', type: 'text' },
       { label: 'Leads Generated', type: 'number' },
       { label: 'Ad Spend', type: 'number' },
       { label: 'Notes', type: 'textarea' }
@@ -70,10 +73,20 @@ export default function Dashboard() {
 
   const fields = departmentConfig[dept] || [];
 
-  // Logic to filter reports based on the selected Tab
-  const filteredReports = activeTab === 'All'
-    ? reports
-    : reports.filter(r => r.department === activeTab);
+  // Logic: Combined Filters (Tab + Search Query + Date)
+  const filteredReports = reports.filter((r) => {
+    const matchesTab = activeTab === 'All' || r.department === activeTab;
+    
+    const matchesSearch = 
+      r.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
+      (r.staffName && r.staffName.toLowerCase().includes(searchQuery.toLowerCase()));
+
+    // Date Logic: Compare YYYY-MM-DD strings
+    const reportDate = new Date(r.createdAt).toISOString().split('T')[0];
+    const matchesDate = !selectedDate || reportDate === selectedDate;
+    
+    return matchesTab && matchesSearch && matchesDate;
+  });
 
   useEffect(() => {
     fetchReports();
@@ -106,7 +119,7 @@ export default function Dashboard() {
 
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col md:flex-row font-sans">
-
+      
       {/* Mobile Header */}
       <div className="md:hidden bg-slate-900 text-white p-4 flex justify-between items-center sticky top-0 z-40">
         <h1 className="font-bold text-blue-400">{dept} Portal</h1>
@@ -132,15 +145,47 @@ export default function Dashboard() {
 
       {/* Main Content Area */}
       <div className="flex-1 p-4 md:p-10">
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4">
+        {/* Header Section with Search & Date */}
+        <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-8 gap-4">
           <div>
-            <h2 className="text-3xl font-bold text-slate-800">Report Log</h2>
-            <p className="text-slate-500 text-sm">Reviewing {activeTab} submissions</p>
+            <h2 className="text-3xl font-bold text-slate-800 tracking-tight">Report Log</h2>
+            {/* <p className="text-slate-500 text-sm italic">Filtering: {activeTab} | {selectedDate || 'All Dates'}</p> */}
           </div>
-          <button onClick={() => setIsModalOpen(true)} className="bg-blue-600 text-white px-8 py-3 rounded-2xl shadow-xl hover:bg-blue-700 transition font-bold">+ New Entry</button>
+          
+          <div className="flex flex-col sm:flex-row w-full lg:w-auto gap-3">
+            {role === 'superadmin' && (
+              <>
+                {/* Search Input */}
+                <input 
+                  type="text" 
+                  placeholder="Search staff..." 
+                  className="px-4 py-3 bg-white border border-slate-200 rounded-2xl outline-none focus:ring-2 focus:ring-blue-500 shadow-sm font-medium text-sm transition-all sm:w-60"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                /> 
+                {/* Date Picker */}
+                <input 
+                  type="date" 
+                  className="px-4 py-3 bg-white border border-slate-200 rounded-2xl outline-none focus:ring-2 focus:ring-blue-500 shadow-sm font-medium text-sm transition-all cursor-pointer"
+                  value={selectedDate}
+                  onChange={(e) => setSelectedDate(e.target.value)}
+                />
+                {/* Clear Filters Button */}
+                { (searchQuery || selectedDate) && (
+                   <button 
+                    onClick={() => {setSearchQuery(''); setSelectedDate('');}}
+                    className="text-xs text-red-500 font-bold hover:underline"
+                   >
+                    Clear Filters
+                   </button>
+                )}
+              </>
+            )}
+            <button onClick={() => setIsModalOpen(true)} className="bg-blue-600 text-white px-8 py-3 rounded-2xl shadow-xl hover:bg-blue-700 transition font-bold active:scale-95 whitespace-nowrap">+ New Entry</button>
+          </div>
         </div>
 
-        {/* --- NEW: DEPARTMENT TABS (SUPERADMIN ONLY) --- */}
+        {/* --- DEPARTMENT TABS --- */}
         {role === 'superadmin' && (
           <div className="flex items-center gap-2 mb-6 overflow-x-auto pb-2 no-scrollbar">
             {allDepts.map((tab) => (
@@ -153,9 +198,6 @@ export default function Dashboard() {
                   }`}
               >
                 {tab}
-                <span className="ml-2 opacity-40 text-[10px]">
-                  ({tab === 'All' ? reports.length : reports.filter(r => r.department === tab).length})
-                </span>
               </button>
             ))}
           </div>
@@ -186,6 +228,11 @@ export default function Dashboard() {
                     </td>
                   </tr>
                 ))}
+                {filteredReports.length === 0 && (
+                  <tr>
+                    <td colSpan="4" className="p-10 text-center text-slate-400 italic">No reports found for this selection.</td>
+                  </tr>
+                )}
               </tbody>
             </table>
           </div>
@@ -226,22 +273,24 @@ export default function Dashboard() {
       {/* VIEW DETAILS MODAL */}
       {selectedReport && (
         <div className="fixed inset-0 bg-slate-900/80 backdrop-blur-xl flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-[2.5rem] w-full max-w-lg shadow-2xl overflow-hidden">
+          <div className="bg-white rounded-[2.5rem] w-full max-w-lg shadow-2xl overflow-hidden border border-white/10">
             <div className="bg-slate-900 p-10 text-white relative">
-              <span className="absolute top-10 right-10 bg-blue-600 px-3 py-1 rounded-full text-[10px] font-black uppercase">{selectedReport.department}</span>
-              <h3 className="text-3xl font-black mb-1">{selectedReport.title}</h3>
-              <p className="text-slate-400 text-sm">Submitted by {selectedReport.staffName}</p>
+              <span className="absolute top-10 right-10 bg-blue-600 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-tighter">{selectedReport.department}</span>
+              <h3 className="text-3xl font-black mb-2">{selectedReport.title}</h3>
+              <p className="text-slate-400 text-sm font-medium">Recorded by {selectedReport.staffName}</p>
             </div>
+            
             <div className="p-10">
               <div className="space-y-4">
+                <h4 className="text-[10px] font-black text-slate-300 uppercase tracking-[0.3em] mb-6">Detailed Analytics</h4>
                 {Object.entries(selectedReport.data || {}).map(([key, value]) => (
-                  <div key={key} className="flex justify-between items-center py-4 border-b border-slate-50 last:border-0">
-                    <span className="text-slate-400 font-bold text-xs uppercase">{key}</span>
-                    <span className="text-slate-900 font-black text-sm">{value || '0'}</span>
+                  <div key={key} className="flex justify-between items-start py-4 border-b border-slate-50 last:border-0">
+                    <span className="text-slate-400 font-bold text-xs uppercase tracking-tight">{key}</span>
+                    <span className="text-slate-900 font-black text-sm text-right max-w-[60%]">{value || '0'}</span>
                   </div>
                 ))}
               </div>
-              <button onClick={() => setSelectedReport(null)} className="w-full mt-10 py-5 bg-blue-600 text-white font-bold rounded-2xl hover:bg-blue-700 transition shadow-xl">Close Summary</button>
+              <button onClick={() => setSelectedReport(null)} className="w-full mt-10 py-5 bg-blue-600 text-white font-bold rounded-2xl hover:bg-blue-700 transition shadow-xl active:scale-95">Close Summary</button>
             </div>
           </div>
         </div>
