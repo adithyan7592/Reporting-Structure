@@ -13,13 +13,10 @@ export default function Dashboard() {
   
   // NEW: State for Date Filtering
   const [selectedDate, setSelectedDate] = useState('');
-
   const dept = localStorage.getItem('dept');
   const role = localStorage.getItem('role');
   const navigate = useNavigate();
-
   const allDepts = ['All', 'KP', 'AYUSH', 'Theertha', 'Bioclean', 'Happiness', 'Purchase', 'Media'];
-
   const departmentConfig = {
     'AYUSH': [
       { label: 'Total No. of Calls', type: 'number' },
@@ -46,15 +43,25 @@ export default function Dashboard() {
       { label: 'Remarks if Any', type: 'textarea' }
     ],
     'Happiness': [
-      { label: 'Customer Name', type: 'text' },
-      { label: 'Happiness Rating (1-5)', type: 'number' },
-      { label: 'Customer Feedback', type: 'textarea' }
+      { label: 'No of New Complaints', type: 'number' },
+      { label: 'Total No. of Pending Complaints', type: 'number' },
+      { label: 'Total No. of Complaints > 6 days', type: 'number' },
+      { label: 'No. of complaints solved', type: 'number' },
+      { label: 'No of New Positive Reviews', type: 'number' },
+      { label: 'No of New Negative Reviews', type: 'number' },
+      { label: 'Complaint Resolution Cost', type: 'number' },
+      { label: 'Remarks', type: 'textarea' }
     ],
     'KP': [
-      { label: 'Lead Name', type: 'text' },
-      { label: 'Contact', type: 'text' },
-      { label: 'Location', type: 'text' },
-      { label: 'Status', type: 'text' }
+      { label: 'Total No. of Calls', type: 'number' },
+      { label: 'Quality Leads', type: 'number' },
+      { label: 'No. of Converted Calls', type: 'text' },
+      { label: 'No. of Quotations', type: 'text' },
+      { label: 'No. of Followups', type: 'number' },
+      { label: 'Factory Outlet Leads', type: 'number' },
+      { label: 'Exclusive Outlet Leads', type: 'number' },
+      { label: 'Total Sales Value', type: 'number' },
+      { label: 'Remarks if Any', type: 'textarea' }
     ],
     'Media': [
       { label: 'Campaign Name', type: 'text' },
@@ -64,16 +71,18 @@ export default function Dashboard() {
       { label: 'Notes', type: 'textarea' }
     ],
     'Purchase': [
-      { label: 'Vendor Name', type: 'text' },
-      { label: 'Item Description', type: 'text' },
-      { label: 'Total Amount', type: 'number' },
-      { label: 'Payment Status', type: 'text' }
+      { label: 'No. of PO Placed For F. Outlets', type: 'number' },
+      { label: 'Amount of PO F. Outlets', type: 'number' },
+      { label: 'No. of PO Placed For E. Outlets', type: 'number' },
+      { label: 'Amount of PO E. Outlets', type: 'number' },
+      { label: 'No of Total Deliveries', type: 'number' },
+      { label: 'No of Total GRN Received', type: 'number' }
     ]
   };
 
   const fields = departmentConfig[dept] || [];
 
-  // Logic: Combined Filters (Tab + Search Query + Date)
+ // Logic: Combined Filters (Tab + Search Query + Date)
   const filteredReports = reports.filter((r) => {
     const matchesTab = activeTab === 'All' || r.department === activeTab;
     
@@ -81,7 +90,7 @@ export default function Dashboard() {
       r.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
       (r.staffName && r.staffName.toLowerCase().includes(searchQuery.toLowerCase()));
 
-    // Date Logic: Compare YYYY-MM-DD strings
+   // Date Logic: Compare YYYY-MM-DD strings
     const reportDate = new Date(r.createdAt).toISOString().split('T')[0];
     const matchesDate = !selectedDate || reportDate === selectedDate;
     
@@ -109,6 +118,7 @@ export default function Dashboard() {
       headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
       body: JSON.stringify({ title: reportTitle, data: dynamicData })
     });
+
     if (res.ok) {
       setIsModalOpen(false);
       setReportTitle('');
@@ -202,7 +212,6 @@ export default function Dashboard() {
             ))}
           </div>
         )}
-
         {/* Table View */}
         <div className="bg-white rounded-[2rem] shadow-sm border border-slate-200 overflow-hidden">
           <div className="overflow-x-auto">
@@ -238,7 +247,6 @@ export default function Dashboard() {
           </div>
         </div>
       </div>
-
       {/* CREATE REPORT MODAL */}
       {isModalOpen && (
         <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-md flex items-center justify-center p-4 z-50">
