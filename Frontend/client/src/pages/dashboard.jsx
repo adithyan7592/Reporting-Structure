@@ -103,7 +103,7 @@ export default function Dashboard() {
 
   const fetchReports = async () => {
     const token = localStorage.getItem('token');
-    const res = await fetch('http://localhost:5000/api/reports', {
+    const res = await fetch('https://reporting-structure.onrender.com/api/reports', {
       headers: { Authorization: `Bearer ${token}` }
     });
     const data = await res.json();
@@ -113,7 +113,7 @@ export default function Dashboard() {
   const handleCreateReport = async (e) => {
     e.preventDefault();
     const token = localStorage.getItem('token');
-    const res = await fetch('http://localhost:5000/api/reports', {
+    const res = await fetch('https://reporting-structure.onrender.com/api/reports', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
       body: JSON.stringify({ title: reportTitle, data: dynamicData })
