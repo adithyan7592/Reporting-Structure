@@ -278,31 +278,71 @@ export default function Dashboard() {
         </div>
       )}
 
-      {/* VIEW DETAILS MODAL */}
-      {selectedReport && (
-        <div className="fixed inset-0 bg-slate-900/80 backdrop-blur-xl flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-[2.5rem] w-full max-w-lg shadow-2xl overflow-hidden border border-white/10">
-            <div className="bg-slate-900 p-10 text-white relative">
-              <span className="absolute top-10 right-10 bg-blue-600 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-tighter">{selectedReport.department}</span>
-              <h3 className="text-3xl font-black mb-2">{selectedReport.title}</h3>
-              <p className="text-slate-400 text-sm font-medium">Recorded by {selectedReport.staffName}</p>
+{/* VIEW DETAILS MODAL */}
+{selectedReport && (
+  <div className="fixed inset-0 bg-slate-900/80 backdrop-blur-xl flex items-center justify-center p-2 sm:p-4 z-50">
+    <div className="bg-white rounded-[2.5rem] w-full max-w-lg shadow-2xl overflow-hidden border border-white/10 max-h-[90vh] flex flex-col transition-all animate-in fade-in zoom-in duration-200">
+      
+      {/* FIXED HEADER: Stays at the top while you scroll the data */}
+      <div className="bg-slate-900 p-8 sm:p-10 text-white relative flex-shrink-0">
+        <div className="flex justify-between items-start mb-2">
+          <span className="bg-blue-600 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-tighter">
+            {selectedReport.department}
+          </span>
+          {/* Top Close Icon for quick exit */}
+          <button 
+            onClick={() => setSelectedReport(null)}
+            className="text-slate-500 hover:text-white transition"
+          >
+            ✕
+          </button>
+        </div>
+        <h3 className="text-2xl sm:text-3xl font-black leading-tight mb-1">
+          {selectedReport.title}
+        </h3>
+        <p className="text-slate-400 text-xs sm:text-sm font-medium">
+          Submitted by <span className="text-blue-400">{selectedReport.staffName}</span>
+        </p>
+      </div>
+      
+      {/* SCROLLABLE BODY: Handles departments*/}
+      <div className="p-8 sm:p-10 overflow-y-auto flex-1 custom-scrollbar">
+        <div className="space-y-5">
+          {/* <h4 className="text-[10px] font-black text-slate-300 uppercase tracking-[0.3em] mb-4 border-b border-slate-50 pb-2">
+            Detailed Metrics
+          </h4>
+           */}
+          {Object.entries(selectedReport.data || {}).map(([key, value]) => (
+            <div key={key} className="group flex flex-col gap-1 py-3 border-b border-slate-50 last:border-0 hover:bg-slate-50/50 px-2 -mx-2 rounded-xl transition">
+              <span className="text-slate-400 font-bold text-[10px] uppercase tracking-wider">
+                {key}
+              </span>
+              <span className="text-slate-900 font-black text-sm sm:text-base break-words">
+                {value || '0'}
+              </span>
             </div>
-            
-            <div className="p-10">
-              <div className="space-y-4">
-                <h4 className="text-[10px] font-black text-slate-300 uppercase tracking-[0.3em] mb-6">Detailed Analytics</h4>
-                {Object.entries(selectedReport.data || {}).map(([key, value]) => (
-                  <div key={key} className="flex justify-between items-start py-4 border-b border-slate-50 last:border-0">
-                    <span className="text-slate-400 font-bold text-xs uppercase tracking-tight">{key}</span>
-                    <span className="text-slate-900 font-black text-sm text-right max-w-[60%]">{value || '0'}</span>
-                  </div>
-                ))}
-              </div>
-              <button onClick={() => setSelectedReport(null)} className="w-full mt-10 py-5 bg-blue-600 text-white font-bold rounded-2xl hover:bg-blue-700 transition shadow-xl active:scale-95">Close Summary</button>
-            </div>
+          ))}
+          
+          {/* Metadata section */}
+          <div className="mt-8 pt-6 border-t border-slate-100 flex justify-between items-center text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+            <span>Entry Date</span>
+            <span>{new Date(selectedReport.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })}</span>
           </div>
         </div>
-      )}
+      </div>
+
+      {/* FIXED FOOTER: The Close button is always visible */}
+      <div className="p-6 sm:p-8 bg-slate-50 border-t border-slate-100 flex-shrink-0">
+        <button 
+          onClick={() => setSelectedReport(null)} 
+          className="w-full py-4 bg-blue-600 text-white font-bold rounded-2xl hover:bg-blue-700 transition shadow-xl shadow-blue-600/20 active:scale-95 text-sm uppercase tracking-widest"
+        >
+          Close Summary
+        </button>
+      </div>
+    </div>
+  </div>
+)}
     </div>
   );
 }
