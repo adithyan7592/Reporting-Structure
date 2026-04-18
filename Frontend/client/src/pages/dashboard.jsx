@@ -16,7 +16,7 @@ export default function Dashboard() {
   const dept = localStorage.getItem('dept');
   const role = localStorage.getItem('role');
   const navigate = useNavigate();
-  const allDepts = ['All', 'KP', 'AYUSH', 'Theertha', 'Bioclean', 'Happiness', 'Purchase', 'Media'];
+  const allDepts = ['KP', 'AYUSH', 'Theertha', 'Bioclean', 'Happiness', 'Purchase', 'Media', 'All' , 'KP(Outlet)', 'KP Warehouse' ,'Ayush/Bioclean/Theertha Warehouse','Accounts'];
   const departmentConfig = {
     'AYUSH': [
       { label: 'Total No. of Calls', type: 'number' },
@@ -77,6 +77,38 @@ export default function Dashboard() {
       { label: 'Amount of PO E. Outlets', type: 'number' },
       { label: 'No of Total Deliveries', type: 'number' },
       { label: 'No of Total GRN Received', type: 'number' }
+    ],
+    'KP(Outlet)': [
+      { label: 'Walk-in Customers', type: 'number' },
+      { label: 'Total Invoices Generated', type: 'number' },
+      { label: 'Total Counter Sales Value', type: 'number' },
+      { label: 'New Product Inquiries', type: 'number' },
+      { label: 'Stock Shortage Items', type: 'text' },
+      { label: 'Outlet Remarks', type: 'textarea' }
+    ],
+    'KP Warehouse': [
+      { label: 'No. of Loads Received', type: 'number' },
+      { label: 'No. of Loads Dispatched', type: 'number' },
+      { label: 'Total GRN Entries', type: 'number' },
+      { label: 'Pending Delivery Orders', type: 'number' },
+      { label: 'Damage/Return Stock', type: 'number' },
+      { label: 'Warehouse Notes', type: 'textarea' }
+    ],
+    'Ayush/Bioclean/Theertha Warehouse': [
+      { label: 'Total Stock Received', type: 'number' },
+      { label: 'Total Stock Dispatched', type: 'number' },
+      { label: 'Stock Verification Status', type: 'text' },
+      { label: 'No. of Inter-branch Transfers', type: 'number' },
+      { label: 'Packaging Material Status', type: 'text' },
+      { label: 'Remarks', type: 'textarea' }
+    ],
+    'Accounts': [
+      { label: 'Total Collections (Daily)', type: 'number' },
+      { label: 'Total Payments Made', type: 'number' },
+      { label: 'Pending Vendor Invoices', type: 'number' },
+      { label: 'Bank Deposit Amount', type: 'number' },
+      { label: 'Outstanding Dues (New)', type: 'number' },
+      { label: 'Accounts Summary', type: 'textarea' }
     ]
   };
 

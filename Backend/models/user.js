@@ -7,7 +7,7 @@ const UserSchema = new mongoose.Schema({
   role: { type: String, enum: ['superadmin', 'staff'], default: 'staff' },
   department: { 
     type: String, 
-    enum: ['KP', 'AYUSH', 'Theertha', 'Bioclean', 'Happiness', 'Purchase', 'Media', 'All'],
+    enum: ['KP', 'AYUSH', 'Theertha', 'Bioclean', 'Happiness', 'Purchase', 'Media', 'All' , 'KP(Outlet)', 'KP Warehouse' ,'Ayush/Bioclean/Theertha Warehouse','Accounts'],
     required: true 
   }
 });

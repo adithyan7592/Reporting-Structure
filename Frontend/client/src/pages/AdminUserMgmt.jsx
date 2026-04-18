@@ -7,7 +7,7 @@ export default function AdminUserMgmt() {
   const [editingUser, setEditingUser] = useState(null); // Track user being edited
   const navigate = useNavigate();
 
-  const departments = ['KP', 'AYUSH', 'Theertha', 'Bioclean', 'Happiness', 'Purchase', 'Media'];
+  const departments = ['KP', 'AYUSH', 'Theertha', 'Bioclean', 'Happiness', 'Purchase', 'Media', 'All' , 'KP(Outlet)', 'KP Warehouse' ,'Ayush/Bioclean/Theertha Warehouse','Accounts'];
   const API_BASE = 'https://reporting-structure.onrender.com/api';
 
   useEffect(() => {
