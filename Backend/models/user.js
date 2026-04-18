@@ -4,8 +4,8 @@ const UserSchema = new mongoose.Schema({
   name: { type: String, required: true },
   email: { type: String, unique: true, required: true },
   password: { type: String, required: true },
-  role: { type: String, enum: ['superadmin', 'staff'], default: 'staff' },
-  department: { 
+  role: { type: String, default: 'Agent' },
+    department: { 
     type: String, 
     enum: ['KP', 'AYUSH', 'Theertha', 'Bioclean', 'Happiness', 'Purchase', 'Media', 'All' , 'KP(Outlet)', 'KP Warehouse' ,'Ayush/Bioclean/Theertha Warehouse','Accounts'],
     required: true 

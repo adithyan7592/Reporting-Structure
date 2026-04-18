@@ -14,7 +14,7 @@ const app = express();
 // Middleware
 app.use(express.json());
 app.use(cors({
-  origin: 'https://reports.thetrendsetters.in', // Your Frontend URL
+  origin: 'https://reports.thetrendsetters.in', 
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
   credentials: true
 }));
