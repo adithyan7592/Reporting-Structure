@@ -18,13 +18,19 @@ export default function Login() {
       const data = await response.json();
 
       if (response.ok) {
+        // 1. CLEAR PREVIOUS SESSION: Prevents role-mixing from previous logins
+        localStorage.clear();
+
+        // 2. STORE NEW DATA: Saves the specific role returned by server.js
         localStorage.setItem('token', data.token);
         localStorage.setItem('dept', data.department);
-        localStorage.setItem('role', data.role);
+        localStorage.setItem('role', data.role); // Crucial for Dashboard roleConfigs lookup
 
+        // 3. ROLE-BASED NAVIGATION
         if (data.role === 'superadmin') {
           navigate('/admin');
         } else {
+          // Navigates to Dashboard where roleConfigs[`${dept}_${role}`] handles the form
           navigate('/dashboard');
         }
       } else {

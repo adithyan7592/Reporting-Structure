@@ -14,7 +14,7 @@ const app = express();
 // Middleware
 app.use(express.json());
 app.use(cors({
-  origin: 'https://reports.thetrendsetters.in', //Frontend URL
+  origin: 'https://reports.thetrendsetters.in', // Your Frontend URL
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
   credentials: true
 }));
@@ -42,7 +42,7 @@ const protect = (req, res, next) => {
 
 /**
  * @route   POST /api/login
- * @desc    Authenticate user & get token
+ * @desc    Authenticate user & get token with specific role
  */
 app.post('/api/login', async (req, res) => {
   const { email, password } = req.body;
@@ -58,6 +58,8 @@ app.post('/api/login', async (req, res) => {
     if (!isMatch) {
       return res.status(400).json({ msg: "Invalid credentials" });
     }
+
+    // Sign token with user ID, department, and specific role (Agent/AGM/etc)
     const token = jwt.sign(
       { 
         id: user._id, 
@@ -84,7 +86,7 @@ app.post('/api/login', async (req, res) => {
 
 /**
  * @route   POST /api/register
- * @desc    Create Staff (Superadmin Only)
+ * @desc    Create Staff with Custom Role (Superadmin Only)
  */
 app.post('/api/register', protect, async (req, res) => {
   try {
@@ -93,13 +95,12 @@ app.post('/api/register', protect, async (req, res) => {
       return res.status(403).json({ msg: "Access Denied: Only Superadmin can create accounts" });
     }
 
-    const { name, email, password, department } = req.body;
+    // Accept 'role' (e.g., Agent, AGM) from the frontend request
+    const { name, email, password, department, role } = req.body;
 
-    // Check if user already exists
     const existingUser = await User.findOne({ email });
     if (existingUser) return res.status(400).json({ msg: "User already exists" });
 
-    // Hash Password
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
 
@@ -108,11 +109,11 @@ app.post('/api/register', protect, async (req, res) => {
       email,
       password: hashedPassword,
       department,
-      role: 'staff' // Default role for created users
+      role: role || 'Agent' // Default to Agent if no role is specified
     });
 
     await newUser.save();
-    res.status(201).json({ msg: `Staff account created for ${name} in ${department}` });
+    res.status(201).json({ msg: `Account created for ${name} as ${role} in ${department}` });
   } catch (err) {
     console.error(err);
     res.status(500).json({ msg: "Error creating staff account" });
@@ -120,81 +121,16 @@ app.post('/api/register', protect, async (req, res) => {
 });
 
 /**
- * @route   GET /api/reports
- * @desc    Get reports based on department permissions
- */
-app.get('/api/reports', protect, async (req, res) => {
-  try {
-    let query = {};
-    
-    if (req.user.role !== 'superadmin') {
-      query.department = req.user.department;
-    }
-
-    const reports = await Report.find(query).sort({ createdAt: -1 });
-    res.json(reports);
-  } catch (err) {
-    res.status(500).json({ msg: "Error fetching reports" });
-  }
-});
-
-/**
- * @route   POST /api/reports
- * @desc    Submit a new report
- */
-app.post('/api/reports', protect, async (req, res) => {
-  try {
-    const { title, data } = req.body;
-
-    const newReport = new Report({
-      title,
-      data: data || {},
-      staffName: req.user.name || "Unknown Staff", 
-      department: req.user.department,
-      createdBy: req.user.id
-    });
-
-    await newReport.save();
-    res.status(201).json(newReport);
-  } catch (err) {
-    console.error("Save Error:", err);
-    res.status(500).json({ msg: "Error saving report" });
-  }
-});
-
-// TEMPORARY ROUTE TO FIX YOUR DATABASE PASSWORD
-app.get('/api/fix-my-password', async (req, res) => {
-  try {
-    const salt = await bcrypt.genSalt(10);
-    const hashedPassword = await bcrypt.hash("admin123", salt);
-    
-    // This updates the user you created in Atlas to have a proper hash
-    const user = await User.findOneAndUpdate(
-      { email: "admin@system.com" }, 
-      { password: hashedPassword },
-      { new: true }
-    );
-
-    if (user) {
-      res.send("<h1>Success!</h1><p>Your password is now encrypted in the database. You can now log in at the frontend.</p>");
-    } else {
-      res.send("<h1>User Not Found</h1><p>Check if the email in Atlas is exactly 'admin@system.com'</p>");
-    }
-  } catch (err) {
-    res.status(500).send(err.message);
-  }
-});
-/**
  * @route   GET /api/users
- * @desc    Get all registered staff (Superadmin Only)
+ * @desc    Get all staff members (Superadmin Only)
  */
 app.get('/api/users', protect, async (req, res) => {
   try {
     if (req.user.role !== 'superadmin') {
       return res.status(403).json({ msg: "Unauthorized" });
     }
-    // We exclude the password from the list for security
-    const users = await User.find({ role: 'staff' }).select('-password').sort({ createdAt: -1 });
+    // Return all users except superadmin, excluding passwords for security
+    const users = await User.find({ role: { $ne: 'superadmin' } }).select('-password').sort({ createdAt: -1 });
     res.json(users);
   } catch (err) {
     res.status(500).json({ msg: "Error fetching users" });
@@ -211,10 +147,9 @@ app.put('/api/users/:id', protect, async (req, res) => {
       return res.status(403).json({ msg: "Unauthorized" });
     }
 
-    const { name, email, department, password } = req.body;
-    let updateData = { name, email, department };
+    const { name, email, department, role, password } = req.body;
+    let updateData = { name, email, department, role };
 
-    // If a password is provided, hash it before updating
     if (password && password.trim() !== "") {
       const salt = await bcrypt.genSalt(10);
       updateData.password = await bcrypt.hash(password, salt);
@@ -231,6 +166,45 @@ app.put('/api/users/:id', protect, async (req, res) => {
     res.status(500).json({ msg: "Error updating user" });
   }
 });
+
+/**
+ * @route   GET /api/reports
+ * @desc    Get reports based on permissions
+ */
+app.get('/api/reports', protect, async (req, res) => {
+  try {
+    let query = {};
+    if (req.user.role !== 'superadmin') {
+      query.department = req.user.department;
+    }
+    const reports = await Report.find(query).sort({ createdAt: -1 });
+    res.json(reports);
+  } catch (err) {
+    res.status(500).json({ msg: "Error fetching reports" });
+  }
+});
+
+/**
+ * @route   POST /api/reports
+ * @desc    Submit a new report
+ */
+app.post('/api/reports', protect, async (req, res) => {
+  try {
+    const { title, data } = req.body;
+    const newReport = new Report({
+      title,
+      data: data || {},
+      staffName: req.user.name || "Unknown Staff", 
+      department: req.user.department,
+      createdBy: req.user.id
+    });
+    await newReport.save();
+    res.status(201).json(newReport);
+  } catch (err) {
+    res.status(500).json({ msg: "Error saving report" });
+  }
+});
+
 // Server Start
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));

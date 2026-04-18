@@ -2,12 +2,19 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 export default function AdminUserMgmt() {
-  const [formData, setFormData] = useState({ name: '', email: '', password: '', department: 'Media' });
+  // UPDATE: Added role to initial state
+  const [formData, setFormData] = useState({ 
+    name: '', email: '', password: '', department: 'Media', role: 'Agent' 
+  });
   const [users, setUsers] = useState([]);
-  const [editingUser, setEditingUser] = useState(null); // Track user being edited
+  const [editingUser, setEditingUser] = useState(null); 
   const navigate = useNavigate();
 
   const departments = ['All', 'AYUSH', 'Theertha', 'Bioclean', 'Happiness', 'Purchase', 'Media', 'KP' , 'KP(Outlet)', 'KP Warehouse' ,'Ayush/Bioclean/Theertha Warehouse','Accounts'];
+  
+  // NEW: Roles list for the dropdown
+  const roles = ['Agent', 'AGM', 'Manager', 'Coordinator', 'Assistant Manager'];
+
   const API_BASE = 'https://reporting-structure.onrender.com/api';
 
   useEffect(() => {
@@ -32,11 +39,11 @@ export default function AdminUserMgmt() {
       const response = await fetch(`${API_BASE}/register`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-        body: JSON.stringify(formData)
+        body: JSON.stringify(formData) // formData now includes 'role'
       });
       if (response.ok) {
         alert("Staff created successfully!");
-        setFormData({ name: '', email: '', password: '', department: 'Media' });
+        setFormData({ name: '', email: '', password: '', department: 'Media', role: 'Agent' });
         fetchUsers();
       }
     } catch (err) { alert("Connection Error"); }
@@ -49,7 +56,7 @@ export default function AdminUserMgmt() {
       const response = await fetch(`${API_BASE}/users/${editingUser._id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-        body: JSON.stringify(editingUser)
+        body: JSON.stringify(editingUser) // editingUser now includes 'role'
       });
       if (response.ok) {
         alert("User updated!");
@@ -61,7 +68,6 @@ export default function AdminUserMgmt() {
 
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col md:flex-row">
-      {/* Sidebar (Same as before) */}
       <div className="w-full md:w-64 bg-slate-900 text-white p-6 shrink-0">
         <h1 className="text-2xl font-bold text-blue-400 mb-8">Admin Panel</h1>
         <nav className="space-y-4">
@@ -72,21 +78,26 @@ export default function AdminUserMgmt() {
 
       <div className="flex-1 p-6 md:p-12 overflow-y-auto">
         <div className="max-w-4xl mx-auto">
-          {/* Creation Form (Same as before) */}
           <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-8 mb-10">
              <h2 className="text-xl font-bold mb-6 text-slate-800">Add New Staff</h2>
              <form onSubmit={handleCreateStaff} className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <input className="p-3 border rounded-lg" placeholder="Name" value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} required />
                 <input className="p-3 border rounded-lg" placeholder="Email" value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})} required />
                 <input className="p-3 border rounded-lg" type="password" placeholder="Password" value={formData.password} onChange={e => setFormData({...formData, password: e.target.value})} required />
+                
                 <select className="p-3 border rounded-lg" value={formData.department} onChange={e => setFormData({...formData, department: e.target.value})}>
                     {departments.map(d => <option key={d} value={d}>{d}</option>)}
                 </select>
+
+                {/* NEW: Role Selection Dropdown */}
+                <select className="p-3 border rounded-lg md:col-span-2" value={formData.role} onChange={e => setFormData({...formData, role: e.target.value})} required>
+                    {roles.map(r => <option key={r} value={r}>{r}</option>)}
+                </select>
+                
                 <button type="submit" className="md:col-span-2 bg-blue-600 text-white py-3 rounded-xl font-bold">Create Account</button>
              </form>
           </div>
 
-          {/* NEW: User List Table */}
           <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
             <div className="p-6 border-b border-slate-100"><h2 className="text-xl font-bold">Active Staff</h2></div>
             <table className="w-full text-left border-collapse">
@@ -95,6 +106,7 @@ export default function AdminUserMgmt() {
                   <th className="p-4">Name</th>
                   <th className="p-4">Email</th>
                   <th className="p-4">Department</th>
+                  <th className="p-4">Role</th> {/* NEW column */}
                   <th className="p-4">Actions</th>
                 </tr>
               </thead>
@@ -104,6 +116,7 @@ export default function AdminUserMgmt() {
                     <td className="p-4 font-bold">{u.name}</td>
                     <td className="p-4 text-slate-500">{u.email}</td>
                     <td className="p-4"><span className="bg-blue-50 text-blue-600 px-2 py-1 rounded text-[10px] font-bold">{u.department}</span></td>
+                    <td className="p-4 text-slate-700 font-medium">{u.role}</td> {/* Display Role */}
                     <td className="p-4">
                       <button onClick={() => setEditingUser(u)} className="text-blue-600 font-bold hover:underline">Edit / Reset Pass</button>
                     </td>
@@ -125,6 +138,15 @@ export default function AdminUserMgmt() {
                 <label className="text-xs font-bold text-slate-400 uppercase">Full Name</label>
                 <input className="w-full p-3 bg-slate-50 border rounded-xl mt-1" value={editingUser.name} onChange={e => setEditingUser({...editingUser, name: e.target.value})} />
               </div>
+              
+              {/* NEW: Role Selection in Edit Modal */}
+              <div>
+                <label className="text-xs font-bold text-slate-400 uppercase">Role</label>
+                <select className="w-full p-3 bg-slate-50 border rounded-xl mt-1" value={editingUser.role} onChange={e => setEditingUser({...editingUser, role: e.target.value})}>
+                    {roles.map(r => <option key={r} value={r}>{r}</option>)}
+                </select>
+              </div>
+
               <div>
                 <label className="text-xs font-bold text-slate-400 uppercase">New Password (leave blank to keep current)</label>
                 <input className="w-full p-3 bg-slate-50 border rounded-xl mt-1" type="password" placeholder="Enter new password" onChange={e => setEditingUser({...editingUser, password: e.target.value})} />
