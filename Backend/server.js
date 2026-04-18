@@ -14,7 +14,7 @@ const app = express();
 // Middleware
 app.use(express.json());
 app.use(cors({
-  origin: 'https://reporting-structure-1.onrender.com', //Frontend URL
+  origin: 'https://reports.thetrendsetters.in', //Frontend URL
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
   credentials: true
 }));
