@@ -184,6 +184,53 @@ app.get('/api/fix-my-password', async (req, res) => {
     res.status(500).send(err.message);
   }
 });
+/**
+ * @route   GET /api/users
+ * @desc    Get all registered staff (Superadmin Only)
+ */
+app.get('/api/users', protect, async (req, res) => {
+  try {
+    if (req.user.role !== 'superadmin') {
+      return res.status(403).json({ msg: "Unauthorized" });
+    }
+    // We exclude the password from the list for security
+    const users = await User.find({ role: 'staff' }).select('-password').sort({ createdAt: -1 });
+    res.json(users);
+  } catch (err) {
+    res.status(500).json({ msg: "Error fetching users" });
+  }
+});
+
+/**
+ * @route   PUT /api/users/:id
+ * @desc    Update staff details or reset password (Superadmin Only)
+ */
+app.put('/api/users/:id', protect, async (req, res) => {
+  try {
+    if (req.user.role !== 'superadmin') {
+      return res.status(403).json({ msg: "Unauthorized" });
+    }
+
+    const { name, email, department, password } = req.body;
+    let updateData = { name, email, department };
+
+    // If a password is provided, hash it before updating
+    if (password && password.trim() !== "") {
+      const salt = await bcrypt.genSalt(10);
+      updateData.password = await bcrypt.hash(password, salt);
+    }
+
+    const updatedUser = await User.findByIdAndUpdate(
+      req.params.id,
+      { $set: updateData },
+      { new: true }
+    ).select('-password');
+
+    res.json({ msg: "User updated successfully", user: updatedUser });
+  } catch (err) {
+    res.status(500).json({ msg: "Error updating user" });
+  }
+});
 // Server Start
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
