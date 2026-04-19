@@ -7,7 +7,7 @@ const ALL_DEPARTMENTS = [
   'AYUSH',
   'Bioclean',
   'Theertha',
-  'KP – ICP (CRM)',
+  'KP(CRM)',
   'KP – Factory Outlet',
   'KP – Exclusive Outlet',
   'Happiness',
@@ -21,7 +21,7 @@ const ALL_DEPARTMENTS = [
 // Dept groupings for display
 const DEPT_GROUPS = [
   { label: 'CRM – Ayush',         depts: ['AYUSH', 'Bioclean', 'Theertha'] },
-  { label: 'KP / ICP',            depts: ['KP – ICP (CRM)', 'KP – Factory Outlet', 'KP – Exclusive Outlet'] },
+  { label: 'KP',            depts: ['KP(CRM)', 'KP – Factory Outlet', 'KP – Exclusive Outlet'] },
   { label: 'Support Departments', depts: ['Happiness', 'Purchase', 'Warehouse', 'Media', 'Marketing', 'Accounts'] },
 ];
 
@@ -58,32 +58,32 @@ const ROLE_PRESETS = [
   },
   // ── KP / ICP (CRM) ──
   {
-    group: 'KP – ICP (CRM)',
-    label: 'ICP CRM — AGM',
+    group: 'KP(CRM)',
+    label: 'AGM',
     jobTitle: 'AGM',
-    depts: ['KP – ICP (CRM)', 'KP – Factory Outlet', 'KP – Exclusive Outlet'],
-    primaryDept: 'KP – ICP (CRM)',
+    depts: ['KP(CRM)', 'KP – Factory Outlet', 'KP – Exclusive Outlet'],
+    primaryDept: 'KP(CRM)',
   },
   {
-    group: 'KP – ICP (CRM)',
-    label: 'ICP CRM — OM',
+    group: 'KP(CRM)',
+    label: 'OM',
     jobTitle: 'Operations Manager',
-    depts: ['KP – ICP (CRM)', 'KP – Factory Outlet', 'KP – Exclusive Outlet'],
-    primaryDept: 'KP – ICP (CRM)',
+    depts: ['KP(CRM)', 'KP – Factory Outlet', 'KP – Exclusive Outlet'],
+    primaryDept: 'KP(CRM)',
   },
   {
-    group: 'KP – ICP (CRM)',
-    label: 'ICP CRM — Team Lead',
+    group: 'KP(CRM)',
+    label: 'Team Lead',
     jobTitle: 'Team Lead',
-    depts: ['KP – ICP (CRM)'],
-    primaryDept: 'KP – ICP (CRM)',
+    depts: ['KP(CRM)'],
+    primaryDept: 'KP(CRM)',
   },
   {
-    group: 'KP – ICP (CRM)',
-    label: 'ICP — Technical Head',
+    group: 'KP(CRM)',
+    label: 'Technical Head',
     jobTitle: 'Technical Head',
-    depts: ['KP – ICP (CRM)', 'KP – Factory Outlet', 'KP – Exclusive Outlet', 'Happiness'],
-    primaryDept: 'KP – ICP (CRM)',
+    depts: ['KP(CRM)', 'KP – Factory Outlet', 'KP – Exclusive Outlet', 'Happiness'],
+    primaryDept: 'KP(CRM)',
   },
   // ── Factory Outlet ──
   {
