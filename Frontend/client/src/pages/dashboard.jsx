@@ -1,150 +1,155 @@
 import { useEffect, useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 
-// ─── helpers ────────────────────────────────────────────────────────────────
+// ── Date helpers ─────────────────────────────────────────────────────────────
 
 function toYMD(date) {
   return date.toISOString().split('T')[0];
 }
-
 function todayYMD() {
   return toYMD(new Date());
 }
-
 function shiftDate(ymd, days) {
-  const d = new Date(ymd);
+  const d = new Date(ymd + 'T00:00:00');
   d.setDate(d.getDate() + days);
   return toYMD(d);
 }
-
 function formatDateLabel(ymd) {
   const d = new Date(ymd + 'T00:00:00');
   const today = todayYMD();
   const yesterday = shiftDate(today, -1);
-  if (ymd === today) return `Today — ${d.toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })}`;
+  if (ymd === today)     return `Today — ${d.toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })}`;
   if (ymd === yesterday) return `Yesterday — ${d.toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })}`;
   return d.toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
 }
 
-// ─── department field definitions ────────────────────────────────────────────
+// ── Department field config ───────────────────────────────────────────────────
 
 const departmentConfig = {
+  // CRM – Ayush group
   'AYUSH': [
-    { label: 'Total No. of Calls', type: 'number' },
-    { label: 'No. of Quality Leads', type: 'number' },
-    { label: 'No. of Converted Leads', type: 'number' },
-    { label: 'No. of Follow-ups', type: 'number' },
-    { label: 'Total Sales Value', type: 'number' },
-    { label: 'Remarks if Any', type: 'textarea' },
-  ],
-  'Theertha': [
-    { label: 'Total No. of Calls', type: 'number' },
-    { label: 'No. of Quality Leads', type: 'number' },
-    { label: 'No. of Converted Leads', type: 'number' },
-    { label: 'No. of Follow-ups', type: 'number' },
-    { label: 'Total Sales Value', type: 'number' },
-    { label: 'Remarks if Any', type: 'textarea' },
+    { label: 'Total No. of Calls',       type: 'number' },
+    { label: 'No. of Quality Leads',     type: 'number' },
+    { label: 'No. of Converted Leads',   type: 'number' },
+    { label: 'No. of Follow-ups',        type: 'number' },
+    { label: 'Total Sales Value',        type: 'number' },
+    { label: 'Remarks if Any',           type: 'textarea' },
   ],
   'Bioclean': [
-    { label: 'Total No. of Calls', type: 'number' },
-    { label: 'No. of Quality Leads', type: 'number' },
-    { label: 'No. of Converted Leads', type: 'number' },
-    { label: 'No. of Follow-ups', type: 'number' },
-    { label: 'Total Sales Value', type: 'number' },
-    { label: 'Remarks if Any', type: 'textarea' },
+    { label: 'Total No. of Calls',       type: 'number' },
+    { label: 'No. of Quality Leads',     type: 'number' },
+    { label: 'No. of Converted Leads',   type: 'number' },
+    { label: 'No. of Follow-ups',        type: 'number' },
+    { label: 'Total Sales Value',        type: 'number' },
+    { label: 'Remarks if Any',           type: 'textarea' },
   ],
+  'Theertha': [
+    { label: 'Total No. of Calls',       type: 'number' },
+    { label: 'No. of Quality Leads',     type: 'number' },
+    { label: 'No. of Converted Leads',   type: 'number' },
+    { label: 'No. of Follow-ups',        type: 'number' },
+    { label: 'Total Sales Value',        type: 'number' },
+    { label: 'Remarks if Any',           type: 'textarea' },
+  ],
+  // KP / ICP
+  'KP – ICP (CRM)': [
+    { label: 'Total No. of Calls',       type: 'number' },
+    { label: 'Quality Leads',            type: 'number' },
+    { label: 'No. of Converted Calls',   type: 'number' },
+    { label: 'No. of Quotations',        type: 'number' },
+    { label: 'No. of Followups',         type: 'number' },
+    { label: 'Factory Outlet Leads',     type: 'number' },
+    { label: 'Exclusive Outlet Leads',   type: 'number' },
+    { label: 'Total Sales Value',        type: 'number' },
+    { label: 'Remarks if Any',           type: 'textarea' },
+  ],
+  'KP – Factory Outlet': [
+    { label: 'Walk-in Customers',        type: 'number' },
+    { label: 'Total Invoices Generated', type: 'number' },
+    { label: 'Total Counter Sales Value',type: 'number' },
+    { label: 'New Product Inquiries',    type: 'number' },
+    { label: 'Stock Shortage Items',     type: 'text' },
+    { label: 'Outlet Remarks',           type: 'textarea' },
+  ],
+  'KP – Exclusive Outlet': [
+    { label: 'Walk-in Customers',        type: 'number' },
+    { label: 'Total Invoices Generated', type: 'number' },
+    { label: 'Total Counter Sales Value',type: 'number' },
+    { label: 'New Product Inquiries',    type: 'number' },
+    { label: 'Stock Shortage Items',     type: 'text' },
+    { label: 'Outlet Remarks',           type: 'textarea' },
+  ],
+  // Support depts
   'Happiness': [
-    { label: 'No of New Complaints', type: 'number' },
-    { label: 'Total No. of Pending Complaints', type: 'number' },
+    { label: 'No of New Complaints',             type: 'number' },
+    { label: 'Total No. of Pending Complaints',  type: 'number' },
     { label: 'Total No. of Complaints > 6 days', type: 'number' },
-    { label: 'No. of complaints solved', type: 'number' },
-    { label: 'No of New Positive Reviews', type: 'number' },
-    { label: 'No of New Negative Reviews', type: 'number' },
-    { label: 'Complaint Resolution Cost', type: 'number' },
-    { label: 'Remarks', type: 'textarea' },
-  ],
-  'KP': [
-    { label: 'Total No. of Calls', type: 'number' },
-    { label: 'Quality Leads', type: 'number' },
-    { label: 'No. of Converted Calls', type: 'number' },
-    { label: 'No. of Quotations', type: 'number' },
-    { label: 'No. of Followups', type: 'number' },
-    { label: 'Factory Outlet Leads', type: 'number' },
-    { label: 'Exclusive Outlet Leads', type: 'number' },
-    { label: 'Total Sales Value', type: 'number' },
-    { label: 'Remarks if Any', type: 'textarea' },
-  ],
-  'Media': [
-    { label: 'Campaign Name', type: 'text' },
-    { label: 'Platform', type: 'text' },
-    { label: 'Leads Generated', type: 'number' },
-    { label: 'Ad Spend', type: 'number' },
-    { label: 'Notes', type: 'textarea' },
+    { label: 'No. of complaints solved',          type: 'number' },
+    { label: 'No of New Positive Reviews',        type: 'number' },
+    { label: 'No of New Negative Reviews',        type: 'number' },
+    { label: 'Complaint Resolution Cost',         type: 'number' },
+    { label: 'Remarks',                           type: 'textarea' },
   ],
   'Purchase': [
-    { label: 'No. of PO Placed For F. Outlets', type: 'number' },
-    { label: 'Amount of PO F. Outlets', type: 'number' },
-    { label: 'No. of PO Placed For E. Outlets', type: 'number' },
-    { label: 'Amount of PO E. Outlets', type: 'number' },
-    { label: 'No of Total Deliveries', type: 'number' },
-    { label: 'No of Total GRN Received', type: 'number' },
+    { label: 'No. of PO Placed For F. Outlets',  type: 'number' },
+    { label: 'Amount of PO F. Outlets',           type: 'number' },
+    { label: 'No. of PO Placed For E. Outlets',  type: 'number' },
+    { label: 'Amount of PO E. Outlets',           type: 'number' },
+    { label: 'No of Total Deliveries',            type: 'number' },
+    { label: 'No of Total GRN Received',          type: 'number' },
   ],
-  'KP(Outlet)': [
-    { label: 'Walk-in Customers', type: 'number' },
-    { label: 'Total Invoices Generated', type: 'number' },
-    { label: 'Total Counter Sales Value', type: 'number' },
-    { label: 'New Product Inquiries', type: 'number' },
-    { label: 'Stock Shortage Items', type: 'text' },
-    { label: 'Outlet Remarks', type: 'textarea' },
+  'Warehouse': [
+    { label: 'No. of Loads Received',    type: 'number' },
+    { label: 'No. of Loads Dispatched',  type: 'number' },
+    { label: 'Total GRN Entries',        type: 'number' },
+    { label: 'Pending Delivery Orders',  type: 'number' },
+    { label: 'Damage/Return Stock',      type: 'number' },
+    { label: 'Warehouse Notes',          type: 'textarea' },
   ],
-  'KP Warehouse': [
-    { label: 'No. of Loads Received', type: 'number' },
-    { label: 'No. of Loads Dispatched', type: 'number' },
-    { label: 'Total GRN Entries', type: 'number' },
-    { label: 'Pending Delivery Orders', type: 'number' },
-    { label: 'Damage/Return Stock', type: 'number' },
-    { label: 'Warehouse Notes', type: 'textarea' },
+  'Media': [
+    { label: 'Campaign Name',     type: 'text' },
+    { label: 'Platform',          type: 'text' },
+    { label: 'Leads Generated',   type: 'number' },
+    { label: 'Ad Spend',          type: 'number' },
+    { label: 'Notes',             type: 'textarea' },
   ],
-  'Ayush/Bioclean/Theertha Warehouse': [
-    { label: 'Total Stock Received', type: 'number' },
-    { label: 'Total Stock Dispatched', type: 'number' },
-    { label: 'Stock Verification Status', type: 'text' },
-    { label: 'No. of Inter-branch Transfers', type: 'number' },
-    { label: 'Packaging Material Status', type: 'text' },
-    { label: 'Remarks', type: 'textarea' },
+  'Marketing': [
+    { label: 'Campaign Name',     type: 'text' },
+    { label: 'Platform',          type: 'text' },
+    { label: 'Leads Generated',   type: 'number' },
+    { label: 'Budget Spent',      type: 'number' },
+    { label: 'Notes',             type: 'textarea' },
   ],
   'Accounts': [
     { label: 'Total Collections (Daily)', type: 'number' },
-    { label: 'Total Payments Made', type: 'number' },
-    { label: 'Pending Vendor Invoices', type: 'number' },
-    { label: 'Bank Deposit Amount', type: 'number' },
-    { label: 'Outstanding Dues (New)', type: 'number' },
-    { label: 'Accounts Summary', type: 'textarea' },
+    { label: 'Total Payments Made',       type: 'number' },
+    { label: 'Pending Vendor Invoices',   type: 'number' },
+    { label: 'Bank Deposit Amount',       type: 'number' },
+    { label: 'Outstanding Dues (New)',    type: 'number' },
+    { label: 'Accounts Summary',          type: 'textarea' },
   ],
 };
 
 const ALL_DEPTS = Object.keys(departmentConfig);
 
-// ─── Daily Report Table (one row per agent per day) ──────────────────────────
+// ── Daily Report Table ────────────────────────────────────────────────────────
+// One row per agent for the selected day. If agent submitted multiple times,
+// shows latest + a badge. Totals row at bottom.
 
 function DailyTable({ reports, dept, selectedDay, onRowClick }) {
   const fields = departmentConfig[dept] || [];
   const numericFields = fields.filter(f => f.type === 'number');
 
-  // Filter reports for this dept + this exact day
   const dayReports = reports.filter(r => {
     if (r.department !== dept) return false;
     return new Date(r.createdAt).toISOString().split('T')[0] === selectedDay;
   });
 
-  // One row per agent — if agent submitted multiple entries that day, use the latest one
-  // and show a badge if they submitted more than once
+  // Group by agent — keep all entries, surface latest for the row
   const agentMap = {};
   dayReports.forEach(r => {
     const name = r.staffName || 'Unknown';
-    if (!agentMap[name]) {
-      agentMap[name] = { staffName: name, entries: [], latest: null };
-    }
+    if (!agentMap[name]) agentMap[name] = { staffName: name, entries: [], latest: null };
     agentMap[name].entries.push(r);
     if (!agentMap[name].latest || new Date(r.createdAt) > new Date(agentMap[name].latest.createdAt)) {
       agentMap[name].latest = r;
@@ -153,12 +158,9 @@ function DailyTable({ reports, dept, selectedDay, onRowClick }) {
 
   const rows = Object.values(agentMap);
 
-  // Totals row — sum latest entries per agent
   const totals = {};
   numericFields.forEach(f => {
-    totals[f.label] = rows.reduce((sum, a) => {
-      return sum + (parseFloat(a.latest?.data?.[f.label]) || 0);
-    }, 0);
+    totals[f.label] = rows.reduce((sum, a) => sum + (parseFloat(a.latest?.data?.[f.label]) || 0), 0);
   });
 
   if (rows.length === 0) {
@@ -177,11 +179,9 @@ function DailyTable({ reports, dept, selectedDay, onRowClick }) {
         <thead>
           <tr className="bg-slate-900 text-white">
             <th className="px-5 py-4 text-[10px] uppercase tracking-widest font-black sticky left-0 bg-slate-900 z-10 min-w-[40px]">Sl.</th>
-            <th className="px-5 py-4 text-[10px] uppercase tracking-widest font-black sticky left-[56px] bg-slate-900 z-10 min-w-[150px]">Agent Name</th>
+            <th className="px-5 py-4 text-[10px] uppercase tracking-widest font-black sticky left-[56px] bg-slate-900 z-10 min-w-[160px]">Agent Name</th>
             {numericFields.map(f => (
-              <th key={f.label} className="px-5 py-4 text-[10px] uppercase tracking-widest font-black whitespace-nowrap">
-                {f.label}
-              </th>
+              <th key={f.label} className="px-5 py-4 text-[10px] uppercase tracking-widest font-black whitespace-nowrap">{f.label}</th>
             ))}
             <th className="px-5 py-4 text-[10px] uppercase tracking-widest font-black">Action</th>
           </tr>
@@ -237,7 +237,7 @@ function DailyTable({ reports, dept, selectedDay, onRowClick }) {
   );
 }
 
-// ─── Agent Drill-down Modal ───────────────────────────────────────────────────
+// ── Agent Drill-down Modal ────────────────────────────────────────────────────
 
 function AgentDrillModal({ agent, dept, onClose }) {
   const [selectedEntry, setSelectedEntry] = useState(null);
@@ -250,7 +250,7 @@ function AgentDrillModal({ agent, dept, onClose }) {
             <div>
               <span className="bg-blue-600 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-tighter">{dept}</span>
               <h3 className="text-2xl font-black mt-3">{agent.staffName}</h3>
-              <p className="text-slate-400 text-sm">{agent.entries.length} entries this week</p>
+              <p className="text-slate-400 text-sm">{agent.entries.length} {agent.entries.length === 1 ? 'entry' : 'entries'} today</p>
             </div>
             <button onClick={onClose} className="text-slate-500 hover:text-white text-xl transition mt-1">✕</button>
           </div>
@@ -259,14 +259,12 @@ function AgentDrillModal({ agent, dept, onClose }) {
         <div className="flex-1 overflow-y-auto p-6">
           {selectedEntry ? (
             <div>
-              <button onClick={() => setSelectedEntry(null)} className="text-blue-600 font-bold text-sm mb-6 hover:underline">
-                ← Back to all entries
-              </button>
+              <button onClick={() => setSelectedEntry(null)} className="text-blue-600 font-bold text-sm mb-6 hover:underline">← Back to all entries</button>
               <p className="text-xs text-slate-400 font-bold uppercase tracking-wider mb-1">
                 {new Date(selectedEntry.createdAt).toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long' })}
               </p>
               <p className="font-black text-slate-900 text-xl mb-6">{selectedEntry.title}</p>
-              <div className="space-y-0 divide-y divide-slate-50">
+              <div className="divide-y divide-slate-50">
                 {Object.entries(selectedEntry.data || {}).map(([key, val]) => (
                   <div key={key} className="flex justify-between py-4">
                     <span className="text-slate-400 text-sm font-semibold">{key}</span>
@@ -277,7 +275,7 @@ function AgentDrillModal({ agent, dept, onClose }) {
             </div>
           ) : (
             <div>
-              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4">All Entries This Week</p>
+              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4">All Entries Today</p>
               <div className="space-y-3">
                 {agent.entries
                   .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
@@ -291,7 +289,7 @@ function AgentDrillModal({ agent, dept, onClose }) {
                         <div>
                           <p className="font-bold text-slate-900 group-hover:text-blue-700">{entry.title}</p>
                           <p className="text-xs text-slate-400 mt-0.5">
-                            {new Date(entry.createdAt).toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'short' })}
+                            {new Date(entry.createdAt).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}
                           </p>
                         </div>
                         <span className="text-slate-300 group-hover:text-blue-500 font-bold text-lg">→</span>
@@ -304,16 +302,14 @@ function AgentDrillModal({ agent, dept, onClose }) {
         </div>
 
         <div className="p-6 bg-slate-50 border-t border-slate-100 flex-shrink-0">
-          <button onClick={onClose} className="w-full py-4 bg-slate-900 text-white font-bold rounded-2xl hover:bg-slate-800 transition">
-            Close
-          </button>
+          <button onClick={onClose} className="w-full py-4 bg-slate-900 text-white font-bold rounded-2xl hover:bg-slate-800 transition">Close</button>
         </div>
       </div>
     </div>
   );
 }
 
-// ─── Main Dashboard ───────────────────────────────────────────────────────────
+// ── Main Dashboard ────────────────────────────────────────────────────────────
 
 export default function Dashboard() {
   const [reports, setReports] = useState([]);
@@ -328,8 +324,8 @@ export default function Dashboard() {
   const [activeDept, setActiveDept] = useState('');
   const [selectedDay, setSelectedDay] = useState(todayYMD());
 
-  const dept = localStorage.getItem('dept');
-  const role = localStorage.getItem('role');
+  const dept     = localStorage.getItem('dept');
+  const role     = localStorage.getItem('role');
   const jobTitle = localStorage.getItem('jobTitle') || '';
   const userName = localStorage.getItem('name') || '';
 
@@ -337,9 +333,9 @@ export default function Dashboard() {
   try { managedDepts = JSON.parse(localStorage.getItem('managedDepts') || '[]'); } catch { managedDepts = []; }
 
   const navigate = useNavigate();
-  const isViewer = role === 'superadmin' || role === 'manager';
+  const isViewer        = role === 'superadmin' || role === 'manager';
   const canSeeAdminPanel = role === 'superadmin';
-  const viewableDepts = role === 'superadmin' ? ALL_DEPTS : managedDepts;
+  const viewableDepts   = role === 'superadmin' ? ALL_DEPTS : managedDepts;
 
   useEffect(() => {
     if (isViewer && !activeDept) {
@@ -353,7 +349,7 @@ export default function Dashboard() {
   const fetchReports = async () => {
     const token = localStorage.getItem('token');
     const res = await fetch('https://reporting-structure.onrender.com/api/reports', {
-      headers: { Authorization: `Bearer ${token}` }
+      headers: { Authorization: `Bearer ${token}` },
     });
     const data = await res.json();
     if (res.ok) setReports(data);
@@ -365,7 +361,7 @@ export default function Dashboard() {
     const res = await fetch('https://reporting-structure.onrender.com/api/reports', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-      body: JSON.stringify({ title: reportTitle, data: dynamicData })
+      body: JSON.stringify({ title: reportTitle, data: dynamicData }),
     });
     if (res.ok) {
       setIsModalOpen(false);
@@ -387,9 +383,9 @@ export default function Dashboard() {
   }, [reports, searchQuery, selectedDate]);
 
   const roleBadge = {
-    superadmin: { label: 'Super Admin', bg: 'bg-purple-600' },
-    manager: { label: jobTitle || 'Manager', bg: 'bg-emerald-600' },
-    staff: { label: dept, bg: 'bg-blue-600' },
+    superadmin: { label: 'Super Admin',        bg: 'bg-purple-600' },
+    manager:    { label: jobTitle || 'Manager', bg: 'bg-emerald-600' },
+    staff:      { label: dept,                  bg: 'bg-blue-600' },
   }[role] || { label: dept, bg: 'bg-blue-600' };
 
   return (
@@ -416,35 +412,26 @@ export default function Dashboard() {
         <nav className="space-y-2 flex-1">
           <div className="p-3 rounded-xl bg-blue-600 font-semibold shadow-lg text-sm">Dashboard</div>
           {canSeeAdminPanel && (
-            <button
-              onClick={() => navigate('/admin')}
-              className="w-full text-left p-3 rounded-xl border border-blue-400/30 text-blue-400 hover:bg-blue-400 hover:text-white transition text-sm"
-            >
+            <button onClick={() => navigate('/admin')} className="w-full text-left p-3 rounded-xl border border-blue-400/30 text-blue-400 hover:bg-blue-400 hover:text-white transition text-sm">
               Admin Settings
             </button>
           )}
           {role === 'staff' && (
-            <button
-              onClick={() => setIsModalOpen(true)}
-              className="w-full text-left p-3 rounded-xl bg-emerald-600 text-white font-semibold mt-4 hover:bg-emerald-700 transition text-sm"
-            >
+            <button onClick={() => setIsModalOpen(true)} className="w-full text-left p-3 rounded-xl bg-emerald-600 text-white font-semibold mt-4 hover:bg-emerald-700 transition text-sm">
               + New Entry
             </button>
           )}
         </nav>
 
-        <button
-          onClick={() => { localStorage.clear(); navigate('/login'); }}
-          className="w-full text-left p-3 rounded-xl text-red-400 font-bold hover:text-red-300 transition text-sm"
-        >
+        <button onClick={() => { localStorage.clear(); navigate('/login'); }} className="w-full text-left p-3 rounded-xl text-red-400 font-bold hover:text-red-300 transition text-sm">
           Logout
         </button>
       </div>
 
-      {/* Main Content */}
+      {/* Main */}
       <div className="flex-1 p-4 md:p-8 overflow-auto">
 
-        {/* ══ MANAGER / SUPERADMIN: Daily Report View ══ */}
+        {/* ══ MANAGER / SUPERADMIN: Daily View ══ */}
         {isViewer && (
           <>
             <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-6 gap-4">
@@ -471,10 +458,7 @@ export default function Dashboard() {
                   className={`font-black px-2 py-1 rounded-lg transition text-lg leading-none ${selectedDay >= todayYMD() ? 'text-slate-200 cursor-not-allowed' : 'text-slate-400 hover:text-slate-900 hover:bg-slate-100'}`}
                 >›</button>
                 {selectedDay !== todayYMD() && (
-                  <button
-                    onClick={() => setSelectedDay(todayYMD())}
-                    className="ml-2 text-[10px] font-black uppercase tracking-wider text-blue-600 hover:underline whitespace-nowrap"
-                  >
+                  <button onClick={() => setSelectedDay(todayYMD())} className="ml-2 text-[10px] font-black uppercase tracking-wider text-blue-600 hover:underline whitespace-nowrap">
                     Today
                   </button>
                 )}
@@ -509,9 +493,7 @@ export default function Dashboard() {
                     · {new Date(selectedDay + 'T00:00:00').toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })}
                   </span>
                 </div>
-                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider hidden sm:block">
-                  Click a row to view details →
-                </span>
+                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider hidden sm:block">Click a row to view details →</span>
               </div>
 
               <DailyTable
@@ -523,10 +505,7 @@ export default function Dashboard() {
             </div>
 
             <div className="mt-6 flex justify-end">
-              <button
-                onClick={() => setIsModalOpen(true)}
-                className="bg-blue-600 text-white px-8 py-3 rounded-2xl shadow-xl hover:bg-blue-700 transition font-bold active:scale-95"
-              >
+              <button onClick={() => setIsModalOpen(true)} className="bg-blue-600 text-white px-8 py-3 rounded-2xl shadow-xl hover:bg-blue-700 transition font-bold active:scale-95">
                 + New Entry
               </button>
             </div>
@@ -539,7 +518,7 @@ export default function Dashboard() {
             <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-6 gap-4">
               <div>
                 <h2 className="text-2xl font-black text-slate-900 tracking-tight">My Reports</h2>
-                <p className="text-slate-400 text-sm mt-0.5">{dept} Department</p>
+                <p className="text-slate-400 text-sm mt-0.5">{dept}</p>
               </div>
               <div className="flex gap-3 items-center w-full lg:w-auto">
                 <input
@@ -580,16 +559,12 @@ export default function Dashboard() {
                         <td className="p-5 font-bold text-slate-900">{r.title}</td>
                         <td className="p-5 text-slate-500">{new Date(r.createdAt).toLocaleDateString('en-IN')}</td>
                         <td className="p-5 text-center">
-                          <button onClick={() => setSelectedReport(r)} className="bg-slate-100 text-slate-700 px-5 py-2 rounded-xl text-xs font-bold hover:bg-slate-900 hover:text-white transition">
-                            View
-                          </button>
+                          <button onClick={() => setSelectedReport(r)} className="bg-slate-100 text-slate-700 px-5 py-2 rounded-xl text-xs font-bold hover:bg-slate-900 hover:text-white transition">View</button>
                         </td>
                       </tr>
                     ))}
                     {filteredReports.length === 0 && (
-                      <tr>
-                        <td colSpan="3" className="p-10 text-center text-slate-400 italic">No reports found.</td>
-                      </tr>
+                      <tr><td colSpan="3" className="p-10 text-center text-slate-400 italic">No reports found.</td></tr>
                     )}
                   </tbody>
                 </table>

@@ -1,49 +1,55 @@
 const mongoose = require('mongoose');
- 
-const allDepartments = [
-  'KP', 'AYUSH', 'Theertha', 'Bioclean', 'Happiness',
-  'Purchase', 'Media', 'KP(Outlet)', 'KP Warehouse',
-  'Ayush/Bioclean/Theertha Warehouse', 'Accounts'
+
+// All departments in the org structure
+const ALL_DEPARTMENTS = [
+  // CRM
+  'AYUSH',
+  'Bioclean',
+  'Theertha',
+  // KP / ICP
+  'KP – ICP (CRM)',
+  'KP – Factory Outlet',
+  'KP – Exclusive Outlet',
+  // Support
+  'Happiness',
+  'Purchase',
+  'Warehouse',
+  'Media',
+  'Marketing',
+  'Accounts',
 ];
- 
+
 const UserSchema = new mongoose.Schema({
-  name: { type: String, required: true },
-  email: { type: String, unique: true, required: true },
+  name:     { type: String, required: true },
+  email:    { type: String, unique: true, required: true },
   password: { type: String, required: true },
- 
+
   // THREE-TIER ROLE SYSTEM
-  // superadmin → sees everything, manages users
-  // manager    → sees only their managedDepts (AGM, OM, TL, etc.)
-  // staff      → sees only their own department reports
+  // superadmin → full access + user management
+  // manager    → sees only their managedDepts (AGM, TL, OM, Head, etc.)
+  // staff      → sees & submits only their own dept
   role: {
     type: String,
     enum: ['superadmin', 'manager', 'staff'],
-    default: 'staff'
+    default: 'staff',
   },
- 
-  // For manager accounts: list of departments they oversee
-  // e.g. ['KP', 'KP(Outlet)'] for a KP AGM
-  // For staff: this will be empty (they use `department` field instead)
+
+  // Manager's job title (e.g. "AGM", "Team Lead", "Technical Head")
+  jobTitle: { type: String, default: '' },
+
+  // For managers: which depts they can view reports from
   managedDepts: {
     type: [String],
-    enum: allDepartments,
-    default: []
+    enum: ALL_DEPARTMENTS,
+    default: [],
   },
- 
-  // The department a staff member belongs to (used for role: 'staff')
-  // For managers, set this to their "primary" dept or leave as 'KP' as a default
+
+  // The dept a user belongs to / submits reports for
   department: {
     type: String,
-    enum: ['KP', 'AYUSH', 'Theertha', 'Bioclean', 'Happiness', 'Purchase', 'Media', 'KP(Outlet)', 'KP Warehouse', 'Ayush/Bioclean/Theertha Warehouse', 'Accounts'],
-    required: true
+    enum: ALL_DEPARTMENTS,
+    required: true,
   },
- 
-  // Optional: Human-readable job title for display on dashboard
-  // e.g. "Team Lead", "AGM", "Operations Manager"
-  jobTitle: {
-    type: String,
-    default: ''
-  }
 });
- 
+
 module.exports = mongoose.model('User', UserSchema);
