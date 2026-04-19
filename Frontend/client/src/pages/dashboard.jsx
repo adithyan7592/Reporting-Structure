@@ -51,8 +51,8 @@ const departmentConfig = {
     { label: 'Total Sales Value',        type: 'number' },
     { label: 'Remarks if Any',           type: 'textarea' },
   ],
-  // KP / ICP
-  'KP – ICP (CRM)': [
+  // KP
+  'KP(CRM)': [
     { label: 'Total No. of Calls',       type: 'number' },
     { label: 'Quality Leads',            type: 'number' },
     { label: 'No. of Converted Calls',   type: 'number' },
@@ -64,19 +64,26 @@ const departmentConfig = {
     { label: 'Remarks if Any',           type: 'textarea' },
   ],
   'KP – Factory Outlet': [
-    { label: 'Walk-in Customers',        type: 'number' },
-    { label: 'Total Invoices Generated', type: 'number' },
-    { label: 'Total Counter Sales Value',type: 'number' },
-    { label: 'New Product Inquiries',    type: 'number' },
-    { label: 'Stock Shortage Items',     type: 'text' },
-    { label: 'Outlet Remarks',           type: 'textarea' },
+    { label: 'Total No. of Walkins',        type: 'number' },
+    { label: 'Total No. of Bills', type: 'number' },
+    { label: 'Total No. of Quotations',type: 'number' },
+    { label: 'Total Sales Value',    type: 'number' },
+    { label: 'PO Status',     type: 'text' },
+    { label: 'GRN Status',           type: 'text' },
+    { label: 'No. of Home Deliveries',       type: 'number' },
+    { label: 'Painters Commission in Amt',       type: 'number' },
+    { label: 'Vehicle Running KM',           type: 'number' },
+    { label: 'Stock Alert',           type: 'number' },
+    { label: 'Outlet Remarks',       type: 'textarea' },
   ],
+  
   'KP – Exclusive Outlet': [
-    { label: 'Walk-in Customers',        type: 'number' },
-    { label: 'Total Invoices Generated', type: 'number' },
-    { label: 'Total Counter Sales Value',type: 'number' },
-    { label: 'New Product Inquiries',    type: 'number' },
-    { label: 'Stock Shortage Items',     type: 'text' },
+    { label: 'Total No. of Walkins',        type: 'number' },
+    { label: 'Total No. of Bills', type: 'number' },
+    { label: 'Total No. of Quotations',type: 'number' },
+    { label: 'PO Status',    type: 'text' },
+    { label: 'GRN Status',     type: 'text' },
+    { label: 'Stock Alert',       type: 'number' },
     { label: 'Outlet Remarks',           type: 'textarea' },
   ],
   // Support depts
@@ -97,6 +104,7 @@ const departmentConfig = {
     { label: 'Amount of PO E. Outlets',           type: 'number' },
     { label: 'No of Total Deliveries',            type: 'number' },
     { label: 'No of Total GRN Received',          type: 'number' },
+    { label: 'Remarks',         type: 'textarea' },
   ],
   'Warehouse': [
     { label: 'No. of Loads Received',    type: 'number' },
