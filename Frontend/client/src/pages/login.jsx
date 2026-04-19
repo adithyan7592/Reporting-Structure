@@ -18,19 +18,17 @@ export default function Login() {
       const data = await response.json();
 
       if (response.ok) {
-        // 1. CLEAR PREVIOUS SESSION: Prevents role-mixing from previous logins
-        localStorage.clear();
-
-        // 2. STORE NEW DATA: Saves the specific role returned by server.js
         localStorage.setItem('token', data.token);
         localStorage.setItem('dept', data.department);
-        localStorage.setItem('role', data.role); // Crucial for Dashboard roleConfigs lookup
+        localStorage.setItem('role', data.role);
+        localStorage.setItem('name', data.name || '');
+        localStorage.setItem('jobTitle', data.jobTitle || '');
+        // Save managedDepts as JSON string for manager role
+        localStorage.setItem('managedDepts', JSON.stringify(data.managedDepts || []));
 
-        // 3. ROLE-BASED NAVIGATION
         if (data.role === 'superadmin') {
           navigate('/admin');
         } else {
-          // Navigates to Dashboard where roleConfigs[`${dept}_${role}`] handles the form
           navigate('/dashboard');
         }
       } else {
@@ -70,12 +68,12 @@ export default function Login() {
               <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">
                 Email Address
               </label>
-              <input 
-                type="email" 
-                required 
+              <input
+                type="email"
+                required
                 className="w-full bg-slate-900/50 border border-slate-700 text-white px-4 py-3 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all placeholder:text-slate-600"
                 placeholder="admin@system.com"
-                onChange={(e) => setEmail(e.target.value)} 
+                onChange={(e) => setEmail(e.target.value)}
               />
             </div>
 
@@ -83,28 +81,28 @@ export default function Login() {
               <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">
                 Password
               </label>
-              <input 
-                type="password" 
-                required 
+              <input
+                type="password"
+                required
                 className="w-full bg-slate-900/50 border border-slate-700 text-white px-4 py-3 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all placeholder:text-slate-600"
                 placeholder="••••••••"
-                onChange={(e) => setPassword(e.target.value)} 
+                onChange={(e) => setPassword(e.target.value)}
               />
             </div>
 
             <div className="pt-2">
-              <button 
-                type="submit" 
+              <button
+                type="submit"
                 className="w-full py-3.5 px-4 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-xl shadow-lg shadow-blue-600/20 transition-all active:scale-[0.98]"
               >
                 Sign In to Portal
               </button>
             </div>
           </form>
-          
+
           <div className="mt-8 pt-6 border-t border-slate-700/50 text-center">
             <p className="text-slate-500 text-xs">
-              Authorized Personnel Only. <br/>
+              Authorized Personnel Only. <br />
               © 2026 Reporting Structure
             </p>
           </div>
