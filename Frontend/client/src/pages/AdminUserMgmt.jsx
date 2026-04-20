@@ -13,7 +13,7 @@ const DEPT_FIELDS = {
   'AYUSH':               ['Total No. of Calls', 'No. of Quality Leads', 'No. of Converted Leads', 'No. of Follow-ups', 'Total Sales Value', 'Remarks if Any'],
   'Bioclean':            ['Total No. of Calls', 'No. of Quality Leads', 'No. of Converted Leads', 'No. of Follow-ups', 'Total Sales Value', 'Remarks if Any'],
   'Theertha':            ['Total No. of Calls', 'No. of Quality Leads', 'No. of Converted Leads', 'No. of Follow-ups', 'Total Sales Value', 'Remarks if Any'],
-  'KP –(CRM)':     ['Total No. of Calls', 'Quality Leads', 'No. of Converted Calls', 'No. of Quotations', 'No. of Followups', 'Factory Outlet Leads', 'Exclusive Outlet Leads', 'Total Sales Value', 'Remarks if Any'],
+  'KP – (CRM)':     ['Total No. of Calls', 'Quality Leads', 'No. of Converted Calls', 'No. of Quotations', 'No. of Followups', 'Factory Outlet Leads', 'Exclusive Outlet Leads', 'Total Sales Value', 'Remarks if Any'],
   'KP – Factory Outlet': ['Walk-in Customers', 'Total Invoices Generated', 'Total Counter Sales Value', 'New Product Inquiries', 'Stock Shortage Items', 'Outlet Remarks'],
   'KP – Exclusive Outlet': ['Walk-in Customers', 'Total Invoices Generated', 'Total Counter Sales Value', 'New Product Inquiries', 'Stock Shortage Items', 'Outlet Remarks'],
   'Happiness':           ['No of New Complaints', 'Total No. of Pending Complaints', 'Total No. of Complaints > 6 days', 'No. of complaints solved', 'No of New Positive Reviews', 'No of New Negative Reviews', 'Complaint Resolution Cost', 'Remarks'],
