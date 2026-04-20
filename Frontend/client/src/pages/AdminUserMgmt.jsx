@@ -1,218 +1,196 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 
-// ── Org Structure ────────────────────────────────────────────────────────────
+// ── Org & field definitions ───────────────────────────────────────────────────
 
 const ALL_DEPARTMENTS = [
-  'AYUSH',
-  'Bioclean',
-  'Theertha',
-  'KP(CRM)',
-  'KP – Factory Outlet',
-  'KP – Exclusive Outlet',
-  'Happiness',
-  'Purchase',
-  'Warehouse',
-  'Media',
-  'Marketing',
-  'Accounts',
+  'AYUSH', 'Bioclean', 'Theertha',
+  'KP –(CRM)', 'KP – Factory Outlet', 'KP – Exclusive Outlet',
+  'Happiness', 'Purchase', 'Warehouse', 'Media', 'Marketing', 'Accounts',
 ];
 
-// Dept groupings for display
+const DEPT_FIELDS = {
+  'AYUSH':               ['Total No. of Calls', 'No. of Quality Leads', 'No. of Converted Leads', 'No. of Follow-ups', 'Total Sales Value', 'Remarks if Any'],
+  'Bioclean':            ['Total No. of Calls', 'No. of Quality Leads', 'No. of Converted Leads', 'No. of Follow-ups', 'Total Sales Value', 'Remarks if Any'],
+  'Theertha':            ['Total No. of Calls', 'No. of Quality Leads', 'No. of Converted Leads', 'No. of Follow-ups', 'Total Sales Value', 'Remarks if Any'],
+  'KP –(CRM)':     ['Total No. of Calls', 'Quality Leads', 'No. of Converted Calls', 'No. of Quotations', 'No. of Followups', 'Factory Outlet Leads', 'Exclusive Outlet Leads', 'Total Sales Value', 'Remarks if Any'],
+  'KP – Factory Outlet': ['Walk-in Customers', 'Total Invoices Generated', 'Total Counter Sales Value', 'New Product Inquiries', 'Stock Shortage Items', 'Outlet Remarks'],
+  'KP – Exclusive Outlet': ['Walk-in Customers', 'Total Invoices Generated', 'Total Counter Sales Value', 'New Product Inquiries', 'Stock Shortage Items', 'Outlet Remarks'],
+  'Happiness':           ['No of New Complaints', 'Total No. of Pending Complaints', 'Total No. of Complaints > 6 days', 'No. of complaints solved', 'No of New Positive Reviews', 'No of New Negative Reviews', 'Complaint Resolution Cost', 'Remarks'],
+  'Purchase':            ['No. of PO Placed For F. Outlets', 'Amount of PO F. Outlets', 'No. of PO Placed For E. Outlets', 'Amount of PO E. Outlets', 'No of Total Deliveries', 'No of Total GRN Received'],
+  'Warehouse':           ['No. of Loads Received', 'No. of Loads Dispatched', 'Total GRN Entries', 'Pending Delivery Orders', 'Damage/Return Stock', 'Warehouse Notes'],
+  'Media':               ['Campaign Name', 'Platform', 'Leads Generated', 'Ad Spend', 'Notes'],
+  'Marketing':           ['Campaign Name', 'Platform', 'Leads Generated', 'Budget Spent', 'Notes'],
+  'Accounts':            ['Total Collections (Daily)', 'Total Payments Made', 'Pending Vendor Invoices', 'Bank Deposit Amount', 'Outstanding Dues (New)', 'Accounts Summary'],
+};
+
 const DEPT_GROUPS = [
-  { label: 'CRM – Ayush',         depts: ['AYUSH', 'Bioclean', 'Theertha'] },
-  { label: 'KP',            depts: ['KP(CRM)', 'KP – Factory Outlet', 'KP – Exclusive Outlet'] },
-  { label: 'Support Departments', depts: ['Happiness', 'Purchase', 'Warehouse', 'Media', 'Marketing', 'Accounts'] },
+  { label: 'CRM – AYUSH',    depts: ['AYUSH', 'Bioclean', 'Theertha'] },
+  { label: 'KP',              depts: ['KP(CRM)', 'KP – Factory Outlet', 'KP – Exclusive Outlet'] },
+  { label: 'Support',         depts: ['Happiness', 'Purchase', 'Warehouse', 'Media', 'Marketing', 'Accounts'] },
 ];
 
-// Role presets matching actual org hierarchy
 const ROLE_PRESETS = [
-  // ── CRM Ayush ──
-  {
-    group: 'CRM – Ayush',
-    label: 'AYUSH / Bioclean / Theertha — Team Lead',
-    jobTitle: 'Team Lead',
-    depts: ['AYUSH', 'Bioclean', 'Theertha'],
-    primaryDept: 'AYUSH',
-  },
-  {
-    group: 'CRM – Ayush',
-    label: 'AYUSH Team Lead',
-    jobTitle: 'Team Lead',
-    depts: ['AYUSH'],
-    primaryDept: 'AYUSH',
-  },
-  {
-    group: 'CRM – Ayush',
-    label: 'Bioclean Team Lead',
-    jobTitle: 'Team Lead',
-    depts: ['Bioclean'],
-    primaryDept: 'Bioclean',
-  },
-  {
-    group: 'CRM – Ayush',
-    label: 'Theertha Team Lead',
-    jobTitle: 'Team Lead',
-    depts: ['Theertha'],
-    primaryDept: 'Theertha',
-  },
-  // ── KP / ICP (CRM) ──
-  {
-    group: 'KP(CRM)',
-    label: 'AGM',
-    jobTitle: 'AGM',
-    depts: ['KP(CRM)', 'KP – Factory Outlet', 'KP – Exclusive Outlet'],
-    primaryDept: 'KP(CRM)',
-  },
-  {
-    group: 'KP(CRM)',
-    label: 'OM',
-    jobTitle: 'Operations Manager',
-    depts: ['KP(CRM)', 'KP – Factory Outlet', 'KP – Exclusive Outlet'],
-    primaryDept: 'KP(CRM)',
-  },
-  {
-    group: 'KP(CRM)',
-    label: 'Team Lead',
-    jobTitle: 'Team Lead',
-    depts: ['KP(CRM)'],
-    primaryDept: 'KP(CRM)',
-  },
-  {
-    group: 'KP(CRM)',
-    label: 'Technical Head',
-    jobTitle: 'Technical Head',
-    depts: ['KP(CRM)', 'KP – Factory Outlet', 'KP – Exclusive Outlet', 'Happiness'],
-    primaryDept: 'KP(CRM)',
-  },
-  // ── Factory Outlet ──
-  {
-    group: 'KP – Factory Outlet',
-    label: 'Factory Outlet — AGM',
-    jobTitle: 'AGM',
-    depts: ['KP – Factory Outlet'],
-    primaryDept: 'KP – Factory Outlet',
-  },
-  {
-    group: 'KP – Factory Outlet',
-    label: 'Factory Outlet — OM',
-    jobTitle: 'Operations Manager',
-    depts: ['KP – Factory Outlet'],
-    primaryDept: 'KP – Factory Outlet',
-  },
-  {
-    group: 'KP – Factory Outlet',
-    label: 'Factory Outlet — Purchase Manager',
-    jobTitle: 'Purchase Manager',
-    depts: ['KP – Factory Outlet', 'Purchase'],
-    primaryDept: 'KP – Factory Outlet',
-  },
-  // ── Exclusive Outlet ──
-  {
-    group: 'KP – Exclusive Outlet',
-    label: 'Exclusive Outlet — Manager',
-    jobTitle: 'Manager',
-    depts: ['KP – Exclusive Outlet'],
-    primaryDept: 'KP – Exclusive Outlet',
-  },
-  {
-    group: 'KP – Exclusive Outlet',
-    label: 'Exclusive Outlet — Outlet Co-ordinator',
-    jobTitle: 'Outlet Co-ordinator',
-    depts: ['KP – Exclusive Outlet'],
-    primaryDept: 'KP – Exclusive Outlet',
-  },
-  {
-    group: 'KP – Exclusive Outlet',
-    label: 'Exclusive Outlet — AGM / OM',
-    jobTitle: 'AGM / OM',
-    depts: ['KP – Exclusive Outlet', 'KP – Factory Outlet'],
-    primaryDept: 'KP – Exclusive Outlet',
-  },
-  // ── Happiness ──
-  {
-    group: 'Happiness',
-    label: 'Happiness — Technical Head',
-    jobTitle: 'Technical Head',
-    depts: ['Happiness'],
-    primaryDept: 'Happiness',
-  },
-  {
-    group: 'Happiness',
-    label: 'Happiness — Technical Co-ordinator',
-    jobTitle: 'Technical Co-ordinator',
-    depts: ['Happiness'],
-    primaryDept: 'Happiness',
-  },
-  {
-    group: 'Happiness',
-    label: 'Happiness — Insurance Co-ordinator',
-    jobTitle: 'Insurance Co-ordinator',
-    depts: ['Happiness'],
-    primaryDept: 'Happiness',
-  },
-  // ── Purchase ──
-  {
-    group: 'Purchase',
-    label: 'Purchase Manager',
-    jobTitle: 'Purchase Manager',
-    depts: ['Purchase'],
-    primaryDept: 'Purchase',
-  },
-  // ── Warehouse ──
-  {
-    group: 'Warehouse',
-    label: 'Warehouse Manager',
-    jobTitle: 'Warehouse Manager',
-    depts: ['Warehouse'],
-    primaryDept: 'Warehouse',
-  },
-  // ── Media ──
-  {
-    group: 'Media',
-    label: 'Media — Head',
-    jobTitle: 'Head',
-    depts: ['Media'],
-    primaryDept: 'Media',
-  },
-  // ── Marketing ──
-  {
-    group: 'Marketing',
-    label: 'Marketing — Head',
-    jobTitle: 'Head',
-    depts: ['Marketing'],
-    primaryDept: 'Marketing',
-  },
+  { group: 'CRM – AYUSH',    label: 'AYUSH / Bioclean / Theertha — Team Lead', jobTitle: 'Team Lead',           depts: ['AYUSH', 'Bioclean', 'Theertha'],                                               primaryDept: 'AYUSH' },
+  { group: 'CRM – AYUSH',    label: 'AYUSH Team Lead',                          jobTitle: 'Team Lead',           depts: ['AYUSH'],                                                                        primaryDept: 'AYUSH' },
+  { group: 'CRM – AYUSH',    label: 'Bioclean Team Lead',                        jobTitle: 'Team Lead',           depts: ['Bioclean'],                                                                     primaryDept: 'Bioclean' },
+  { group: 'CRM – AYUSH',    label: 'Theertha Team Lead',                        jobTitle: 'Team Lead',           depts: ['Theertha'],                                                                     primaryDept: 'Theertha' },
+  { group: 'KP',              label: 'AGM',                             jobTitle: 'AGM',                 depts: ['KP –(CRM)', 'KP – Factory Outlet', 'KP – Exclusive Outlet'],              primaryDept: 'KP –(CRM)' },
+  { group: 'KP',              label: 'OM',                              jobTitle: 'Operations Manager',  depts: ['KP –(CRM)', 'KP – Factory Outlet', 'KP – Exclusive Outlet'],              primaryDept: 'KP –(CRM)' },
+  { group: 'KP',              label: 'Team Lead',                       jobTitle: 'Team Lead',           depts: ['KP –(CRM)'],                                                               primaryDept: 'KP –(CRM)' },
+  { group: 'KP',              label: 'Technical Head',                      jobTitle: 'Technical Head',      depts: ['KP – (CRM)', 'KP – Factory Outlet', 'KP – Exclusive Outlet', 'Happiness'], primaryDept: 'KP –(CRM)' },
+  { group: 'KP',              label: 'Factory Outlet — AGM',                      jobTitle: 'AGM',                 depts: ['KP – Factory Outlet'],                                                          primaryDept: 'KP – Factory Outlet' },
+  { group: 'KP',              label: 'Factory Outlet — OM',                       jobTitle: 'Operations Manager',  depts: ['KP – Factory Outlet'],                                                          primaryDept: 'KP – Factory Outlet' },
+  { group: 'KP',              label: 'Factory Outlet — Purchase Manager',          jobTitle: 'Purchase Manager',    depts: ['KP – Factory Outlet', 'Purchase'],                                              primaryDept: 'KP – Factory Outlet' },
+  { group: 'KP',              label: 'Exclusive Outlet — Manager',                jobTitle: 'Manager',             depts: ['KP – Exclusive Outlet'],                                                        primaryDept: 'KP – Exclusive Outlet' },
+  { group: 'KP',              label: 'Exclusive Outlet — Outlet Co-ordinator',    jobTitle: 'Outlet Co-ordinator', depts: ['KP – Exclusive Outlet'],                                                        primaryDept: 'KP – Exclusive Outlet' },
+  { group: 'Support',         label: 'Happiness — Technical Head',                jobTitle: 'Technical Head',      depts: ['Happiness'],                                                                    primaryDept: 'Happiness' },
+  { group: 'Support',         label: 'Happiness — Technical Co-ordinator',        jobTitle: 'Technical Co-ordinator', depts: ['Happiness'],                                                               primaryDept: 'Happiness' },
+  { group: 'Support',         label: 'Happiness — Insurance Co-ordinator',        jobTitle: 'Insurance Co-ordinator', depts: ['Happiness'],                                                               primaryDept: 'Happiness' },
+  { group: 'Support',         label: 'Purchase Manager',                           jobTitle: 'Purchase Manager',    depts: ['Purchase'],                                                                     primaryDept: 'Purchase' },
+  { group: 'Support',         label: 'Warehouse Manager',                          jobTitle: 'Warehouse Manager',   depts: ['Warehouse'],                                                                    primaryDept: 'Warehouse' },
+  { group: 'Support',         label: 'Media — Head',                               jobTitle: 'Head',                depts: ['Media'],                                                                        primaryDept: 'Media' },
+  { group: 'Support',         label: 'Marketing — Head',                           jobTitle: 'Head',                depts: ['Marketing'],                                                                    primaryDept: 'Marketing' },
 ];
 
 const PRESET_GROUPS = [...new Set(ROLE_PRESETS.map(p => p.group))];
-
 const API_BASE = 'https://reporting-structure.onrender.com/api';
 
-// ── Component ────────────────────────────────────────────────────────────────
+// ── Helpers ───────────────────────────────────────────────────────────────────
+
+// Build initial managedDepts entry with all fields selected
+function buildDeptEntry(deptName) {
+  return { dept: deptName, fields: [...(DEPT_FIELDS[deptName] || [])] };
+}
+
+function getManagedDeptEntry(managedDepts, deptName) {
+  return managedDepts.find(d => d.dept === deptName) || null;
+}
+
+function toggleDeptInList(managedDepts, deptName) {
+  const exists = managedDepts.find(d => d.dept === deptName);
+  if (exists) return managedDepts.filter(d => d.dept !== deptName);
+  return [...managedDepts, buildDeptEntry(deptName)];
+}
+
+function toggleFieldInDept(managedDepts, deptName, fieldName) {
+  return managedDepts.map(d => {
+    if (d.dept !== deptName) return d;
+    const hasField = d.fields.includes(fieldName);
+    return { ...d, fields: hasField ? d.fields.filter(f => f !== fieldName) : [...d.fields, fieldName] };
+  });
+}
+
+function setAllFields(managedDepts, deptName, selectAll) {
+  return managedDepts.map(d => {
+    if (d.dept !== deptName) return d;
+    return { ...d, fields: selectAll ? [...(DEPT_FIELDS[deptName] || [])] : [] };
+  });
+}
+
+// ── Dept Access Card with Field Checklist ─────────────────────────────────────
+
+function DeptAccessCard({ deptName, entry, onToggleDept, onToggleField, onSelectAll }) {
+  const [expanded, setExpanded] = useState(false);
+  const allFields = DEPT_FIELDS[deptName] || [];
+  const isActive = !!entry;
+  const selectedCount = entry ? entry.fields.length : 0;
+  const allSelected = selectedCount === allFields.length;
+
+  return (
+    <div className={`rounded-2xl border-2 transition-all ${isActive ? 'border-emerald-400 bg-emerald-50/50' : 'border-slate-200 bg-white'}`}>
+      {/* Dept header row */}
+      <div className="flex items-center justify-between p-3">
+        <div className="flex items-center gap-3">
+          {/* Toggle dept on/off */}
+          <button
+            type="button"
+            onClick={() => { onToggleDept(deptName); if (!isActive) setExpanded(true); }}
+            className={`w-6 h-6 rounded-lg border-2 flex items-center justify-center font-black text-xs transition-all flex-shrink-0 ${
+              isActive ? 'bg-emerald-600 border-emerald-600 text-white' : 'border-slate-300 text-slate-300 hover:border-emerald-400'
+            }`}
+          >
+            {isActive ? '✓' : ''}
+          </button>
+          <span className={`text-sm font-bold ${isActive ? 'text-emerald-900' : 'text-slate-500'}`}>{deptName}</span>
+          {isActive && (
+            <span className="text-[10px] font-black text-emerald-600 bg-emerald-100 px-2 py-0.5 rounded-full">
+              {selectedCount}/{allFields.length} fields
+            </span>
+          )}
+        </div>
+
+        {/* Expand/collapse field list */}
+        {isActive && (
+          <button
+            type="button"
+            onClick={() => setExpanded(!expanded)}
+            className="text-emerald-600 text-xs font-black hover:underline flex items-center gap-1"
+          >
+            {expanded ? 'Hide fields ▲' : 'Edit fields ▼'}
+          </button>
+        )}
+      </div>
+
+      {/* Field checklist (shown when expanded) */}
+      {isActive && expanded && (
+        <div className="px-4 pb-4 border-t border-emerald-100 pt-3">
+          {/* Select all / Clear */}
+          <div className="flex justify-between items-center mb-3">
+            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Field Access</span>
+            <div className="flex gap-3">
+              <button type="button" onClick={() => onSelectAll(deptName, true)} className="text-[10px] font-black text-emerald-600 hover:underline">All</button>
+              <button type="button" onClick={() => onSelectAll(deptName, false)} className="text-[10px] font-black text-red-400 hover:underline">None</button>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            {allFields.map(field => {
+              const checked = entry.fields.includes(field);
+              return (
+                <button
+                  key={field}
+                  type="button"
+                  onClick={() => onToggleField(deptName, field)}
+                  className={`flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-semibold text-left transition-all border ${
+                    checked
+                      ? 'bg-emerald-600 text-white border-emerald-600'
+                      : 'bg-white text-slate-500 border-slate-200 hover:border-emerald-300'
+                  }`}
+                >
+                  <span className={`w-4 h-4 rounded flex items-center justify-center flex-shrink-0 font-black text-[10px] border ${
+                    checked ? 'bg-white/30 border-white/50 text-white' : 'border-slate-300'
+                  }`}>
+                    {checked ? '✓' : ''}
+                  </span>
+                  {field}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── Main Component ────────────────────────────────────────────────────────────
 
 export default function AdminUserMgmt() {
-  const [formData, setFormData] = useState({
-    name: '', email: '', password: '',
-    department: 'AYUSH',
-    role: 'staff',
-    jobTitle: '',
-    managedDepts: [],
-  });
+  const emptyForm = { name: '', email: '', password: '', department: 'AYUSH', role: 'staff', jobTitle: '', managedDepts: [] };
+  const [formData, setFormData] = useState(emptyForm);
   const [activePresetGroup, setActivePresetGroup] = useState(PRESET_GROUPS[0]);
   const [selectedPreset, setSelectedPreset] = useState(null);
   const [users, setUsers] = useState([]);
   const [editingUser, setEditingUser] = useState(null);
   const [filterRole, setFilterRole] = useState('all');
+  const [expandedUser, setExpandedUser] = useState(null);
   const navigate = useNavigate();
 
   useEffect(() => { fetchUsers(); }, []);
 
   const fetchUsers = async () => {
-    const token = localStorage.getItem('token');
-    const res = await fetch(`${API_BASE}/users`, {
-      headers: { Authorization: `Bearer ${token}` },
-    });
+    const res = await fetch(`${API_BASE}/users`, { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } });
     if (res.ok) setUsers(await res.json());
   };
 
@@ -220,54 +198,32 @@ export default function AdminUserMgmt() {
     setSelectedPreset(preset.label);
     setFormData(prev => ({
       ...prev,
-      role:         'manager',
-      jobTitle:     preset.jobTitle,
-      managedDepts: preset.depts,
-      department:   preset.primaryDept,
+      role: 'manager',
+      jobTitle: preset.jobTitle,
+      primaryDept: preset.primaryDept,
+      department: preset.primaryDept,
+      // Build managedDepts with all fields selected by default
+      managedDepts: preset.depts.map(buildDeptEntry),
     }));
-  };
-
-  const toggleManagedDept = (dept, isEditing = false) => {
-    if (isEditing) {
-      const cur = editingUser.managedDepts || [];
-      setEditingUser({
-        ...editingUser,
-        managedDepts: cur.includes(dept) ? cur.filter(d => d !== dept) : [...cur, dept],
-      });
-    } else {
-      const cur = formData.managedDepts;
-      setFormData({
-        ...formData,
-        managedDepts: cur.includes(dept) ? cur.filter(d => d !== dept) : [...cur, dept],
-      });
-    }
   };
 
   const handleCreate = async (e) => {
     e.preventDefault();
-    const token = localStorage.getItem('token');
     const res = await fetch(`${API_BASE}/register`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${localStorage.getItem('token')}` },
       body: JSON.stringify(formData),
     });
     const data = await res.json();
-    if (res.ok) {
-      alert(`✅ ${data.msg}`);
-      setFormData({ name: '', email: '', password: '', department: 'AYUSH', role: 'staff', jobTitle: '', managedDepts: [] });
-      setSelectedPreset(null);
-      fetchUsers();
-    } else {
-      alert(`❌ ${data.msg}`);
-    }
+    if (res.ok) { alert(`✅ ${data.msg}`); setFormData(emptyForm); setSelectedPreset(null); fetchUsers(); }
+    else alert(`❌ ${data.msg}`);
   };
 
   const handleUpdate = async (e) => {
     e.preventDefault();
-    const token = localStorage.getItem('token');
     const res = await fetch(`${API_BASE}/users/${editingUser._id}`, {
       method: 'PUT',
-      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${localStorage.getItem('token')}` },
       body: JSON.stringify(editingUser),
     });
     if (res.ok) { alert('✅ Updated!'); setEditingUser(null); fetchUsers(); }
@@ -276,23 +232,27 @@ export default function AdminUserMgmt() {
 
   const handleDelete = async (id, name) => {
     if (!confirm(`Delete ${name}? This cannot be undone.`)) return;
-    const token = localStorage.getItem('token');
-    const res = await fetch(`${API_BASE}/users/${id}`, {
-      method: 'DELETE',
-      headers: { Authorization: `Bearer ${token}` },
-    });
+    const res = await fetch(`${API_BASE}/users/${id}`, { method: 'DELETE', headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } });
     if (res.ok) fetchUsers();
   };
 
-  const filteredUsers = users.filter(u =>
-    filterRole === 'all' ? true : u.role === filterRole
-  );
+  // Handlers for form managedDepts
+  const formHandlers = {
+    toggleDept:  (d) => setFormData(p => ({ ...p, managedDepts: toggleDeptInList(p.managedDepts, d) })),
+    toggleField: (d, f) => setFormData(p => ({ ...p, managedDepts: toggleFieldInDept(p.managedDepts, d, f) })),
+    selectAll:   (d, all) => setFormData(p => ({ ...p, managedDepts: setAllFields(p.managedDepts, d, all) })),
+  };
 
-  const roleChip = (role) => ({
-    manager:    'bg-emerald-100 text-emerald-700',
-    staff:      'bg-blue-50 text-blue-600',
-    superadmin: 'bg-purple-100 text-purple-700',
-  }[role] || 'bg-slate-100 text-slate-600');
+  // Handlers for edit modal managedDepts
+  const editHandlers = {
+    toggleDept:  (d) => setEditingUser(p => ({ ...p, managedDepts: toggleDeptInList(p.managedDepts || [], d) })),
+    toggleField: (d, f) => setEditingUser(p => ({ ...p, managedDepts: toggleFieldInDept(p.managedDepts || [], d, f) })),
+    selectAll:   (d, all) => setEditingUser(p => ({ ...p, managedDepts: setAllFields(p.managedDepts || [], d, all) })),
+  };
+
+  const filteredUsers = users.filter(u => filterRole === 'all' || u.role === filterRole);
+
+  const roleChip = (r) => ({ manager: 'bg-emerald-100 text-emerald-700', staff: 'bg-blue-50 text-blue-600' }[r] || 'bg-slate-100 text-slate-600');
 
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col md:flex-row">
@@ -301,18 +261,14 @@ export default function AdminUserMgmt() {
       <div className="w-full md:w-64 bg-slate-900 text-white p-6 shrink-0 flex flex-col">
         <h1 className="text-xl font-bold text-blue-400 mb-8">Admin Panel</h1>
         <nav className="space-y-3 flex-1">
-          <button onClick={() => navigate('/dashboard')} className="w-full text-left p-3 rounded-xl hover:bg-slate-800 transition text-slate-300 text-sm">
-            ← Back to Dashboard
-          </button>
+          <button onClick={() => navigate('/dashboard')} className="w-full text-left p-3 rounded-xl hover:bg-slate-800 transition text-slate-300 text-sm">← Back to Dashboard</button>
           <div className="p-3 rounded-xl bg-blue-600 text-white font-semibold text-sm">User Management</div>
         </nav>
-
-        {/* Role guide */}
         <div className="mt-8 p-4 bg-slate-800 rounded-2xl text-[10px] text-slate-400 space-y-2 leading-relaxed">
           <p className="font-bold text-slate-200 uppercase tracking-wider text-[9px] mb-3">Role Guide</p>
-          <p>🔵 <strong className="text-slate-300">Staff</strong><br/>Submits + views own dept only</p>
-          <p>🟢 <strong className="text-slate-300">Manager</strong><br/>Views assigned depts' reports</p>
-          <p>🟣 <strong className="text-slate-300">Superadmin</strong><br/>Full access + user management</p>
+          <p>🔵 <strong className="text-slate-300">Staff</strong> — Submits + views own dept</p>
+          <p>🟢 <strong className="text-slate-300">Manager</strong> — Views selected depts & fields</p>
+          <p>🟣 <strong className="text-slate-300">Superadmin</strong> — Full access</p>
         </div>
       </div>
 
@@ -323,169 +279,90 @@ export default function AdminUserMgmt() {
           {/* ── CREATE FORM ── */}
           <div className="bg-white rounded-3xl shadow-sm border border-slate-200 p-8">
             <h2 className="text-xl font-black text-slate-900 mb-1">Add New Account</h2>
-            <p className="text-slate-400 text-sm mb-8">Pick a preset to auto-fill a manager role, or manually set up a staff account.</p>
+            <p className="text-slate-400 text-sm mb-8">For managers: choose a preset, then customize which departments and specific fields they can view.</p>
 
             {/* Preset Browser */}
             <div className="mb-8">
-              <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">
-                Role Presets — Manager Hierarchy
-              </label>
-
-              {/* Group tabs */}
+              <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">Quick Role Presets</label>
               <div className="flex flex-wrap gap-2 mb-4">
                 {PRESET_GROUPS.map(g => (
-                  <button
-                    key={g}
-                    type="button"
-                    onClick={() => setActivePresetGroup(g)}
-                    className={`px-4 py-1.5 rounded-full text-xs font-bold border transition ${
-                      activePresetGroup === g
-                        ? 'bg-slate-900 text-white border-slate-900'
-                        : 'border-slate-200 text-slate-500 hover:bg-slate-50'
-                    }`}
-                  >
+                  <button key={g} type="button" onClick={() => setActivePresetGroup(g)}
+                    className={`px-4 py-1.5 rounded-full text-xs font-bold border transition ${activePresetGroup === g ? 'bg-slate-900 text-white border-slate-900' : 'border-slate-200 text-slate-500 hover:bg-slate-50'}`}>
                     {g}
                   </button>
                 ))}
               </div>
-
-              {/* Preset buttons for active group */}
               <div className="flex flex-wrap gap-2">
                 {ROLE_PRESETS.filter(p => p.group === activePresetGroup).map(p => (
-                  <button
-                    key={p.label}
-                    type="button"
-                    onClick={() => applyPreset(p)}
-                    className={`px-4 py-2 rounded-xl text-xs font-bold border transition ${
-                      selectedPreset === p.label
-                        ? 'bg-emerald-600 text-white border-emerald-600'
-                        : 'border-emerald-200 text-emerald-700 hover:bg-emerald-50'
-                    }`}
-                  >
+                  <button key={p.label} type="button" onClick={() => applyPreset(p)}
+                    className={`px-4 py-2 rounded-xl text-xs font-bold border transition ${selectedPreset === p.label ? 'bg-emerald-600 text-white border-emerald-600' : 'border-emerald-200 text-emerald-700 hover:bg-emerald-50'}`}>
                     🟢 {p.label}
                   </button>
                 ))}
-                {/* Staff shortcut */}
-                <button
-                  type="button"
-                  onClick={() => {
-                    setSelectedPreset('staff');
-                    setFormData(prev => ({ ...prev, role: 'staff', jobTitle: '', managedDepts: [] }));
-                  }}
-                  className={`px-4 py-2 rounded-xl text-xs font-bold border transition ${
-                    selectedPreset === 'staff'
-                      ? 'bg-blue-600 text-white border-blue-600'
-                      : 'border-blue-200 text-blue-700 hover:bg-blue-50'
-                  }`}
-                >
+                <button type="button" onClick={() => { setSelectedPreset('staff'); setFormData(p => ({ ...p, role: 'staff', jobTitle: '', managedDepts: [] })); }}
+                  className={`px-4 py-2 rounded-xl text-xs font-bold border transition ${selectedPreset === 'staff' ? 'bg-blue-600 text-white border-blue-600' : 'border-blue-200 text-blue-700 hover:bg-blue-50'}`}>
                   🔵 Staff / Agent
                 </button>
               </div>
-
-              {/* Preview of what was selected */}
-              {selectedPreset && selectedPreset !== 'staff' && formData.managedDepts.length > 0 && (
-                <div className="mt-3 px-4 py-3 bg-emerald-50 rounded-xl border border-emerald-100">
-                  <p className="text-[10px] font-black text-emerald-700 uppercase tracking-wider mb-1">Access Preview</p>
-                  <div className="flex flex-wrap gap-1">
-                    {formData.managedDepts.map(d => (
-                      <span key={d} className="bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded text-[10px] font-bold">{d}</span>
-                    ))}
-                  </div>
-                </div>
-              )}
             </div>
 
-            {/* Form Fields */}
-            <form onSubmit={handleCreate} className="space-y-5">
+            <form onSubmit={handleCreate} className="space-y-6">
+              {/* Basic Info */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Full Name</label>
-                  <input
-                    className="w-full p-3 border border-slate-200 rounded-xl bg-slate-50 font-medium text-sm"
-                    placeholder="Name"
-                    value={formData.name}
-                    onChange={e => setFormData({ ...formData, name: e.target.value })}
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Email</label>
-                  <input
-                    className="w-full p-3 border border-slate-200 rounded-xl bg-slate-50 font-medium text-sm"
-                    placeholder="Email"
-                    type="email"
-                    value={formData.email}
-                    onChange={e => setFormData({ ...formData, email: e.target.value })}
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Password</label>
-                  <input
-                    className="w-full p-3 border border-slate-200 rounded-xl bg-slate-50 font-medium text-sm"
-                    placeholder="Password"
-                    type="password"
-                    value={formData.password}
-                    onChange={e => setFormData({ ...formData, password: e.target.value })}
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Job Title</label>
-                  <input
-                    className="w-full p-3 border border-slate-200 rounded-xl bg-slate-50 font-medium text-sm"
-                    placeholder="e.g. Team Lead, AGM, Manager..."
-                    value={formData.jobTitle}
-                    onChange={e => setFormData({ ...formData, jobTitle: e.target.value })}
-                  />
-                </div>
+                {[
+                  { label: 'Full Name', key: 'name', type: 'text', placeholder: 'Name' },
+                  { label: 'Email', key: 'email', type: 'email', placeholder: 'Email' },
+                  { label: 'Password', key: 'password', type: 'password', placeholder: 'Password' },
+                  { label: 'Job Title', key: 'jobTitle', type: 'text', placeholder: 'e.g. Team Lead, AGM...' },
+                ].map(({ label, key, type, placeholder }) => (
+                  <div key={key}>
+                    <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">{label}</label>
+                    <input type={type} className="w-full p-3 border border-slate-200 rounded-xl bg-slate-50 font-medium text-sm"
+                      placeholder={placeholder} value={formData[key]}
+                      onChange={e => setFormData({ ...formData, [key]: e.target.value })}
+                      required={key !== 'jobTitle'} />
+                  </div>
+                ))}
                 <div>
                   <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Role</label>
-                  <select
-                    className="w-full p-3 border border-slate-200 rounded-xl bg-slate-50 font-medium text-sm"
-                    value={formData.role}
-                    onChange={e => setFormData({ ...formData, role: e.target.value })}
-                  >
+                  <select className="w-full p-3 border border-slate-200 rounded-xl bg-slate-50 font-medium text-sm" value={formData.role} onChange={e => setFormData({ ...formData, role: e.target.value })}>
                     <option value="staff">Staff / Agent</option>
                     <option value="manager">Manager</option>
                   </select>
                 </div>
                 <div>
                   <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Primary Department</label>
-                  <select
-                    className="w-full p-3 border border-slate-200 rounded-xl bg-slate-50 font-medium text-sm"
-                    value={formData.department}
-                    onChange={e => setFormData({ ...formData, department: e.target.value })}
-                  >
+                  <select className="w-full p-3 border border-slate-200 rounded-xl bg-slate-50 font-medium text-sm" value={formData.department} onChange={e => setFormData({ ...formData, department: e.target.value })}>
                     {ALL_DEPARTMENTS.map(d => <option key={d} value={d}>{d}</option>)}
                   </select>
                 </div>
               </div>
 
-              {/* Dept Access (managers only) */}
+              {/* Field-level Dept Access */}
               {formData.role === 'manager' && (
                 <div>
-                  <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">
-                    Departments This Manager Can View
-                  </label>
+                  <div className="flex items-center justify-between mb-3">
+                    <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                      Department & Field Access
+                    </label>
+                    <span className="text-[10px] text-slate-400">
+                      {formData.managedDepts.length} dept{formData.managedDepts.length !== 1 ? 's' : ''} selected
+                    </span>
+                  </div>
                   <div className="space-y-3">
                     {DEPT_GROUPS.map(group => (
                       <div key={group.label}>
-                        <p className="text-[10px] font-bold text-slate-300 uppercase tracking-wider mb-1.5">{group.label}</p>
-                        <div className="flex flex-wrap gap-2">
-                          {group.depts.map(dept => (
-                            <button
-                              key={dept}
-                              type="button"
-                              onClick={() => toggleManagedDept(dept)}
-                              className={`px-4 py-2 rounded-xl text-xs font-bold transition border ${
-                                formData.managedDepts.includes(dept)
-                                  ? 'bg-emerald-600 text-white border-emerald-600'
-                                  : 'border-slate-200 text-slate-500 hover:border-emerald-300'
-                              }`}
-                            >
-                              {formData.managedDepts.includes(dept) ? '✓ ' : ''}{dept}
-                            </button>
+                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">{group.label}</p>
+                        <div className="space-y-2">
+                          {group.depts.map(deptName => (
+                            <DeptAccessCard
+                              key={deptName}
+                              deptName={deptName}
+                              entry={getManagedDeptEntry(formData.managedDepts, deptName)}
+                              onToggleDept={formHandlers.toggleDept}
+                              onToggleField={formHandlers.toggleField}
+                              onSelectAll={formHandlers.selectAll}
+                            />
                           ))}
                         </div>
                       </div>
@@ -494,10 +371,7 @@ export default function AdminUserMgmt() {
                 </div>
               )}
 
-              <button
-                type="submit"
-                className="w-full bg-blue-600 text-white py-4 rounded-2xl font-bold hover:bg-blue-700 transition shadow-lg shadow-blue-600/20 text-sm"
-              >
+              <button type="submit" className="w-full bg-blue-600 text-white py-4 rounded-2xl font-bold hover:bg-blue-700 transition shadow-lg shadow-blue-600/20 text-sm">
                 Create Account
               </button>
             </form>
@@ -509,66 +383,51 @@ export default function AdminUserMgmt() {
               <h2 className="text-xl font-black text-slate-900">Active Accounts</h2>
               <div className="flex gap-2">
                 {['all', 'manager', 'staff'].map(r => (
-                  <button
-                    key={r}
-                    onClick={() => setFilterRole(r)}
-                    className={`px-4 py-2 rounded-xl text-xs font-bold border transition ${
-                      filterRole === r
-                        ? 'bg-slate-900 text-white border-slate-900'
-                        : 'border-slate-200 text-slate-500 hover:bg-slate-50'
-                    }`}
-                  >
+                  <button key={r} onClick={() => setFilterRole(r)}
+                    className={`px-4 py-2 rounded-xl text-xs font-bold border transition ${filterRole === r ? 'bg-slate-900 text-white border-slate-900' : 'border-slate-200 text-slate-500 hover:bg-slate-50'}`}>
                     {r === 'all' ? 'All' : r === 'manager' ? '🟢 Managers' : '🔵 Staff'}
                   </button>
                 ))}
               </div>
             </div>
 
-            <div className="overflow-x-auto">
-              <table className="w-full text-left border-collapse">
-                <thead className="bg-slate-50 text-[10px] uppercase font-black text-slate-400">
-                  <tr>
-                    <th className="p-4">Name</th>
-                    <th className="p-4">Role / Title</th>
-                    <th className="p-4">Dept / Access</th>
-                    <th className="p-4">Actions</th>
-                  </tr>
-                </thead>
-                <tbody className="text-sm divide-y divide-slate-50">
-                  {filteredUsers.map(u => (
-                    <tr key={u._id} className="hover:bg-slate-50 transition">
-                      <td className="p-4">
+            <div className="divide-y divide-slate-50">
+              {filteredUsers.map(u => (
+                <div key={u._id}>
+                  <div className="p-4 flex items-start justify-between hover:bg-slate-50 transition">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap">
                         <p className="font-bold text-slate-900">{u.name}</p>
-                        <p className="text-slate-400 text-xs">{u.email}</p>
-                      </td>
-                      <td className="p-4">
-                        <span className={`px-2 py-1 rounded-full text-[10px] font-bold ${roleChip(u.role)}`}>{u.role}</span>
-                        {u.jobTitle && <p className="text-slate-500 text-xs mt-1">{u.jobTitle}</p>}
-                      </td>
-                      <td className="p-4">
-                        {u.role === 'manager' && u.managedDepts?.length > 0 ? (
-                          <div className="flex flex-wrap gap-1">
-                            {u.managedDepts.map(d => (
-                              <span key={d} className="bg-emerald-50 text-emerald-700 px-2 py-0.5 rounded text-[10px] font-bold">{d}</span>
-                            ))}
-                          </div>
-                        ) : (
-                          <span className="bg-blue-50 text-blue-600 px-2 py-1 rounded text-[10px] font-bold">{u.department}</span>
-                        )}
-                      </td>
-                      <td className="p-4">
-                        <div className="flex gap-3">
-                          <button onClick={() => setEditingUser({ ...u, password: '' })} className="text-blue-600 font-bold hover:underline text-xs">Edit</button>
-                          <button onClick={() => handleDelete(u._id, u.name)} className="text-red-400 font-bold hover:underline text-xs">Delete</button>
+                        <span className={`px-2 py-0.5 rounded-full text-[10px] font-black ${roleChip(u.role)}`}>{u.role}</span>
+                        {u.jobTitle && <span className="text-slate-400 text-xs">{u.jobTitle}</span>}
+                      </div>
+                      <p className="text-slate-400 text-xs mt-0.5">{u.email}</p>
+
+                      {/* Manager dept/field summary */}
+                      {u.role === 'manager' && u.managedDepts?.length > 0 && (
+                        <div className="mt-2 flex flex-wrap gap-1">
+                          {u.managedDepts.map(d => (
+                            <span key={d.dept} className="bg-emerald-50 text-emerald-700 px-2 py-0.5 rounded-full text-[10px] font-bold">
+                              {d.dept} ({d.fields.length === (DEPT_FIELDS[d.dept] || []).length ? 'all fields' : `${d.fields.length} fields`})
+                            </span>
+                          ))}
                         </div>
-                      </td>
-                    </tr>
-                  ))}
-                  {filteredUsers.length === 0 && (
-                    <tr><td colSpan="4" className="p-8 text-center text-slate-400 italic">No accounts found.</td></tr>
-                  )}
-                </tbody>
-              </table>
+                      )}
+                      {u.role === 'staff' && (
+                        <span className="inline-block mt-1 bg-blue-50 text-blue-600 px-2 py-0.5 rounded-full text-[10px] font-bold">{u.department}</span>
+                      )}
+                    </div>
+
+                    <div className="flex gap-3 ml-4 flex-shrink-0">
+                      <button onClick={() => setEditingUser({ ...u, password: '', managedDepts: u.managedDepts || [] })} className="text-blue-600 font-bold hover:underline text-xs">Edit</button>
+                      <button onClick={() => handleDelete(u._id, u.name)} className="text-red-400 font-bold hover:underline text-xs">Delete</button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+              {filteredUsers.length === 0 && (
+                <div className="p-8 text-center text-slate-400 italic">No accounts found.</div>
+              )}
             </div>
           </div>
         </div>
@@ -577,52 +436,54 @@ export default function AdminUserMgmt() {
       {/* ── EDIT MODAL ── */}
       {editingUser && (
         <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-3xl p-8 w-full max-w-lg shadow-2xl max-h-[90vh] overflow-y-auto">
-            <h2 className="text-2xl font-black mb-6 text-slate-900">Edit {editingUser.name}</h2>
-            <form onSubmit={handleUpdate} className="space-y-4">
-              <div>
-                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Full Name</label>
-                <input className="w-full p-3 bg-slate-50 border rounded-xl mt-1 font-medium text-sm" value={editingUser.name} onChange={e => setEditingUser({ ...editingUser, name: e.target.value })} />
-              </div>
-              <div>
-                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Job Title</label>
-                <input className="w-full p-3 bg-slate-50 border rounded-xl mt-1 font-medium text-sm" placeholder="e.g. AGM, Team Lead..." value={editingUser.jobTitle || ''} onChange={e => setEditingUser({ ...editingUser, jobTitle: e.target.value })} />
-              </div>
-              <div>
-                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Role</label>
-                <select className="w-full p-3 bg-slate-50 border rounded-xl mt-1 font-medium text-sm" value={editingUser.role} onChange={e => setEditingUser({ ...editingUser, role: e.target.value })}>
-                  <option value="staff">Staff / Agent</option>
-                  <option value="manager">Manager</option>
-                </select>
-              </div>
-              <div>
-                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Primary Department</label>
-                <select className="w-full p-3 bg-slate-50 border rounded-xl mt-1 font-medium text-sm" value={editingUser.department} onChange={e => setEditingUser({ ...editingUser, department: e.target.value })}>
-                  {ALL_DEPARTMENTS.map(d => <option key={d} value={d}>{d}</option>)}
-                </select>
+          <div className="bg-white rounded-3xl p-8 w-full max-w-2xl shadow-2xl max-h-[90vh] overflow-y-auto">
+            <div className="flex justify-between items-start mb-6">
+              <h2 className="text-2xl font-black text-slate-900">Edit {editingUser.name}</h2>
+              <button onClick={() => setEditingUser(null)} className="text-slate-400 hover:text-slate-700 text-xl">✕</button>
+            </div>
+
+            <form onSubmit={handleUpdate} className="space-y-5">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Full Name</label>
+                  <input className="w-full p-3 bg-slate-50 border rounded-xl mt-1 font-medium text-sm" value={editingUser.name} onChange={e => setEditingUser({ ...editingUser, name: e.target.value })} />
+                </div>
+                <div>
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Job Title</label>
+                  <input className="w-full p-3 bg-slate-50 border rounded-xl mt-1 font-medium text-sm" value={editingUser.jobTitle || ''} onChange={e => setEditingUser({ ...editingUser, jobTitle: e.target.value })} />
+                </div>
+                <div>
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Role</label>
+                  <select className="w-full p-3 bg-slate-50 border rounded-xl mt-1 font-medium text-sm" value={editingUser.role} onChange={e => setEditingUser({ ...editingUser, role: e.target.value })}>
+                    <option value="staff">Staff / Agent</option>
+                    <option value="manager">Manager</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Primary Department</label>
+                  <select className="w-full p-3 bg-slate-50 border rounded-xl mt-1 font-medium text-sm" value={editingUser.department} onChange={e => setEditingUser({ ...editingUser, department: e.target.value })}>
+                    {ALL_DEPARTMENTS.map(d => <option key={d} value={d}>{d}</option>)}
+                  </select>
+                </div>
               </div>
 
               {editingUser.role === 'manager' && (
                 <div>
-                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-3">Departments This Manager Can View</label>
-                  <div className="space-y-3">
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-3">Department & Field Access</label>
+                  <div className="space-y-4">
                     {DEPT_GROUPS.map(group => (
                       <div key={group.label}>
-                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">{group.label}</p>
-                        <div className="flex flex-wrap gap-2">
-                          {group.depts.map(dept => (
-                            <button
-                              key={dept}
-                              type="button"
-                              onClick={() => toggleManagedDept(dept, true)}
-                              className={`px-3 py-1.5 rounded-xl text-xs font-bold border transition ${
-                                (editingUser.managedDepts || []).includes(dept)
-                                  ? 'bg-emerald-600 text-white border-emerald-600'
-                                  : 'border-slate-200 text-slate-500 hover:border-emerald-300'
-                              }`}
-                            >
-                              {(editingUser.managedDepts || []).includes(dept) ? '✓ ' : ''}{dept}
-                            </button>
+                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">{group.label}</p>
+                        <div className="space-y-2">
+                          {group.depts.map(deptName => (
+                            <DeptAccessCard
+                              key={deptName}
+                              deptName={deptName}
+                              entry={getManagedDeptEntry(editingUser.managedDepts || [], deptName)}
+                              onToggleDept={editHandlers.toggleDept}
+                              onToggleField={editHandlers.toggleField}
+                              onSelectAll={editHandlers.selectAll}
+                            />
                           ))}
                         </div>
                       </div>
@@ -636,7 +497,7 @@ export default function AdminUserMgmt() {
                 <input className="w-full p-3 bg-slate-50 border rounded-xl mt-1 font-medium text-sm" type="password" placeholder="Enter new password" onChange={e => setEditingUser({ ...editingUser, password: e.target.value })} />
               </div>
 
-              <div className="flex gap-3 pt-4">
+              <div className="flex gap-3 pt-2">
                 <button type="button" onClick={() => setEditingUser(null)} className="flex-1 py-3 text-slate-400 font-bold border rounded-xl hover:bg-slate-50 text-sm">Cancel</button>
                 <button type="submit" className="flex-1 py-3 bg-blue-600 text-white rounded-xl font-bold hover:bg-blue-700 transition text-sm">Save Changes</button>
               </div>
@@ -647,3 +508,4 @@ export default function AdminUserMgmt() {
     </div>
   );
 }
+

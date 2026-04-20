@@ -1,30 +1,19 @@
 import { useEffect, useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 
-// ── Date helpers ─────────────────────────────────────────────────────────────
-
-function toYMD(date) {
-  return date.toISOString().split('T')[0];
-}
-function todayYMD() {
-  return toYMD(new Date());
-}
-function shiftDate(ymd, days) {
-  const d = new Date(ymd + 'T00:00:00');
-  d.setDate(d.getDate() + days);
-  return toYMD(d);
-}
+// ── Date helpers ──────────────────────────────────────────────────────────────
+function toYMD(d) { return d.toISOString().split('T')[0]; }
+function todayYMD() { return toYMD(new Date()); }
+function shiftDate(ymd, days) { const d = new Date(ymd + 'T00:00:00'); d.setDate(d.getDate() + days); return toYMD(d); }
 function formatDateLabel(ymd) {
   const d = new Date(ymd + 'T00:00:00');
-  const today = todayYMD();
-  const yesterday = shiftDate(today, -1);
+  const today = todayYMD(), yesterday = shiftDate(today, -1);
   if (ymd === today)     return `Today — ${d.toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })}`;
   if (ymd === yesterday) return `Yesterday — ${d.toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })}`;
   return d.toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
 }
 
-// ── Department field config ───────────────────────────────────────────────────
-
+// ── Dept field config ─────────────────────────────────────────────────────────
 const departmentConfig = {
   // CRM – Ayush group
   'AYUSH': [
@@ -52,7 +41,7 @@ const departmentConfig = {
     { label: 'Remarks if Any',           type: 'textarea' },
   ],
   // KP
-  'KP(CRM)': [
+  'KP –(CRM)': [
     { label: 'Total No. of Calls',       type: 'number' },
     { label: 'Quality Leads',            type: 'number' },
     { label: 'No. of Converted Calls',   type: 'number' },
@@ -71,18 +60,18 @@ const departmentConfig = {
     { label: 'PO Status',     type: 'text' },
     { label: 'GRN Status',           type: 'text' },
     { label: 'No. of Home Deliveries',       type: 'number' },
-    { label: 'Painters Commission in Amt',       type: 'number' },
+    { label: 'Painters Commission in Amt',           type: 'number' },
     { label: 'Vehicle Running KM',           type: 'number' },
-    { label: 'Stock Alert',           type: 'number' },
-    { label: 'Outlet Remarks',       type: 'textarea' },
+    { label: 'Stock Alert',           type: 'number' }, 
+    { label: 'Outlet Remarks',           type: 'textarea' },  
   ],
-  
   'KP – Exclusive Outlet': [
     { label: 'Total No. of Walkins',        type: 'number' },
     { label: 'Total No. of Bills', type: 'number' },
     { label: 'Total No. of Quotations',type: 'number' },
-    { label: 'PO Status',    type: 'text' },
-    { label: 'GRN Status',     type: 'text' },
+    { label: 'Total Sales Value',    type: 'number' },
+    { label: 'PO Status',     type: 'text' },
+    { label: 'GRN Status',           type: 'text' },
     { label: 'Stock Alert',       type: 'number' },
     { label: 'Outlet Remarks',           type: 'textarea' },
   ],
@@ -104,7 +93,6 @@ const departmentConfig = {
     { label: 'Amount of PO E. Outlets',           type: 'number' },
     { label: 'No of Total Deliveries',            type: 'number' },
     { label: 'No of Total GRN Received',          type: 'number' },
-    { label: 'Remarks',         type: 'textarea' },
   ],
   'Warehouse': [
     { label: 'No. of Loads Received',    type: 'number' },
@@ -137,31 +125,32 @@ const departmentConfig = {
     { label: 'Accounts Summary',          type: 'textarea' },
   ],
 };
-
 const ALL_DEPTS = Object.keys(departmentConfig);
 
-// ── Daily Report Table ────────────────────────────────────────────────────────
-// One row per agent for the selected day. If agent submitted multiple times,
-// shows latest + a badge. Totals row at bottom.
+// ── Daily Report Table ─────────────────────────────────────────────────────────
+// allowedFields: array of field labels this manager can see (or null = all)
 
-function DailyTable({ reports, dept, selectedDay, onRowClick }) {
-  const fields = departmentConfig[dept] || [];
-  const numericFields = fields.filter(f => f.type === 'number');
+function DailyTable({ reports, dept, selectedDay, allowedFields, onRowClick }) {
+  const allFields = departmentConfig[dept] || [];
 
-  const dayReports = reports.filter(r => {
-    if (r.department !== dept) return false;
-    return new Date(r.createdAt).toISOString().split('T')[0] === selectedDay;
-  });
+  // Filter fields by access
+  const visibleFields = allFields.filter(f =>
+    !allowedFields || allowedFields.includes(f.label)
+  );
+  const numericFields = visibleFields.filter(f => f.type === 'number');
 
-  // Group by agent — keep all entries, surface latest for the row
+  const dayReports = reports.filter(r =>
+    r.department === dept &&
+    new Date(r.createdAt).toISOString().split('T')[0] === selectedDay
+  );
+
   const agentMap = {};
   dayReports.forEach(r => {
     const name = r.staffName || 'Unknown';
     if (!agentMap[name]) agentMap[name] = { staffName: name, entries: [], latest: null };
     agentMap[name].entries.push(r);
-    if (!agentMap[name].latest || new Date(r.createdAt) > new Date(agentMap[name].latest.createdAt)) {
+    if (!agentMap[name].latest || new Date(r.createdAt) > new Date(agentMap[name].latest.createdAt))
       agentMap[name].latest = r;
-    }
   });
 
   const rows = Object.values(agentMap);
@@ -198,18 +187,13 @@ function DailyTable({ reports, dept, selectedDay, onRowClick }) {
           {rows.map((agent, idx) => {
             const data = agent.latest?.data || {};
             return (
-              <tr
-                key={agent.staffName}
-                onClick={() => onRowClick && onRowClick(agent)}
-                className="border-b border-slate-100 hover:bg-blue-50/60 cursor-pointer transition group"
-              >
+              <tr key={agent.staffName} onClick={() => onRowClick?.(agent)}
+                className="border-b border-slate-100 hover:bg-blue-50/60 cursor-pointer transition group">
                 <td className="px-5 py-4 text-slate-400 font-bold text-xs sticky left-0 bg-white group-hover:bg-blue-50/60 z-10">{idx + 1}</td>
                 <td className="px-5 py-4 sticky left-[56px] bg-white group-hover:bg-blue-50/60 z-10">
                   <p className="font-bold text-slate-900">{agent.staffName}</p>
                   {agent.entries.length > 1 && (
-                    <span className="text-[10px] font-black text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full">
-                      {agent.entries.length} entries
-                    </span>
+                    <span className="text-[10px] font-black text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full">{agent.entries.length} entries</span>
                   )}
                 </td>
                 {numericFields.map(f => (
@@ -232,9 +216,7 @@ function DailyTable({ reports, dept, selectedDay, onRowClick }) {
             <td className="px-5 py-4 font-black text-slate-900 uppercase text-xs tracking-wider sticky left-[56px] bg-slate-50 z-10">Total</td>
             {numericFields.map(f => (
               <td key={f.label} className="px-5 py-4 font-black text-slate-900 tabular-nums">
-                {totals[f.label] > 0
-                  ? totals[f.label].toLocaleString('en-IN')
-                  : <span className="text-slate-300">—</span>}
+                {totals[f.label] > 0 ? totals[f.label].toLocaleString('en-IN') : <span className="text-slate-300">—</span>}
               </td>
             ))}
             <td className="px-5 py-4 text-slate-400 text-xs font-bold">{rows.length} agents</td>
@@ -245,10 +227,16 @@ function DailyTable({ reports, dept, selectedDay, onRowClick }) {
   );
 }
 
-// ── Agent Drill-down Modal ────────────────────────────────────────────────────
+// ── Agent Drill-down Modal ─────────────────────────────────────────────────────
 
-function AgentDrillModal({ agent, dept, onClose }) {
+function AgentDrillModal({ agent, dept, allowedFields, onClose }) {
   const [selectedEntry, setSelectedEntry] = useState(null);
+
+  // Filter entry data keys by allowedFields
+  const filterData = (data) => {
+    if (!allowedFields) return data;
+    return Object.fromEntries(Object.entries(data || {}).filter(([k]) => allowedFields.includes(k)));
+  };
 
   return (
     <div className="fixed inset-0 bg-slate-900/80 backdrop-blur-xl flex items-center justify-center p-4 z-50">
@@ -259,6 +247,9 @@ function AgentDrillModal({ agent, dept, onClose }) {
               <span className="bg-blue-600 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-tighter">{dept}</span>
               <h3 className="text-2xl font-black mt-3">{agent.staffName}</h3>
               <p className="text-slate-400 text-sm">{agent.entries.length} {agent.entries.length === 1 ? 'entry' : 'entries'} today</p>
+              {allowedFields && (
+                <p className="text-slate-500 text-[10px] mt-1">Showing {allowedFields.length} of {(departmentConfig[dept] || []).length} fields</p>
+              )}
             </div>
             <button onClick={onClose} className="text-slate-500 hover:text-white text-xl transition mt-1">✕</button>
           </div>
@@ -273,7 +264,7 @@ function AgentDrillModal({ agent, dept, onClose }) {
               </p>
               <p className="font-black text-slate-900 text-xl mb-6">{selectedEntry.title}</p>
               <div className="divide-y divide-slate-50">
-                {Object.entries(selectedEntry.data || {}).map(([key, val]) => (
+                {Object.entries(filterData(selectedEntry.data)).map(([key, val]) => (
                   <div key={key} className="flex justify-between py-4">
                     <span className="text-slate-400 text-sm font-semibold">{key}</span>
                     <span className="text-slate-900 font-black text-sm">{val || '—'}</span>
@@ -285,25 +276,20 @@ function AgentDrillModal({ agent, dept, onClose }) {
             <div>
               <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4">All Entries Today</p>
               <div className="space-y-3">
-                {agent.entries
-                  .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
-                  .map(entry => (
-                    <button
-                      key={entry._id}
-                      onClick={() => setSelectedEntry(entry)}
-                      className="w-full text-left p-4 bg-slate-50 rounded-2xl hover:bg-blue-50 border border-slate-100 hover:border-blue-200 transition group"
-                    >
-                      <div className="flex justify-between items-center">
-                        <div>
-                          <p className="font-bold text-slate-900 group-hover:text-blue-700">{entry.title}</p>
-                          <p className="text-xs text-slate-400 mt-0.5">
-                            {new Date(entry.createdAt).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}
-                          </p>
-                        </div>
-                        <span className="text-slate-300 group-hover:text-blue-500 font-bold text-lg">→</span>
+                {agent.entries.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)).map(entry => (
+                  <button key={entry._id} onClick={() => setSelectedEntry(entry)}
+                    className="w-full text-left p-4 bg-slate-50 rounded-2xl hover:bg-blue-50 border border-slate-100 hover:border-blue-200 transition group">
+                    <div className="flex justify-between items-center">
+                      <div>
+                        <p className="font-bold text-slate-900 group-hover:text-blue-700">{entry.title}</p>
+                        <p className="text-xs text-slate-400 mt-0.5">
+                          {new Date(entry.createdAt).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}
+                        </p>
                       </div>
-                    </button>
-                  ))}
+                      <span className="text-slate-300 group-hover:text-blue-500 font-bold text-lg">→</span>
+                    </div>
+                  </button>
+                ))}
               </div>
             </div>
           )}
@@ -317,7 +303,7 @@ function AgentDrillModal({ agent, dept, onClose }) {
   );
 }
 
-// ── Main Dashboard ────────────────────────────────────────────────────────────
+// ── Main Dashboard ─────────────────────────────────────────────────────────────
 
 export default function Dashboard() {
   const [reports, setReports] = useState([]);
@@ -337,64 +323,69 @@ export default function Dashboard() {
   const jobTitle = localStorage.getItem('jobTitle') || '';
   const userName = localStorage.getItem('name') || '';
 
+  // managedDepts is now [{ dept, fields }]
   let managedDepts = [];
   try { managedDepts = JSON.parse(localStorage.getItem('managedDepts') || '[]'); } catch { managedDepts = []; }
 
   const navigate = useNavigate();
   const isViewer        = role === 'superadmin' || role === 'manager';
   const canSeeAdminPanel = role === 'superadmin';
-  const viewableDepts   = role === 'superadmin' ? ALL_DEPTS : managedDepts;
+
+  // For superadmin: all depts, no field restrictions
+  // For manager: only their managedDepts entries
+  const viewableDepts = role === 'superadmin'
+    ? ALL_DEPTS
+    : managedDepts.map(d => d.dept);
+
+  // Get allowed fields for the currently active dept (null = all)
+  const getAllowedFields = (deptName) => {
+    if (role === 'superadmin') return null; // superadmin sees all
+    const entry = managedDepts.find(d => d.dept === deptName);
+    if (!entry) return [];
+    // If fields contains all dept fields or is marked '*', show all
+    const allForDept = (departmentConfig[deptName] || []).map(f => f.label);
+    if (entry.fields.length === allForDept.length) return null; // effectively all
+    return entry.fields;
+  };
 
   useEffect(() => {
-    if (isViewer && !activeDept) {
-      setActiveDept(viewableDepts[0] || dept || ALL_DEPTS[0]);
-    }
+    if (isViewer && !activeDept) setActiveDept(viewableDepts[0] || dept || ALL_DEPTS[0]);
     fetchReports();
   }, []);
 
   const fields = departmentConfig[dept] || [];
 
   const fetchReports = async () => {
-    const token = localStorage.getItem('token');
     const res = await fetch('https://reporting-structure.onrender.com/api/reports', {
-      headers: { Authorization: `Bearer ${token}` },
+      headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
     });
-    const data = await res.json();
-    if (res.ok) setReports(data);
+    if (res.ok) setReports(await res.json());
   };
 
   const handleCreateReport = async (e) => {
     e.preventDefault();
-    const token = localStorage.getItem('token');
     const res = await fetch('https://reporting-structure.onrender.com/api/reports', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${localStorage.getItem('token')}` },
       body: JSON.stringify({ title: reportTitle, data: dynamicData }),
     });
-    if (res.ok) {
-      setIsModalOpen(false);
-      setReportTitle('');
-      setDynamicData({});
-      fetchReports();
-    }
+    if (res.ok) { setIsModalOpen(false); setReportTitle(''); setDynamicData({}); fetchReports(); }
   };
 
-  const filteredReports = useMemo(() => {
-    return reports.filter(r => {
-      const matchesSearch =
-        r.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        (r.staffName && r.staffName.toLowerCase().includes(searchQuery.toLowerCase()));
-      const reportDate = new Date(r.createdAt).toISOString().split('T')[0];
-      const matchesDate = !selectedDate || reportDate === selectedDate;
-      return matchesSearch && matchesDate;
-    });
-  }, [reports, searchQuery, selectedDate]);
+  const filteredReports = useMemo(() => reports.filter(r => {
+    const matchesSearch = r.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (r.staffName && r.staffName.toLowerCase().includes(searchQuery.toLowerCase()));
+    const matchesDate = !selectedDate || new Date(r.createdAt).toISOString().split('T')[0] === selectedDate;
+    return matchesSearch && matchesDate;
+  }), [reports, searchQuery, selectedDate]);
 
   const roleBadge = {
     superadmin: { label: 'Super Admin',        bg: 'bg-purple-600' },
     manager:    { label: jobTitle || 'Manager', bg: 'bg-emerald-600' },
     staff:      { label: dept,                  bg: 'bg-blue-600' },
   }[role] || { label: dept, bg: 'bg-blue-600' };
+
+  const currentAllowedFields = getAllowedFields(activeDept);
 
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col md:flex-row font-sans">
@@ -408,32 +399,22 @@ export default function Dashboard() {
       {/* Sidebar */}
       <div className={`${isMenuOpen ? 'translate-x-0' : '-translate-x-full'} md:translate-x-0 fixed md:relative z-30 w-64 bg-slate-900 text-white min-h-screen p-6 transition-transform duration-300 flex flex-col`}>
         <div className="hidden md:block mb-8 text-center">
-          <span className={`inline-block px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest mb-3 ${roleBadge.bg}`}>
-            {roleBadge.label}
-          </span>
+          <span className={`inline-block px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest mb-3 ${roleBadge.bg}`}>{roleBadge.label}</span>
           <h1 className="text-lg font-bold text-white">{userName}</h1>
           {role === 'manager' && managedDepts.length > 0 && (
-            <p className="text-slate-400 text-[10px] mt-1 leading-relaxed">{managedDepts.join(' · ')}</p>
+            <p className="text-slate-400 text-[10px] mt-1 leading-relaxed">{managedDepts.map(d => d.dept).join(' · ')}</p>
           )}
         </div>
-
         <nav className="space-y-2 flex-1">
           <div className="p-3 rounded-xl bg-blue-600 font-semibold shadow-lg text-sm">Dashboard</div>
           {canSeeAdminPanel && (
-            <button onClick={() => navigate('/admin')} className="w-full text-left p-3 rounded-xl border border-blue-400/30 text-blue-400 hover:bg-blue-400 hover:text-white transition text-sm">
-              Admin Settings
-            </button>
+            <button onClick={() => navigate('/admin')} className="w-full text-left p-3 rounded-xl border border-blue-400/30 text-blue-400 hover:bg-blue-400 hover:text-white transition text-sm">Admin Settings</button>
           )}
           {role === 'staff' && (
-            <button onClick={() => setIsModalOpen(true)} className="w-full text-left p-3 rounded-xl bg-emerald-600 text-white font-semibold mt-4 hover:bg-emerald-700 transition text-sm">
-              + New Entry
-            </button>
+            <button onClick={() => setIsModalOpen(true)} className="w-full text-left p-3 rounded-xl bg-emerald-600 text-white font-semibold mt-4 hover:bg-emerald-700 transition text-sm">+ New Entry</button>
           )}
         </nav>
-
-        <button onClick={() => { localStorage.clear(); navigate('/login'); }} className="w-full text-left p-3 rounded-xl text-red-400 font-bold hover:text-red-300 transition text-sm">
-          Logout
-        </button>
+        <button onClick={() => { localStorage.clear(); navigate('/login'); }} className="w-full text-left p-3 rounded-xl text-red-400 font-bold hover:text-red-300 transition text-sm">Logout</button>
       </div>
 
       {/* Main */}
@@ -445,30 +426,24 @@ export default function Dashboard() {
             <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-6 gap-4">
               <div>
                 <h2 className="text-2xl font-black text-slate-900 tracking-tight">Daily Report Summary</h2>
-                <p className="text-slate-400 text-sm mt-0.5">{formatDateLabel(selectedDay)} · {activeDept}</p>
+                <p className="text-slate-400 text-sm mt-0.5">{formatDateLabel(selectedDay)} · {activeDept}
+                  {currentAllowedFields && (
+                    <span className="ml-2 text-[10px] font-bold text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full">
+                      {currentAllowedFields.length} fields visible
+                    </span>
+                  )}
+                </p>
               </div>
 
               {/* Day navigator */}
               <div className="flex items-center gap-2 bg-white border border-slate-200 rounded-2xl shadow-sm px-4 py-2.5">
-                <button
-                  onClick={() => setSelectedDay(shiftDate(selectedDay, -1))}
-                  className="text-slate-400 hover:text-slate-900 font-black px-2 py-1 rounded-lg hover:bg-slate-100 transition text-lg leading-none"
-                >‹</button>
-                <input
-                  type="date"
-                  value={selectedDay}
-                  max={todayYMD()}
-                  onChange={e => setSelectedDay(e.target.value)}
-                  className="text-sm font-bold text-slate-700 bg-transparent outline-none cursor-pointer text-center"
-                />
-                <button
-                  onClick={() => { if (selectedDay < todayYMD()) setSelectedDay(shiftDate(selectedDay, 1)); }}
-                  className={`font-black px-2 py-1 rounded-lg transition text-lg leading-none ${selectedDay >= todayYMD() ? 'text-slate-200 cursor-not-allowed' : 'text-slate-400 hover:text-slate-900 hover:bg-slate-100'}`}
-                >›</button>
+                <button onClick={() => setSelectedDay(shiftDate(selectedDay, -1))} className="text-slate-400 hover:text-slate-900 font-black px-2 py-1 rounded-lg hover:bg-slate-100 transition text-lg leading-none">‹</button>
+                <input type="date" value={selectedDay} max={todayYMD()} onChange={e => setSelectedDay(e.target.value)}
+                  className="text-sm font-bold text-slate-700 bg-transparent outline-none cursor-pointer text-center" />
+                <button onClick={() => { if (selectedDay < todayYMD()) setSelectedDay(shiftDate(selectedDay, 1)); }}
+                  className={`font-black px-2 py-1 rounded-lg transition text-lg leading-none ${selectedDay >= todayYMD() ? 'text-slate-200 cursor-not-allowed' : 'text-slate-400 hover:text-slate-900 hover:bg-slate-100'}`}>›</button>
                 {selectedDay !== todayYMD() && (
-                  <button onClick={() => setSelectedDay(todayYMD())} className="ml-2 text-[10px] font-black uppercase tracking-wider text-blue-600 hover:underline whitespace-nowrap">
-                    Today
-                  </button>
+                  <button onClick={() => setSelectedDay(todayYMD())} className="ml-2 text-[10px] font-black uppercase tracking-wider text-blue-600 hover:underline whitespace-nowrap">Today</button>
                 )}
               </div>
             </div>
@@ -477,15 +452,8 @@ export default function Dashboard() {
             {viewableDepts.length > 1 && (
               <div className="flex items-center gap-2 mb-6 overflow-x-auto pb-2 no-scrollbar">
                 {viewableDepts.map(d => (
-                  <button
-                    key={d}
-                    onClick={() => setActiveDept(d)}
-                    className={`px-5 py-2 rounded-full text-xs font-bold whitespace-nowrap transition-all border ${
-                      activeDept === d
-                        ? 'bg-slate-900 text-white border-slate-900 shadow-lg'
-                        : 'bg-white text-slate-500 border-slate-200 hover:border-blue-400'
-                    }`}
-                  >
+                  <button key={d} onClick={() => setActiveDept(d)}
+                    className={`px-5 py-2 rounded-full text-xs font-bold whitespace-nowrap transition-all border ${activeDept === d ? 'bg-slate-900 text-white border-slate-900 shadow-lg' : 'bg-white text-slate-500 border-slate-200 hover:border-blue-400'}`}>
                     {d}
                   </button>
                 ))}
@@ -503,19 +471,17 @@ export default function Dashboard() {
                 </div>
                 <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider hidden sm:block">Click a row to view details →</span>
               </div>
-
               <DailyTable
                 reports={reports}
                 dept={activeDept}
                 selectedDay={selectedDay}
+                allowedFields={currentAllowedFields}
                 onRowClick={setSelectedAgent}
               />
             </div>
 
             <div className="mt-6 flex justify-end">
-              <button onClick={() => setIsModalOpen(true)} className="bg-blue-600 text-white px-8 py-3 rounded-2xl shadow-xl hover:bg-blue-700 transition font-bold active:scale-95">
-                + New Entry
-              </button>
+              <button onClick={() => setIsModalOpen(true)} className="bg-blue-600 text-white px-8 py-3 rounded-2xl shadow-xl hover:bg-blue-700 transition font-bold active:scale-95">+ New Entry</button>
             </div>
           </>
         )}
@@ -529,37 +495,21 @@ export default function Dashboard() {
                 <p className="text-slate-400 text-sm mt-0.5">{dept}</p>
               </div>
               <div className="flex gap-3 items-center w-full lg:w-auto">
-                <input
-                  type="text"
-                  placeholder="Search..."
-                  className="px-4 py-3 bg-white border border-slate-200 rounded-2xl outline-none focus:ring-2 focus:ring-blue-500 shadow-sm font-medium text-sm flex-1 lg:w-48"
-                  value={searchQuery}
-                  onChange={e => setSearchQuery(e.target.value)}
-                />
-                <input
-                  type="date"
-                  className="px-4 py-3 bg-white border border-slate-200 rounded-2xl outline-none focus:ring-2 focus:ring-blue-500 shadow-sm font-medium text-sm cursor-pointer"
-                  value={selectedDate}
-                  onChange={e => setSelectedDate(e.target.value)}
-                />
+                <input type="text" placeholder="Search..." className="px-4 py-3 bg-white border border-slate-200 rounded-2xl outline-none focus:ring-2 focus:ring-blue-500 shadow-sm font-medium text-sm flex-1 lg:w-48"
+                  value={searchQuery} onChange={e => setSearchQuery(e.target.value)} />
+                <input type="date" className="px-4 py-3 bg-white border border-slate-200 rounded-2xl outline-none focus:ring-2 focus:ring-blue-500 shadow-sm font-medium text-sm cursor-pointer"
+                  value={selectedDate} onChange={e => setSelectedDate(e.target.value)} />
                 {(searchQuery || selectedDate) && (
                   <button onClick={() => { setSearchQuery(''); setSelectedDate(''); }} className="text-xs text-red-500 font-bold hover:underline whitespace-nowrap">Clear</button>
                 )}
-                <button onClick={() => setIsModalOpen(true)} className="bg-blue-600 text-white px-6 py-3 rounded-2xl shadow-xl hover:bg-blue-700 transition font-bold active:scale-95 whitespace-nowrap">
-                  + New Entry
-                </button>
+                <button onClick={() => setIsModalOpen(true)} className="bg-blue-600 text-white px-6 py-3 rounded-2xl shadow-xl hover:bg-blue-700 transition font-bold active:scale-95 whitespace-nowrap">+ New Entry</button>
               </div>
             </div>
-
             <div className="bg-white rounded-[2rem] shadow-sm border border-slate-200 overflow-hidden">
               <div className="overflow-x-auto">
                 <table className="w-full text-left border-collapse text-sm">
                   <thead className="bg-slate-50/50 border-b border-slate-200 text-slate-400 text-[10px] uppercase tracking-widest font-black">
-                    <tr>
-                      <th className="p-5">Subject</th>
-                      <th className="p-5">Date</th>
-                      <th className="p-5 text-center">Action</th>
-                    </tr>
+                    <tr><th className="p-5">Subject</th><th className="p-5">Date</th><th className="p-5 text-center">Action</th></tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100">
                     {filteredReports.map(r => (
@@ -571,9 +521,7 @@ export default function Dashboard() {
                         </td>
                       </tr>
                     ))}
-                    {filteredReports.length === 0 && (
-                      <tr><td colSpan="3" className="p-10 text-center text-slate-400 italic">No reports found.</td></tr>
-                    )}
+                    {filteredReports.length === 0 && <tr><td colSpan="3" className="p-10 text-center text-slate-400 italic">No reports found.</td></tr>}
                   </tbody>
                 </table>
               </div>
@@ -590,33 +538,16 @@ export default function Dashboard() {
             <form onSubmit={handleCreateReport} className="space-y-6">
               <div>
                 <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Subject / Title</label>
-                <input
-                  type="text"
-                  className="w-full bg-slate-50 border border-slate-200 p-4 rounded-2xl outline-none focus:ring-2 focus:ring-blue-500 font-semibold"
-                  placeholder="e.g. Daily Report – 19 Apr"
-                  value={reportTitle}
-                  onChange={e => setReportTitle(e.target.value)}
-                  required
-                />
+                <input type="text" className="w-full bg-slate-50 border border-slate-200 p-4 rounded-2xl outline-none focus:ring-2 focus:ring-blue-500 font-semibold"
+                  placeholder="e.g. Daily Report – 20 Apr" value={reportTitle} onChange={e => setReportTitle(e.target.value)} required />
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {fields.map(field => (
                   <div key={field.label} className={field.type === 'textarea' ? 'md:col-span-2' : ''}>
                     <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">{field.label}</label>
-                    {field.type === 'textarea' ? (
-                      <textarea
-                        className="w-full bg-slate-50 border border-slate-200 p-4 rounded-2xl outline-none focus:ring-2 focus:ring-blue-500 h-28 font-semibold"
-                        placeholder="..."
-                        onChange={e => setDynamicData({ ...dynamicData, [field.label]: e.target.value })}
-                      />
-                    ) : (
-                      <input
-                        type={field.type}
-                        className="w-full bg-slate-50 border border-slate-200 p-4 rounded-2xl outline-none focus:ring-2 focus:ring-blue-500 font-semibold"
-                        placeholder="0"
-                        onChange={e => setDynamicData({ ...dynamicData, [field.label]: e.target.value })}
-                      />
-                    )}
+                    {field.type === 'textarea'
+                      ? <textarea className="w-full bg-slate-50 border border-slate-200 p-4 rounded-2xl outline-none focus:ring-2 focus:ring-blue-500 h-28 font-semibold" placeholder="..." onChange={e => setDynamicData({ ...dynamicData, [field.label]: e.target.value })} />
+                      : <input type={field.type} className="w-full bg-slate-50 border border-slate-200 p-4 rounded-2xl outline-none focus:ring-2 focus:ring-blue-500 font-semibold" placeholder="0" onChange={e => setDynamicData({ ...dynamicData, [field.label]: e.target.value })} />}
                   </div>
                 ))}
               </div>
@@ -660,14 +591,16 @@ export default function Dashboard() {
         </div>
       )}
 
-      {/* ── AGENT DRILL-DOWN MODAL ── */}
+      {/* ── AGENT DRILL-DOWN ── */}
       {selectedAgent && (
         <AgentDrillModal
           agent={selectedAgent}
           dept={activeDept}
+          allowedFields={currentAllowedFields}
           onClose={() => setSelectedAgent(null)}
         />
       )}
     </div>
   );
 }
+

@@ -9,7 +9,6 @@ const User = require('./models/user');
 const Report = require('./models/reports');
 
 const app = express();
-
 app.use(express.json());
 app.use(cors({
   origin: 'https://reports.thetrendsetters.in',
@@ -18,195 +17,114 @@ app.use(cors({
 }));
 
 mongoose.connect(process.env.MONGO_URI)
-  .then(() => console.log('✅ MongoDB Connected: ReportingDB'))
+  .then(() => console.log('✅ MongoDB Connected'))
   .catch(err => console.log('❌ MongoDB Error:', err));
 
-// ── Auth Middleware ──────────────────────────────────────────────────────────
 const protect = (req, res, next) => {
   const token = req.headers.authorization?.split(' ')[1];
-  if (!token) return res.status(401).json({ msg: 'No token, authorization denied' });
-  try {
-    req.user = jwt.verify(token, process.env.JWT_SECRET);
-    next();
-  } catch {
-    res.status(401).json({ msg: 'Token is not valid or expired' });
-  }
+  if (!token) return res.status(401).json({ msg: 'No token' });
+  try { req.user = jwt.verify(token, process.env.JWT_SECRET); next(); }
+  catch { res.status(401).json({ msg: 'Invalid token' }); }
 };
 
-// ── POST /api/login ──────────────────────────────────────────────────────────
+// ── Login ────────────────────────────────────────────────────────────────────
 app.post('/api/login', async (req, res) => {
   const { email, password } = req.body;
   try {
     const user = await User.findOne({ email: { $regex: new RegExp(`^${email}$`, 'i') } });
     if (!user) return res.status(400).json({ msg: 'User does not exist' });
+    if (!await bcrypt.compare(password, user.password)) return res.status(400).json({ msg: 'Invalid credentials' });
 
-    const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch) return res.status(400).json({ msg: 'Invalid credentials' });
-
+    // managedDepts is now array of { dept, fields }
     const token = jwt.sign(
-      {
-        id:           user._id,
-        role:         user.role,
-        department:   user.department,
-        managedDepts: user.managedDepts || [],
-        jobTitle:     user.jobTitle || '',
-        name:         user.name,
-      },
-      process.env.JWT_SECRET,
-      { expiresIn: '1d' }
+      { id: user._id, role: user.role, department: user.department, managedDepts: user.managedDepts, jobTitle: user.jobTitle, name: user.name },
+      process.env.JWT_SECRET, { expiresIn: '1d' }
     );
 
-    res.json({
-      token,
-      role:         user.role,
-      department:   user.department,
-      managedDepts: user.managedDepts || [],
-      jobTitle:     user.jobTitle || '',
-      name:         user.name,
-    });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ msg: 'Server error' });
-  }
+    res.json({ token, role: user.role, department: user.department, managedDepts: user.managedDepts, jobTitle: user.jobTitle, name: user.name });
+  } catch (err) { res.status(500).json({ msg: 'Server error' }); }
 });
 
-// ── POST /api/register (superadmin only) ─────────────────────────────────────
+// ── Register (superadmin only) ───────────────────────────────────────────────
 app.post('/api/register', protect, async (req, res) => {
+  if (req.user.role !== 'superadmin') return res.status(403).json({ msg: 'Access denied' });
+  const { name, email, password, department, role, managedDepts, jobTitle } = req.body;
   try {
-    if (req.user.role !== 'superadmin')
-      return res.status(403).json({ msg: 'Access Denied' });
-
-    const { name, email, password, department, role, managedDepts, jobTitle } = req.body;
-
-    const existing = await User.findOne({ email });
-    if (existing) return res.status(400).json({ msg: 'User already exists' });
-
-    const salt = await bcrypt.genSalt(10);
-    const hashed = await bcrypt.hash(password, salt);
-
-    const newUser = new User({
-      name,
-      email,
-      password:     hashed,
-      department,
-      role:         role || 'staff',
+    if (await User.findOne({ email })) return res.status(400).json({ msg: 'User already exists' });
+    const hashed = await bcrypt.hash(password, await bcrypt.genSalt(10));
+    await new User({
+      name, email, password: hashed, department,
+      role: role || 'staff',
+      // managedDepts: array of { dept, fields } for managers
       managedDepts: role === 'manager' ? (managedDepts || []) : [],
-      jobTitle:     jobTitle || '',
-    });
-
-    await newUser.save();
+      jobTitle: jobTitle || '',
+    }).save();
     res.status(201).json({ msg: `Account created for ${name}` });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ msg: 'Error creating account' });
-  }
+  } catch (err) { res.status(500).json({ msg: 'Error creating account' }); }
 });
 
-// ── GET /api/reports ─────────────────────────────────────────────────────────
-// superadmin → all | manager → managedDepts | staff → own dept
+// ── Get Reports ──────────────────────────────────────────────────────────────
+// superadmin → all | manager → depts in their managedDepts | staff → own dept
 app.get('/api/reports', protect, async (req, res) => {
   try {
     let query = {};
     if (req.user.role === 'manager') {
-      const depts = req.user.managedDepts || [];
+      const depts = (req.user.managedDepts || []).map(d => d.dept);
       if (!depts.length) return res.json([]);
       query.department = { $in: depts };
     } else if (req.user.role === 'staff') {
       query.department = req.user.department;
     }
-    const reports = await Report.find(query).sort({ createdAt: -1 });
-    res.json(reports);
-  } catch {
-    res.status(500).json({ msg: 'Error fetching reports' });
-  }
+    res.json(await Report.find(query).sort({ createdAt: -1 }));
+  } catch { res.status(500).json({ msg: 'Error fetching reports' }); }
 });
 
-// ── POST /api/reports ────────────────────────────────────────────────────────
+// ── Submit Report ────────────────────────────────────────────────────────────
 app.post('/api/reports', protect, async (req, res) => {
   try {
     const { title, data } = req.body;
-    const newReport = new Report({
-      title,
-      data:       data || {},
-      staffName:  req.user.name || 'Unknown',
-      department: req.user.department,
-      createdBy:  req.user.id,
-    });
-    await newReport.save();
-    res.status(201).json(newReport);
-  } catch (err) {
-    console.error('Save Error:', err);
-    res.status(500).json({ msg: 'Error saving report' });
-  }
+    const r = await new Report({ title, data: data || {}, staffName: req.user.name, department: req.user.department, createdBy: req.user.id }).save();
+    res.status(201).json(r);
+  } catch (err) { res.status(500).json({ msg: 'Error saving report' }); }
 });
 
-// ── GET /api/users (superadmin only) ─────────────────────────────────────────
+// ── Get Users (superadmin only) ──────────────────────────────────────────────
 app.get('/api/users', protect, async (req, res) => {
+  if (req.user.role !== 'superadmin') return res.status(403).json({ msg: 'Unauthorized' });
   try {
-    if (req.user.role !== 'superadmin') return res.status(403).json({ msg: 'Unauthorized' });
-    const users = await User.find({ role: { $ne: 'superadmin' } })
-      .select('-password')
-      .sort({ role: 1, name: 1 });
-    res.json(users);
-  } catch {
-    res.status(500).json({ msg: 'Error fetching users' });
-  }
+    res.json(await User.find({ role: { $ne: 'superadmin' } }).select('-password').sort({ role: 1, name: 1 }));
+  } catch { res.status(500).json({ msg: 'Error fetching users' }); }
 });
 
-// ── PUT /api/users/:id (superadmin only) ─────────────────────────────────────
+// ── Update User ──────────────────────────────────────────────────────────────
 app.put('/api/users/:id', protect, async (req, res) => {
+  if (req.user.role !== 'superadmin') return res.status(403).json({ msg: 'Unauthorized' });
+  const { name, email, department, password, role, managedDepts, jobTitle } = req.body;
+  const update = {
+    name, email, department,
+    role: role || 'staff',
+    managedDepts: role === 'manager' ? (managedDepts || []) : [],
+    jobTitle: jobTitle || '',
+  };
+  if (password?.trim()) update.password = await bcrypt.hash(password, await bcrypt.genSalt(10));
   try {
-    if (req.user.role !== 'superadmin') return res.status(403).json({ msg: 'Unauthorized' });
-
-    const { name, email, department, password, role, managedDepts, jobTitle } = req.body;
-    const updateData = {
-      name, email, department,
-      role:         role || 'staff',
-      managedDepts: role === 'manager' ? (managedDepts || []) : [],
-      jobTitle:     jobTitle || '',
-    };
-
-    if (password && password.trim()) {
-      const salt = await bcrypt.genSalt(10);
-      updateData.password = await bcrypt.hash(password, salt);
-    }
-
-    const updated = await User.findByIdAndUpdate(
-      req.params.id, { $set: updateData }, { new: true }
-    ).select('-password');
-
-    res.json({ msg: 'User updated', user: updated });
-  } catch {
-    res.status(500).json({ msg: 'Error updating user' });
-  }
+    const u = await User.findByIdAndUpdate(req.params.id, { $set: update }, { new: true }).select('-password');
+    res.json({ msg: 'Updated', user: u });
+  } catch { res.status(500).json({ msg: 'Error updating' }); }
 });
 
-// ── DELETE /api/users/:id (superadmin only) ───────────────────────────────────
+// ── Delete User ──────────────────────────────────────────────────────────────
 app.delete('/api/users/:id', protect, async (req, res) => {
-  try {
-    if (req.user.role !== 'superadmin') return res.status(403).json({ msg: 'Unauthorized' });
-    await User.findByIdAndDelete(req.params.id);
-    res.json({ msg: 'User deleted' });
-  } catch {
-    res.status(500).json({ msg: 'Error deleting user' });
-  }
+  if (req.user.role !== 'superadmin') return res.status(403).json({ msg: 'Unauthorized' });
+  try { await User.findByIdAndDelete(req.params.id); res.json({ msg: 'Deleted' }); }
+  catch { res.status(500).json({ msg: 'Error deleting' }); }
 });
 
-// ── Temp password fix ─────────────────────────────────────────────────────────
 app.get('/api/fix-my-password', async (req, res) => {
   try {
-    const salt = await bcrypt.genSalt(10);
-    const hashed = await bcrypt.hash('admin123', salt);
-    const user = await User.findOneAndUpdate(
-      { email: 'admin@system.com' },
-      { password: hashed },
-      { new: true }
-    );
-    res.send(user ? '<h1>Done! Password updated.</h1>' : '<h1>User not found.</h1>');
-  } catch (err) {
-    res.status(500).send(err.message);
-  }
+    const u = await User.findOneAndUpdate({ email: 'admin@system.com' }, { password: await bcrypt.hash('admin123', 10) }, { new: true });
+    res.send(u ? '<h1>Done!</h1>' : '<h1>Not found</h1>');
+  } catch (e) { res.status(500).send(e.message); }
 });
 
-const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log(`🚀 Server on port ${PORT}`));
+app.listen(process.env.PORT || 5000, () => console.log('🚀 Server running'));
