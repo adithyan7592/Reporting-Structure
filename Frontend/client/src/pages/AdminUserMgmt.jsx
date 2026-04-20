@@ -13,7 +13,7 @@ const DEPT_FIELDS = {
   'AYUSH':               ['Total No. of Calls', 'No. of Quality Leads', 'No. of Converted Leads', 'No. of Follow-ups', 'Total Sales Value', 'Remarks if Any'],
   'Bioclean':            ['Total No. of Calls', 'No. of Quality Leads', 'No. of Converted Leads', 'No. of Follow-ups', 'Total Sales Value', 'Remarks if Any'],
   'Theertha':            ['Total No. of Calls', 'No. of Quality Leads', 'No. of Converted Leads', 'No. of Follow-ups', 'Total Sales Value', 'Remarks if Any'],
-  'KP – (CRM)':     ['Total No. of Calls', 'Quality Leads', 'No. of Converted Calls', 'No. of Quotations', 'No. of Followups', 'Factory Outlet Leads', 'Exclusive Outlet Leads', 'Total Sales Value', 'Remarks if Any'],
+  'KP –(CRM)':     ['Total No. of Calls', 'Quality Leads', 'No. of Converted Calls', 'No. of Quotations', 'No. of Followups', 'Factory Outlet Leads', 'Exclusive Outlet Leads', 'Total Sales Value', 'Remarks if Any'],
   'KP – Factory Outlet': ['Walk-in Customers', 'Total Invoices Generated', 'Total Counter Sales Value', 'New Product Inquiries', 'Stock Shortage Items', 'Outlet Remarks'],
   'KP – Exclusive Outlet': ['Walk-in Customers', 'Total Invoices Generated', 'Total Counter Sales Value', 'New Product Inquiries', 'Stock Shortage Items', 'Outlet Remarks'],
   'Happiness':           ['No of New Complaints', 'Total No. of Pending Complaints', 'Total No. of Complaints > 6 days', 'No. of complaints solved', 'No of New Positive Reviews', 'No of New Negative Reviews', 'Complaint Resolution Cost', 'Remarks'],
@@ -177,7 +177,15 @@ function DeptAccessCard({ deptName, entry, onToggleDept, onToggleField, onSelect
 // ── Main Component ────────────────────────────────────────────────────────────
 
 export default function AdminUserMgmt() {
-  const emptyForm = { name: '', email: '', password: '', department: 'AYUSH', role: 'staff', jobTitle: '', managedDepts: [] };
+  const role = localStorage.getItem('role');
+  let managedDepts = [];
+  try { managedDepts = JSON.parse(localStorage.getItem('managedDepts') || '[]'); } catch { managedDepts = []; }
+
+  const availableDepts = role === 'manager'
+    ? managedDepts.map(d => d.dept)
+    : ALL_DEPARTMENTS;
+
+  const emptyForm = { name: '', email: '', password: '', department: availableDepts[0] || 'AYUSH', role: 'staff', jobTitle: '', managedDepts: [] };
   const [formData, setFormData] = useState(emptyForm);
   const [activePresetGroup, setActivePresetGroup] = useState(PRESET_GROUPS[0]);
   const [selectedPreset, setSelectedPreset] = useState(null);
@@ -281,8 +289,8 @@ export default function AdminUserMgmt() {
             <h2 className="text-xl font-black text-slate-900 mb-1">Add New Account</h2>
             <p className="text-slate-400 text-sm mb-8">For managers: choose a preset, then customize which departments and specific fields they can view.</p>
 
-            {/* Preset Browser */}
-            <div className="mb-8">
+            {/* Preset Browser — superadmin only */}
+            {role === 'superadmin' && <div className="mb-8">
               <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">Quick Role Presets</label>
               <div className="flex flex-wrap gap-2 mb-4">
                 {PRESET_GROUPS.map(g => (
@@ -304,7 +312,7 @@ export default function AdminUserMgmt() {
                   🔵 Staff / Agent
                 </button>
               </div>
-            </div>
+            </div>}
 
             <form onSubmit={handleCreate} className="space-y-6">
               {/* Basic Info */}
@@ -325,15 +333,15 @@ export default function AdminUserMgmt() {
                 ))}
                 <div>
                   <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Role</label>
-                  <select className="w-full p-3 border border-slate-200 rounded-xl bg-slate-50 font-medium text-sm" value={formData.role} onChange={e => setFormData({ ...formData, role: e.target.value })}>
+                  <select className="w-full p-3 border border-slate-200 rounded-xl bg-slate-50 font-medium text-sm" value={formData.role} onChange={e => setFormData({ ...formData, role: e.target.value })} disabled={role === 'manager'}>
                     <option value="staff">Staff / Agent</option>
-                    <option value="manager">Manager</option>
+                    {role === 'superadmin' && <option value="manager">Manager</option>}
                   </select>
                 </div>
                 <div>
                   <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Primary Department</label>
                   <select className="w-full p-3 border border-slate-200 rounded-xl bg-slate-50 font-medium text-sm" value={formData.department} onChange={e => setFormData({ ...formData, department: e.target.value })}>
-                    {ALL_DEPARTMENTS.map(d => <option key={d} value={d}>{d}</option>)}
+                    {availableDepts.map(d => <option key={d} value={d}>{d}</option>)}
                   </select>
                 </div>
               </div>
@@ -454,15 +462,15 @@ export default function AdminUserMgmt() {
                 </div>
                 <div>
                   <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Role</label>
-                  <select className="w-full p-3 bg-slate-50 border rounded-xl mt-1 font-medium text-sm" value={editingUser.role} onChange={e => setEditingUser({ ...editingUser, role: e.target.value })}>
+                  <select className="w-full p-3 bg-slate-50 border rounded-xl mt-1 font-medium text-sm" value={editingUser.role} onChange={e => setEditingUser({ ...editingUser, role: e.target.value })} disabled={role === 'manager'}>
                     <option value="staff">Staff / Agent</option>
-                    <option value="manager">Manager</option>
+                    {role === 'superadmin' && <option value="manager">Manager</option>}
                   </select>
                 </div>
                 <div>
                   <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Primary Department</label>
                   <select className="w-full p-3 bg-slate-50 border rounded-xl mt-1 font-medium text-sm" value={editingUser.department} onChange={e => setEditingUser({ ...editingUser, department: e.target.value })}>
-                    {ALL_DEPARTMENTS.map(d => <option key={d} value={d}>{d}</option>)}
+                    {availableDepts.map(d => <option key={d} value={d}>{d}</option>)}
                   </select>
                 </div>
               </div>
@@ -508,4 +516,6 @@ export default function AdminUserMgmt() {
     </div>
   );
 }
+
+
 

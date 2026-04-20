@@ -15,7 +15,6 @@ function formatDateLabel(ymd) {
 
 // ── Dept field config ─────────────────────────────────────────────────────────
 const departmentConfig = {
-  // CRM – Ayush group
   'AYUSH': [
     { label: 'Total No. of Calls',       type: 'number' },
     { label: 'No. of Quality Leads',     type: 'number' },
@@ -40,7 +39,6 @@ const departmentConfig = {
     { label: 'Total Sales Value',        type: 'number' },
     { label: 'Remarks if Any',           type: 'textarea' },
   ],
-  // KP
   'KP – (CRM)': [
     { label: 'Total No. of Calls',       type: 'number' },
     { label: 'Quality Leads',            type: 'number' },
@@ -53,68 +51,67 @@ const departmentConfig = {
     { label: 'Remarks if Any',           type: 'textarea' },
   ],
   'KP – Factory Outlet': [
-    { label: 'Total No. of Walkins',        type: 'number' },
-    { label: 'Total No. of Bills', type: 'number' },
-    { label: 'Total No. of Quotations',type: 'number' },
-    { label: 'Total Sales Value',    type: 'number' },
-    { label: 'PO Status',     type: 'text' },
-    { label: 'GRN Status',           type: 'text' },
-    { label: 'No. of Home Deliveries',       type: 'number' },
-    { label: 'Painters Commission in Amt',           type: 'number' },
-    { label: 'Vehicle Running KM',           type: 'number' },
-    { label: 'Stock Alert',           type: 'number' }, 
-    { label: 'Outlet Remarks',           type: 'textarea' },  
+    { label: 'Total No. of Walkins',          type: 'number' },
+    { label: 'Total No. of Bills',            type: 'number' },
+    { label: 'Total No. of Quotations',       type: 'number' },
+    { label: 'Total Sales Value',             type: 'number' },
+    { label: 'PO Status',                     type: 'text' },
+    { label: 'GRN Status',                    type: 'text' },
+    { label: 'No. of Home Deliveries',        type: 'number' },
+    { label: 'Painters Commission in Amt',    type: 'number' },
+    { label: 'Vehicle Running KM',            type: 'number' },
+    { label: 'Stock Alert',                   type: 'number' },
+    { label: 'Outlet Remarks',                type: 'textarea' },
   ],
   'KP – Exclusive Outlet': [
-    { label: 'Total No. of Walkins',        type: 'number' },
-    { label: 'Total No. of Bills', type: 'number' },
-    { label: 'Total No. of Quotations',type: 'number' },
-    { label: 'Total Sales Value',    type: 'number' },
-    { label: 'PO Status',     type: 'text' },
-    { label: 'GRN Status',           type: 'text' },
-    { label: 'Stock Alert',       type: 'number' },
-    { label: 'Outlet Remarks',           type: 'textarea' },
+    { label: 'Total No. of Walkins',    type: 'number' },
+    { label: 'Total No. of Bills',      type: 'number' },
+    { label: 'Total No. of Quotations', type: 'number' },
+    { label: 'Total Sales Value',       type: 'number' },
+    { label: 'PO Status',               type: 'text' },
+    { label: 'GRN Status',              type: 'text' },
+    { label: 'Stock Alert',             type: 'number' },
+    { label: 'Outlet Remarks',          type: 'textarea' },
   ],
-  // Support depts
   'Happiness': [
-    { label: 'No of New Complaints',             type: 'number' },
-    { label: 'Total No. of Pending Complaints',  type: 'number' },
-    { label: 'Total No. of Complaints > 6 days', type: 'number' },
-    { label: 'No. of complaints solved',          type: 'number' },
-    { label: 'No of New Positive Reviews',        type: 'number' },
-    { label: 'No of New Negative Reviews',        type: 'number' },
-    { label: 'Complaint Resolution Cost',         type: 'number' },
-    { label: 'Remarks',                           type: 'textarea' },
+    { label: 'No of New Complaints',              type: 'number' },
+    { label: 'Total No. of Pending Complaints',   type: 'number' },
+    { label: 'Total No. of Complaints > 6 days',  type: 'number' },
+    { label: 'No. of complaints solved',           type: 'number' },
+    { label: 'No of New Positive Reviews',         type: 'number' },
+    { label: 'No of New Negative Reviews',         type: 'number' },
+    { label: 'Complaint Resolution Cost',          type: 'number' },
+    { label: 'Remarks',                            type: 'textarea' },
   ],
   'Purchase': [
-    { label: 'No. of PO Placed For F. Outlets',  type: 'number' },
-    { label: 'Amount of PO F. Outlets',           type: 'number' },
-    { label: 'No. of PO Placed For E. Outlets',  type: 'number' },
-    { label: 'Amount of PO E. Outlets',           type: 'number' },
-    { label: 'No of Total Deliveries',            type: 'number' },
-    { label: 'No of Total GRN Received',          type: 'number' },
+    { label: 'No. of PO Placed For F. Outlets', type: 'number' },
+    { label: 'Amount of PO F. Outlets',         type: 'number' },
+    { label: 'No. of PO Placed For E. Outlets', type: 'number' },
+    { label: 'Amount of PO E. Outlets',         type: 'number' },
+    { label: 'No of Total Deliveries',          type: 'number' },
+    { label: 'No of Total GRN Received',        type: 'number' },
   ],
   'Warehouse': [
-    { label: 'No. of Loads Received',    type: 'number' },
-    { label: 'No. of Loads Dispatched',  type: 'number' },
-    { label: 'Total GRN Entries',        type: 'number' },
-    { label: 'Pending Delivery Orders',  type: 'number' },
-    { label: 'Damage/Return Stock',      type: 'number' },
-    { label: 'Warehouse Notes',          type: 'textarea' },
+    { label: 'No. of Loads Received',   type: 'number' },
+    { label: 'No. of Loads Dispatched', type: 'number' },
+    { label: 'Total GRN Entries',       type: 'number' },
+    { label: 'Pending Delivery Orders', type: 'number' },
+    { label: 'Damage/Return Stock',     type: 'number' },
+    { label: 'Warehouse Notes',         type: 'textarea' },
   ],
   'Media': [
-    { label: 'Campaign Name',     type: 'text' },
-    { label: 'Platform',          type: 'text' },
-    { label: 'Leads Generated',   type: 'number' },
-    { label: 'Ad Spend',          type: 'number' },
-    { label: 'Notes',             type: 'textarea' },
+    { label: 'Campaign Name',   type: 'text' },
+    { label: 'Platform',        type: 'text' },
+    { label: 'Leads Generated', type: 'number' },
+    { label: 'Ad Spend',        type: 'number' },
+    { label: 'Notes',           type: 'textarea' },
   ],
   'Marketing': [
-    { label: 'Campaign Name',     type: 'text' },
-    { label: 'Platform',          type: 'text' },
-    { label: 'Leads Generated',   type: 'number' },
-    { label: 'Budget Spent',      type: 'number' },
-    { label: 'Notes',             type: 'textarea' },
+    { label: 'Campaign Name',   type: 'text' },
+    { label: 'Platform',        type: 'text' },
+    { label: 'Leads Generated', type: 'number' },
+    { label: 'Budget Spent',    type: 'number' },
+    { label: 'Notes',           type: 'textarea' },
   ],
   'Accounts': [
     { label: 'Total Collections (Daily)', type: 'number' },
@@ -125,18 +122,14 @@ const departmentConfig = {
     { label: 'Accounts Summary',          type: 'textarea' },
   ],
 };
+
 const ALL_DEPTS = Object.keys(departmentConfig);
 
-// ── Daily Report Table ─────────────────────────────────────────────────────────
-// allowedFields: array of field labels this manager can see (or null = all)
+// ── Daily Report Table ────────────────────────────────────────────────────────
 
 function DailyTable({ reports, dept, selectedDay, allowedFields, onRowClick }) {
   const allFields = departmentConfig[dept] || [];
-
-  // Filter fields by access
-  const visibleFields = allFields.filter(f =>
-    !allowedFields || allowedFields.includes(f.label)
-  );
+  const visibleFields = allFields.filter(f => !allowedFields || allowedFields.includes(f.label));
   const numericFields = visibleFields.filter(f => f.type === 'number');
 
   const dayReports = reports.filter(r =>
@@ -177,15 +170,15 @@ function DailyTable({ reports, dept, selectedDay, allowedFields, onRowClick }) {
           <tr className="bg-slate-900 text-white">
             <th className="px-5 py-4 text-[10px] uppercase tracking-widest font-black sticky left-0 bg-slate-900 z-10 min-w-[40px]">Sl.</th>
             <th className="px-5 py-4 text-[10px] uppercase tracking-widest font-black sticky left-[56px] bg-slate-900 z-10 min-w-[160px]">Agent Name</th>
-           {numericFields.map(f => (
-  <th key={f.label} className="px-5 py-4 text-[10px] uppercase tracking-widest font-black whitespace-nowrap">{f.label}</th>
-))}
-{dept === 'KP – (CRM)' && (
-  <th className="px-5 py-4 text-[10px] uppercase tracking-widest font-black whitespace-nowrap bg-slate-800">
-    Conversion Rate %
-  </th>
-)}
-<th className="px-5 py-4 text-[10px] uppercase tracking-widest font-black">Action</th>
+            {numericFields.map(f => (
+              <th key={f.label} className="px-5 py-4 text-[10px] uppercase tracking-widest font-black whitespace-nowrap">{f.label}</th>
+            ))}
+            {dept === 'KP – (CRM)' && (
+              <th className="px-5 py-4 text-[10px] uppercase tracking-widest font-black whitespace-nowrap bg-slate-800 sticky right-16 z-10">
+                Conversion Rate %
+              </th>
+            )}
+            <th className="px-5 py-4 text-[10px] uppercase tracking-widest font-black sticky right-0 bg-slate-900 z-10">Action</th>
           </tr>
         </thead>
         <tbody>
@@ -200,31 +193,34 @@ function DailyTable({ reports, dept, selectedDay, allowedFields, onRowClick }) {
                   {agent.entries.length > 1 && (
                     <span className="text-[10px] font-black text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full">{agent.entries.length} entries</span>
                   )}
+                  {agent.latest?.isEdited && (
+                    <span className="text-[10px] font-black text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full ml-1">✏️ Edited</span>
+                  )}
                 </td>
-              {numericFields.map(f => (
-          <td key={f.label} className="px-5 py-4 text-slate-700 font-semibold tabular-nums">
-          {parseFloat(data[f.label]) > 0
-          ? parseFloat(data[f.label]).toLocaleString('en-IN')
-         : <span className="text-slate-300">—</span>}
-        </td>
-         ))}
-    {dept === 'KP – (CRM)' && (() => {
-    const calls = parseFloat(data['Total No. of Calls']) || 0;
-    const converted = parseFloat(data['No. of Converted Calls']) || 0;
-    const rate = calls > 0 ? ((converted / calls) * 100).toFixed(1) : null;
-   return (
-    <td className="px-5 py-4 font-bold tabular-nums">
-      {rate !== null
-        ? <span className={`px-2 py-1 rounded-lg text-xs font-black ${parseFloat(rate) >= 50 ? 'bg-emerald-100 text-emerald-700' : parseFloat(rate) >= 25 ? 'bg-amber-100 text-amber-700' : 'bg-red-100 text-red-600'}`}>
-            {rate}%
-          </span>
-        : <span className="text-slate-300">—</span>}
-    </td>
-  );
-})()}
-<td className="px-5 py-4">
-  <span className="text-blue-600 text-xs font-black group-hover:underline">View →</span>
-</td>
+                {numericFields.map(f => (
+                  <td key={f.label} className="px-5 py-4 text-slate-700 font-semibold tabular-nums">
+                    {parseFloat(data[f.label]) > 0
+                      ? parseFloat(data[f.label]).toLocaleString('en-IN')
+                      : <span className="text-slate-300">—</span>}
+                  </td>
+                ))}
+                {dept === 'KP – (CRM)' && (() => {
+                  const calls = parseFloat(data['Total No. of Calls']) || 0;
+                  const converted = parseFloat(data['No. of Converted Calls']) || 0;
+                  const rate = calls > 0 ? ((converted / calls) * 100).toFixed(1) : null;
+                  return (
+                    <td className="px-5 py-4 font-bold tabular-nums sticky right-16 bg-white group-hover:bg-blue-50/60 z-10">
+                      {rate !== null
+                        ? <span className={`px-2 py-1 rounded-lg text-xs font-black ${parseFloat(rate) >= 50 ? 'bg-emerald-100 text-emerald-700' : parseFloat(rate) >= 25 ? 'bg-amber-100 text-amber-700' : 'bg-red-100 text-red-600'}`}>
+                            {rate}%
+                          </span>
+                        : <span className="text-slate-300">—</span>}
+                    </td>
+                  );
+                })()}
+                <td className="px-5 py-4 sticky right-0 bg-white group-hover:bg-blue-50/60 z-10">
+                  <span className="text-blue-600 text-xs font-black group-hover:underline">View →</span>
+                </td>
               </tr>
             );
           })}
@@ -233,26 +229,26 @@ function DailyTable({ reports, dept, selectedDay, allowedFields, onRowClick }) {
           <tr className="bg-slate-50 border-t-2 border-slate-300">
             <td className="px-5 py-4 sticky left-0 bg-slate-50 z-10"></td>
             <td className="px-5 py-4 font-black text-slate-900 uppercase text-xs tracking-wider sticky left-[56px] bg-slate-50 z-10">Total</td>
-     {numericFields.map(f => (
-  <td key={f.label} className="px-5 py-4 font-black text-slate-900 tabular-nums">
-    {totals[f.label] > 0 ? totals[f.label].toLocaleString('en-IN') : <span className="text-slate-300">—</span>}
-  </td>
-))}
-{dept === 'KP – (CRM)' && (() => {
-  const totalCalls = totals['Total No. of Calls'] || 0;
-  const totalConverted = totals['No. of Converted Calls'] || 0;
-  const rate = totalCalls > 0 ? ((totalConverted / totalCalls) * 100).toFixed(1) : null;
-  return (
-    <td className="px-5 py-4 font-black tabular-nums">
-      {rate !== null
-        ? <span className={`px-2 py-1 rounded-lg text-xs font-black ${parseFloat(rate) >= 50 ? 'bg-emerald-100 text-emerald-700' : parseFloat(rate) >= 25 ? 'bg-amber-100 text-amber-700' : 'bg-red-100 text-red-600'}`}>
-            {rate}%
-          </span>
-        : <span className="text-slate-300">—</span>}
-    </td>
-  );
-})()}
-<td className="px-5 py-4 text-slate-400 text-xs font-bold">{rows.length} agents</td>
+            {numericFields.map(f => (
+              <td key={f.label} className="px-5 py-4 font-black text-slate-900 tabular-nums">
+                {totals[f.label] > 0 ? totals[f.label].toLocaleString('en-IN') : <span className="text-slate-300">—</span>}
+              </td>
+            ))}
+            {dept === 'KP – (CRM)' && (() => {
+              const totalCalls = totals['Total No. of Calls'] || 0;
+              const totalConverted = totals['No. of Converted Calls'] || 0;
+              const rate = totalCalls > 0 ? ((totalConverted / totalCalls) * 100).toFixed(1) : null;
+              return (
+                <td className="px-5 py-4 font-black tabular-nums sticky right-16 bg-slate-50 z-10">
+                  {rate !== null
+                    ? <span className={`px-2 py-1 rounded-lg text-xs font-black ${parseFloat(rate) >= 50 ? 'bg-emerald-100 text-emerald-700' : parseFloat(rate) >= 25 ? 'bg-amber-100 text-amber-700' : 'bg-red-100 text-red-600'}`}>
+                        {rate}%
+                      </span>
+                    : <span className="text-slate-300">—</span>}
+                </td>
+              );
+            })()}
+            <td className="px-5 py-4 text-slate-400 text-xs font-bold sticky right-0 bg-slate-50 z-10">{rows.length} agents</td>
           </tr>
         </tfoot>
       </table>
@@ -260,12 +256,12 @@ function DailyTable({ reports, dept, selectedDay, allowedFields, onRowClick }) {
   );
 }
 
-// ── Agent Drill-down Modal ─────────────────────────────────────────────────────
+// ── Agent Drill-down Modal ────────────────────────────────────────────────────
 
-function AgentDrillModal({ agent, dept, allowedFields, onClose }) {
+function AgentDrillModal({ agent, dept, allowedFields, onClose, onEditReport }) {
   const [selectedEntry, setSelectedEntry] = useState(null);
+  const role = localStorage.getItem('role');
 
-  // Filter entry data keys by allowedFields
   const filterData = (data) => {
     if (!allowedFields) return data;
     return Object.fromEntries(Object.entries(data || {}).filter(([k]) => allowedFields.includes(k)));
@@ -274,6 +270,8 @@ function AgentDrillModal({ agent, dept, allowedFields, onClose }) {
   return (
     <div className="fixed inset-0 bg-slate-900/80 backdrop-blur-xl flex items-center justify-center p-4 z-50">
       <div className="bg-white rounded-[2.5rem] w-full max-w-2xl shadow-2xl max-h-[90vh] flex flex-col overflow-hidden">
+
+        {/* Header */}
         <div className="bg-slate-900 p-8 text-white flex-shrink-0">
           <div className="flex justify-between items-start">
             <div>
@@ -288,6 +286,7 @@ function AgentDrillModal({ agent, dept, allowedFields, onClose }) {
           </div>
         </div>
 
+        {/* Body */}
         <div className="flex-1 overflow-y-auto p-6">
           {selectedEntry ? (
             <div>
@@ -295,7 +294,12 @@ function AgentDrillModal({ agent, dept, allowedFields, onClose }) {
               <p className="text-xs text-slate-400 font-bold uppercase tracking-wider mb-1">
                 {new Date(selectedEntry.createdAt).toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long' })}
               </p>
-              <p className="font-black text-slate-900 text-xl mb-6">{selectedEntry.title}</p>
+              <p className="font-black text-slate-900 text-xl mb-2">{selectedEntry.title}</p>
+              {selectedEntry.isEdited && (
+                <p className="text-[10px] font-bold text-blue-500 mb-6">
+                  ✏️ Edited by {selectedEntry.editedBy} · {new Date(selectedEntry.editedAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })} {new Date(selectedEntry.editedAt).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}
+                </p>
+              )}
               <div className="divide-y divide-slate-50">
                 {Object.entries(filterData(selectedEntry.data)).map(([key, val]) => (
                   <div key={key} className="flex justify-between py-4">
@@ -314,9 +318,15 @@ function AgentDrillModal({ agent, dept, allowedFields, onClose }) {
                     className="w-full text-left p-4 bg-slate-50 rounded-2xl hover:bg-blue-50 border border-slate-100 hover:border-blue-200 transition group">
                     <div className="flex justify-between items-center">
                       <div>
-                        <p className="font-bold text-slate-900 group-hover:text-blue-700">{entry.title}</p>
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <p className="font-bold text-slate-900 group-hover:text-blue-700">{entry.title}</p>
+                          {entry.isEdited && (
+                            <span className="text-[10px] font-black text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full">✏️ Edited</span>
+                          )}
+                        </div>
                         <p className="text-xs text-slate-400 mt-0.5">
                           {new Date(entry.createdAt).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}
+                          {entry.isEdited && ` · Edited by ${entry.editedBy}`}
                         </p>
                       </div>
                       <span className="text-slate-300 group-hover:text-blue-500 font-bold text-lg">→</span>
@@ -328,15 +338,30 @@ function AgentDrillModal({ agent, dept, allowedFields, onClose }) {
           )}
         </div>
 
-        <div className="p-6 bg-slate-50 border-t border-slate-100 flex-shrink-0">
-          <button onClick={onClose} className="w-full py-4 bg-slate-900 text-white font-bold rounded-2xl hover:bg-slate-800 transition">Close</button>
+        {/* Footer */}
+        <div className="p-6 bg-slate-50 border-t border-slate-100 flex-shrink-0 flex gap-3">
+          {selectedEntry && (role === 'manager' || role === 'superadmin') && (
+            <button
+              onClick={() => { onClose(); onEditReport(selectedEntry); }}
+              className="flex-1 py-4 bg-emerald-600 text-white font-bold rounded-2xl hover:bg-emerald-700 transition"
+            >
+              ✏️ Edit Report
+            </button>
+          )}
+          <button
+            onClick={onClose}
+            className={`py-4 bg-slate-900 text-white font-bold rounded-2xl hover:bg-slate-800 transition ${selectedEntry && (role === 'manager' || role === 'superadmin') ? 'flex-1' : 'w-full'}`}
+          >
+            Close
+          </button>
         </div>
+
       </div>
     </div>
   );
 }
 
-// ── Main Dashboard ─────────────────────────────────────────────────────────────
+// ── Main Dashboard ────────────────────────────────────────────────────────────
 
 export default function Dashboard() {
   const [reports, setReports] = useState([]);
@@ -350,34 +375,29 @@ export default function Dashboard() {
   const [selectedDate, setSelectedDate] = useState('');
   const [activeDept, setActiveDept] = useState('');
   const [selectedDay, setSelectedDay] = useState(todayYMD());
+  const [editingReport, setEditingReport] = useState(null);
+  const [editData, setEditData] = useState({});
 
   const dept     = localStorage.getItem('dept');
   const role     = localStorage.getItem('role');
   const jobTitle = localStorage.getItem('jobTitle') || '';
   const userName = localStorage.getItem('name') || '';
 
-  // managedDepts is now [{ dept, fields }]
   let managedDepts = [];
   try { managedDepts = JSON.parse(localStorage.getItem('managedDepts') || '[]'); } catch { managedDepts = []; }
 
   const navigate = useNavigate();
-  const isViewer        = role === 'superadmin' || role === 'manager';
+  const isViewer         = role === 'superadmin' || role === 'manager';
   const canSeeAdminPanel = role === 'superadmin';
 
-  // For superadmin: all depts, no field restrictions
-  // For manager: only their managedDepts entries
-  const viewableDepts = role === 'superadmin'
-    ? ALL_DEPTS
-    : managedDepts.map(d => d.dept);
+  const viewableDepts = role === 'superadmin' ? ALL_DEPTS : managedDepts.map(d => d.dept);
 
-  // Get allowed fields for the currently active dept (null = all)
   const getAllowedFields = (deptName) => {
-    if (role === 'superadmin') return null; // superadmin sees all
+    if (role === 'superadmin') return null;
     const entry = managedDepts.find(d => d.dept === deptName);
     if (!entry) return [];
-    // If fields contains all dept fields or is marked '*', show all
     const allForDept = (departmentConfig[deptName] || []).map(f => f.label);
-    if (entry.fields.length === allForDept.length) return null; // effectively all
+    if (entry.fields.length === allForDept.length) return null;
     return entry.fields;
   };
 
@@ -403,6 +423,16 @@ export default function Dashboard() {
       body: JSON.stringify({ title: reportTitle, data: dynamicData }),
     });
     if (res.ok) { setIsModalOpen(false); setReportTitle(''); setDynamicData({}); fetchReports(); }
+  };
+
+  const handleEditReport = async (e) => {
+    e.preventDefault();
+    const res = await fetch(`https://reporting-structure.onrender.com/api/reports/${editingReport._id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${localStorage.getItem('token')}` },
+      body: JSON.stringify({ data: editData }),
+    });
+    if (res.ok) { setEditingReport(null); setEditData({}); fetchReports(); }
   };
 
   const filteredReports = useMemo(() => reports.filter(r => {
@@ -440,8 +470,10 @@ export default function Dashboard() {
         </div>
         <nav className="space-y-2 flex-1">
           <div className="p-3 rounded-xl bg-blue-600 font-semibold shadow-lg text-sm">Dashboard</div>
-          {canSeeAdminPanel && (
-            <button onClick={() => navigate('/admin')} className="w-full text-left p-3 rounded-xl border border-blue-400/30 text-blue-400 hover:bg-blue-400 hover:text-white transition text-sm">Admin Settings</button>
+          {(canSeeAdminPanel || role === 'manager') && (
+            <button onClick={() => navigate('/admin')} className="w-full text-left p-3 rounded-xl border border-blue-400/30 text-blue-400 hover:bg-blue-400 hover:text-white transition text-sm">
+              {role === 'manager' ? '👥 Manage Agents' : 'Admin Settings'}
+            </button>
           )}
           {role === 'staff' && (
             <button onClick={() => setIsModalOpen(true)} className="w-full text-left p-3 rounded-xl bg-emerald-600 text-white font-semibold mt-4 hover:bg-emerald-700 transition text-sm">+ New Entry</button>
@@ -631,9 +663,57 @@ export default function Dashboard() {
           dept={activeDept}
           allowedFields={currentAllowedFields}
           onClose={() => setSelectedAgent(null)}
+          onEditReport={(report) => {
+            setEditingReport(report);
+            setEditData({ ...report.data });
+          }}
         />
       )}
+
+      {/* ── EDIT REPORT MODAL ── */}
+      {editingReport && (
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-md flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-[2.5rem] p-8 md:p-10 w-full max-w-2xl max-h-[90vh] overflow-y-auto shadow-2xl">
+            <div className="flex justify-between items-start mb-2">
+              <h2 className="text-2xl font-black text-slate-900">Edit Report</h2>
+              <button onClick={() => setEditingReport(null)} className="text-slate-400 hover:text-slate-700 text-xl">✕</button>
+            </div>
+            <p className="text-slate-400 text-sm mb-8">
+              {editingReport.staffName} · {new Date(editingReport.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })}
+            </p>
+            <form onSubmit={handleEditReport} className="space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {(departmentConfig[editingReport.department] || []).map(field => (
+                  <div key={field.label} className={field.type === 'textarea' ? 'md:col-span-2' : ''}>
+                    <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">{field.label}</label>
+                    {field.type === 'textarea' ? (
+                      <textarea
+                        className="w-full bg-slate-50 border border-slate-200 p-4 rounded-2xl outline-none focus:ring-2 focus:ring-emerald-500 h-28 font-semibold"
+                        value={editData[field.label] || ''}
+                        onChange={e => setEditData({ ...editData, [field.label]: e.target.value })}
+                      />
+                    ) : (
+                      <input
+                        type={field.type}
+                        className="w-full bg-slate-50 border border-slate-200 p-4 rounded-2xl outline-none focus:ring-2 focus:ring-emerald-500 font-semibold"
+                        value={editData[field.label] || ''}
+                        onChange={e => setEditData({ ...editData, [field.label]: e.target.value })}
+                      />
+                    )}
+                  </div>
+                ))}
+              </div>
+              <div className="flex justify-end gap-4 pt-4">
+                <button type="button" onClick={() => setEditingReport(null)} className="px-6 py-3 text-slate-400 font-bold">Cancel</button>
+                <button type="submit" className="px-10 py-4 bg-emerald-600 text-white rounded-2xl font-bold hover:bg-emerald-700 transition shadow-lg">Save Changes</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }
+
 

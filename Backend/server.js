@@ -47,7 +47,7 @@ app.post('/api/login', async (req, res) => {
 
 // ── Register (superadmin only) ───────────────────────────────────────────────
 app.post('/api/register', protect, async (req, res) => {
-  if (req.user.role !== 'superadmin') return res.status(403).json({ msg: 'Access denied' });
+  if (req.user.role !== 'superadmin' && req.user.role !== 'manager') return res.status(403).json({ msg: 'Access denied' });
   const { name, email, password, department, role, managedDepts, jobTitle } = req.body;
   try {
     if (await User.findOne({ email })) return res.status(400).json({ msg: 'User already exists' });
@@ -90,15 +90,20 @@ app.post('/api/reports', protect, async (req, res) => {
 
 // ── Get Users (superadmin only) ──────────────────────────────────────────────
 app.get('/api/users', protect, async (req, res) => {
-  if (req.user.role !== 'superadmin') return res.status(403).json({ msg: 'Unauthorized' });
+  if (req.user.role !== 'superadmin' && req.user.role !== 'manager') return res.status(403).json({ msg: 'Unauthorized' });
   try {
-    res.json(await User.find({ role: { $ne: 'superadmin' } }).select('-password').sort({ role: 1, name: 1 }));
+    let query = { role: { $ne: 'superadmin' } };
+    if (req.user.role === 'manager') {
+      const depts = (req.user.managedDepts || []).map(d => d.dept);
+      query = { role: 'staff', department: { $in: depts } };
+    }
+    res.json(await User.find(query).select('-password').sort({ name: 1 }));
   } catch { res.status(500).json({ msg: 'Error fetching users' }); }
 });
 
 // ── Update User ──────────────────────────────────────────────────────────────
 app.put('/api/users/:id', protect, async (req, res) => {
-  if (req.user.role !== 'superadmin') return res.status(403).json({ msg: 'Unauthorized' });
+  if (req.user.role !== 'superadmin' && req.user.role !== 'manager') return res.status(403).json({ msg: 'Unauthorized' });
   const { name, email, department, password, role, managedDepts, jobTitle } = req.body;
   const update = {
     name, email, department,
@@ -125,6 +130,35 @@ app.get('/api/fix-my-password', async (req, res) => {
     const u = await User.findOneAndUpdate({ email: 'admin@system.com' }, { password: await bcrypt.hash('admin123', 10) }, { new: true });
     res.send(u ? '<h1>Done!</h1>' : '<h1>Not found</h1>');
   } catch (e) { res.status(500).send(e.message); }
+});
+// ── Edit Report (manager or superadmin) ──────────────────────────────────────
+app.put('/api/reports/:id', protect, async (req, res) => {
+  if (req.user.role === 'staff') return res.status(403).json({ msg: 'Unauthorized' });
+  try {
+    const { data } = req.body;
+    const report = await Report.findById(req.params.id);
+    if (!report) return res.status(404).json({ msg: 'Report not found' });
+
+    // Manager can only edit reports from their managed depts
+    if (req.user.role === 'manager') {
+      const depts = (req.user.managedDepts || []).map(d => d.dept);
+      if (!depts.includes(report.department)) return res.status(403).json({ msg: 'Access denied' });
+    }
+
+    const updated = await Report.findByIdAndUpdate(
+      req.params.id,
+      {
+        $set: {
+          data,
+          isEdited: true,
+          editedAt: new Date(),
+          editedBy: req.user.name,
+        }
+      },
+      { new: true }
+    );
+    res.json(updated);
+  } catch (err) { res.status(500).json({ msg: 'Error updating report' }); }
 });
 
 app.listen(process.env.PORT || 5000, () => console.log('🚀 Server running'));
