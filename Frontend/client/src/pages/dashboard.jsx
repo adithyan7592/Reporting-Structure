@@ -83,14 +83,26 @@ const departmentConfig = {
     { label: 'Complaint Resolution Cost',          type: 'number' },
     { label: 'Remarks',                            type: 'textarea' },
   ],
-  'Purchase': [
-    { label: 'No. of PO Placed For F. Outlets', type: 'number' },
-    { label: 'Amount of PO F. Outlets',         type: 'number' },
-    { label: 'No. of PO Placed For E. Outlets', type: 'number' },
-    { label: 'Amount of PO E. Outlets',         type: 'number' },
-    { label: 'No of Total Deliveries',          type: 'number' },
-    { label: 'No of Total GRN Received',        type: 'number' },
-  ],
+ 'Purchase': [
+  // Report Type selector — controls which fields appear
+  { label: 'Report Type', type: 'report_selector', options: ['PO Report', 'Brand Purchase Order'] },
+
+  // PO Report fields (shown when Report Type = 'PO Report')
+  { label: 'No. of PO Placed For F. Outlets', type: 'number',   reportType: 'PO Report' },
+  { label: 'Amount of PO F. Outlets',         type: 'number',   reportType: 'PO Report' },
+  { label: 'No. of PO Placed For E. Outlets', type: 'number',   reportType: 'PO Report' },
+  { label: 'Amount of PO E. Outlets',         type: 'number',   reportType: 'PO Report' },
+  { label: 'No of Total Deliveries',          type: 'number',   reportType: 'PO Report' },
+  { label: 'No of Total GRN Received',        type: 'number',   reportType: 'PO Report' },
+
+  // Brand Purchase Order fields (shown when Report Type = 'Brand Purchase Order')
+  { label: 'Brand / Division', type: 'select',  reportType: 'Brand Purchase Order', options: ['AYUSH', 'Theertha', 'Bioclean', 'KP', 'HO'] },
+  { label: 'Item',             type: 'text',    reportType: 'Brand Purchase Order' },
+  { label: 'Vendor',           type: 'text',    reportType: 'Brand Purchase Order' },
+  { label: 'Amount',           type: 'number',  reportType: 'Brand Purchase Order' },
+  { label: 'Exp. Delivery Date', type: 'date',  reportType: 'Brand Purchase Order' },
+  { label: 'Remarks',          type: 'textarea', reportType: 'Brand Purchase Order' },
+],
   'Warehouse': [
     { label: 'No. of Loads Received',   type: 'number' },
     { label: 'No. of Loads Dispatched', type: 'number' },
@@ -595,36 +607,85 @@ export default function Dashboard() {
         )}
       </div>
 
-      {/* ── CREATE REPORT MODAL ── */}
-      {isModalOpen && (
-        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-md flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-[2.5rem] p-8 md:p-10 w-full max-w-2xl max-h-[90vh] overflow-y-auto shadow-2xl">
-            <h2 className="text-3xl font-black text-slate-900 mb-8">{dept} Report</h2>
-            <form onSubmit={handleCreateReport} className="space-y-6">
-              <div>
-                <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Subject / Title</label>
-                <input type="text" className="w-full bg-slate-50 border border-slate-200 p-4 rounded-2xl outline-none focus:ring-2 focus:ring-blue-500 font-semibold"
-                  placeholder="e.g. Daily Report – 20 Apr" value={reportTitle} onChange={e => setReportTitle(e.target.value)} required />
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {fields.map(field => (
-                  <div key={field.label} className={field.type === 'textarea' ? 'md:col-span-2' : ''}>
-                    <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">{field.label}</label>
-                    {field.type === 'textarea'
-                      ? <textarea className="w-full bg-slate-50 border border-slate-200 p-4 rounded-2xl outline-none focus:ring-2 focus:ring-blue-500 h-28 font-semibold" placeholder="..." onChange={e => setDynamicData({ ...dynamicData, [field.label]: e.target.value })} />
-                      : <input type={field.type} className="w-full bg-slate-50 border border-slate-200 p-4 rounded-2xl outline-none focus:ring-2 focus:ring-blue-500 font-semibold" placeholder="0" onChange={e => setDynamicData({ ...dynamicData, [field.label]: e.target.value })} />}
-                  </div>
-                ))}
-              </div>
-              <div className="flex justify-end gap-4 pt-4">
-                <button type="button" onClick={() => setIsModalOpen(false)} className="px-6 py-3 text-slate-400 font-bold">Cancel</button>
-                <button type="submit" className="px-10 py-4 bg-blue-600 text-white rounded-2xl font-bold hover:bg-blue-700 transition shadow-lg">Save Entry</button>
-              </div>
-            </form>
-          </div>
+     {/* ── CREATE REPORT MODAL ── */}
+{isModalOpen && (
+  <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-md flex items-center justify-center p-4 z-50">
+    <div className="bg-white rounded-[2.5rem] p-8 md:p-10 w-full max-w-2xl max-h-[90vh] overflow-y-auto shadow-2xl">
+      <h2 className="text-3xl font-black text-slate-900 mb-8">{dept} Report</h2>
+      <form onSubmit={handleCreateReport} className="space-y-6">
+        <div>
+          <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Subject / Title</label>
+          <input type="text" className="w-full bg-slate-50 border border-slate-200 p-4 rounded-2xl outline-none focus:ring-2 focus:ring-blue-500 font-semibold"
+            placeholder="e.g. Daily Report – 20 Apr" value={reportTitle} onChange={e => setReportTitle(e.target.value)} required />
         </div>
-      )}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {fields.map(field => {
+            // Report type selector — full width, updates dynamicData
+            if (field.type === 'report_selector') {
+              return (
+                <div key={field.label} className="md:col-span-2">
+                  <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">{field.label}</label>
+                  <div className="flex gap-3">
+                    {field.options.map(opt => (
+                      <button
+                        key={opt}
+                        type="button"
+                        onClick={() => setDynamicData({ [field.label]: opt })}
+                        className={`flex-1 py-3 rounded-2xl font-bold text-sm border-2 transition ${
+                          dynamicData[field.label] === opt
+                            ? 'bg-blue-600 text-white border-blue-600'
+                            : 'bg-slate-50 text-slate-500 border-slate-200 hover:border-blue-400'
+                        }`}
+                      >
+                        {opt}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              );
+            }
 
+            // Skip fields that belong to a different report type
+            if (field.reportType && dynamicData['Report Type'] !== field.reportType) return null;
+
+            return (
+              <div key={field.label} className={field.type === 'textarea' ? 'md:col-span-2' : ''}>
+                <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">{field.label}</label>
+                {field.type === 'textarea' ? (
+                  <textarea
+                    className="w-full bg-slate-50 border border-slate-200 p-4 rounded-2xl outline-none focus:ring-2 focus:ring-blue-500 h-28 font-semibold"
+                    placeholder="..."
+                    onChange={e => setDynamicData({ ...dynamicData, [field.label]: e.target.value })}
+                  />
+                ) : field.type === 'select' ? (
+                  <select
+                    className="w-full bg-slate-50 border border-slate-200 p-4 rounded-2xl outline-none focus:ring-2 focus:ring-blue-500 font-semibold"
+                    defaultValue=""
+                    onChange={e => setDynamicData({ ...dynamicData, [field.label]: e.target.value })}
+                  >
+                    <option value="" disabled>Select...</option>
+                    {field.options.map(opt => <option key={opt} value={opt}>{opt}</option>)}
+                  </select>
+                ) : (
+                  <input
+                    type={field.type}
+                    className="w-full bg-slate-50 border border-slate-200 p-4 rounded-2xl outline-none focus:ring-2 focus:ring-blue-500 font-semibold"
+                    placeholder={field.type === 'number' ? '0' : ''}
+                    onChange={e => setDynamicData({ ...dynamicData, [field.label]: e.target.value })}
+                  />
+                )}
+              </div>
+            );
+          })}
+        </div>
+        <div className="flex justify-end gap-4 pt-4">
+          <button type="button" onClick={() => { setIsModalOpen(false); setDynamicData({}); }} className="px-6 py-3 text-slate-400 font-bold">Cancel</button>
+          <button type="submit" className="px-10 py-4 bg-blue-600 text-white rounded-2xl font-bold hover:bg-blue-700 transition shadow-lg">Save Entry</button>
+        </div>
+      </form>
+    </div>
+  </div>
+)}
       {/* ── STAFF VIEW DETAILS MODAL ── */}
       {selectedReport && (
         <div className="fixed inset-0 bg-slate-900/80 backdrop-blur-xl flex items-center justify-center p-4 z-50">

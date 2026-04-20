@@ -17,7 +17,7 @@ const DEPT_FIELDS = {
   'KP – Factory Outlet': ['Total No. of Walkins', 'Total No. of Bills', 'Total No. of Quotations', 'Total Sales Value', 'PO Status', 'GRN Status', 'No. of Home Deliveries', 'Painters Commission in Amt', 'Vehicle Running KM', 'Stock Alert', 'Outlet Remarks'],
   'KP – Exclusive Outlet': ['Total No. of Walkins', 'Total No. of Bills', 'Total No. of Quotations', 'Total Sales Value', 'PO Status', 'GRN Status', 'Stock Alert', 'Outlet Remarks'],
   'Happiness':           ['No of New Complaints', 'Total No. of Pending Complaints', 'Total No. of Complaints > 6 days', 'No. of complaints solved', 'No of New Positive Reviews', 'No of New Negative Reviews', 'Complaint Resolution Cost', 'Remarks'],
-  'Purchase':            ['No. of PO Placed For F. Outlets', 'Amount of PO F. Outlets', 'No. of PO Placed For E. Outlets', 'Amount of PO E. Outlets', 'No of Total Deliveries', 'No of Total GRN Received'],
+  'Purchase': ['Report Type', 'No. of PO Placed For F. Outlets', 'Amount of PO F. Outlets', 'No. of PO Placed For E. Outlets', 'Amount of PO E. Outlets', 'No of Total Deliveries', 'No of Total GRN Received', 'Brand / Division', 'Item', 'Vendor', 'Amount', 'Exp. Delivery Date', 'Remarks'],
   'Warehouse':           ['No. of Loads Received', 'No. of Loads Dispatched', 'Total GRN Entries', 'Pending Delivery Orders', 'Damage/Return Stock', 'Warehouse Notes'],
   'Media':               ['Campaign Name', 'Platform', 'Leads Generated', 'Ad Spend', 'Notes'],
   'Marketing':           ['Campaign Name', 'Platform', 'Leads Generated', 'Budget Spent', 'Notes'],
