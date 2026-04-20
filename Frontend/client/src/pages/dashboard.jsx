@@ -177,10 +177,15 @@ function DailyTable({ reports, dept, selectedDay, allowedFields, onRowClick }) {
           <tr className="bg-slate-900 text-white">
             <th className="px-5 py-4 text-[10px] uppercase tracking-widest font-black sticky left-0 bg-slate-900 z-10 min-w-[40px]">Sl.</th>
             <th className="px-5 py-4 text-[10px] uppercase tracking-widest font-black sticky left-[56px] bg-slate-900 z-10 min-w-[160px]">Agent Name</th>
-            {numericFields.map(f => (
-              <th key={f.label} className="px-5 py-4 text-[10px] uppercase tracking-widest font-black whitespace-nowrap">{f.label}</th>
-            ))}
-            <th className="px-5 py-4 text-[10px] uppercase tracking-widest font-black">Action</th>
+           {numericFields.map(f => (
+  <th key={f.label} className="px-5 py-4 text-[10px] uppercase tracking-widest font-black whitespace-nowrap">{f.label}</th>
+))}
+{dept === 'KP – (CRM)' && (
+  <th className="px-5 py-4 text-[10px] uppercase tracking-widest font-black whitespace-nowrap bg-slate-800">
+    Conversion Rate %
+  </th>
+)}
+<th className="px-5 py-4 text-[10px] uppercase tracking-widest font-black">Action</th>
           </tr>
         </thead>
         <tbody>
@@ -196,16 +201,30 @@ function DailyTable({ reports, dept, selectedDay, allowedFields, onRowClick }) {
                     <span className="text-[10px] font-black text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full">{agent.entries.length} entries</span>
                   )}
                 </td>
-                {numericFields.map(f => (
-                  <td key={f.label} className="px-5 py-4 text-slate-700 font-semibold tabular-nums">
-                    {parseFloat(data[f.label]) > 0
-                      ? parseFloat(data[f.label]).toLocaleString('en-IN')
-                      : <span className="text-slate-300">—</span>}
-                  </td>
-                ))}
-                <td className="px-5 py-4">
-                  <span className="text-blue-600 text-xs font-black group-hover:underline">View →</span>
-                </td>
+              {numericFields.map(f => (
+          <td key={f.label} className="px-5 py-4 text-slate-700 font-semibold tabular-nums">
+          {parseFloat(data[f.label]) > 0
+          ? parseFloat(data[f.label]).toLocaleString('en-IN')
+         : <span className="text-slate-300">—</span>}
+        </td>
+         ))}
+    {dept === 'KP – (CRM)' && (() => {
+    const calls = parseFloat(data['Total No. of Calls']) || 0;
+    const converted = parseFloat(data['No. of Converted Calls']) || 0;
+    const rate = calls > 0 ? ((converted / calls) * 100).toFixed(1) : null;
+   return (
+    <td className="px-5 py-4 font-bold tabular-nums">
+      {rate !== null
+        ? <span className={`px-2 py-1 rounded-lg text-xs font-black ${parseFloat(rate) >= 50 ? 'bg-emerald-100 text-emerald-700' : parseFloat(rate) >= 25 ? 'bg-amber-100 text-amber-700' : 'bg-red-100 text-red-600'}`}>
+            {rate}%
+          </span>
+        : <span className="text-slate-300">—</span>}
+    </td>
+  );
+})()}
+<td className="px-5 py-4">
+  <span className="text-blue-600 text-xs font-black group-hover:underline">View →</span>
+</td>
               </tr>
             );
           })}
@@ -214,12 +233,26 @@ function DailyTable({ reports, dept, selectedDay, allowedFields, onRowClick }) {
           <tr className="bg-slate-50 border-t-2 border-slate-300">
             <td className="px-5 py-4 sticky left-0 bg-slate-50 z-10"></td>
             <td className="px-5 py-4 font-black text-slate-900 uppercase text-xs tracking-wider sticky left-[56px] bg-slate-50 z-10">Total</td>
-            {numericFields.map(f => (
-              <td key={f.label} className="px-5 py-4 font-black text-slate-900 tabular-nums">
-                {totals[f.label] > 0 ? totals[f.label].toLocaleString('en-IN') : <span className="text-slate-300">—</span>}
-              </td>
-            ))}
-            <td className="px-5 py-4 text-slate-400 text-xs font-bold">{rows.length} agents</td>
+     {numericFields.map(f => (
+  <td key={f.label} className="px-5 py-4 font-black text-slate-900 tabular-nums">
+    {totals[f.label] > 0 ? totals[f.label].toLocaleString('en-IN') : <span className="text-slate-300">—</span>}
+  </td>
+))}
+{dept === 'KP – (CRM)' && (() => {
+  const totalCalls = totals['Total No. of Calls'] || 0;
+  const totalConverted = totals['No. of Converted Calls'] || 0;
+  const rate = totalCalls > 0 ? ((totalConverted / totalCalls) * 100).toFixed(1) : null;
+  return (
+    <td className="px-5 py-4 font-black tabular-nums">
+      {rate !== null
+        ? <span className={`px-2 py-1 rounded-lg text-xs font-black ${parseFloat(rate) >= 50 ? 'bg-emerald-100 text-emerald-700' : parseFloat(rate) >= 25 ? 'bg-amber-100 text-amber-700' : 'bg-red-100 text-red-600'}`}>
+            {rate}%
+          </span>
+        : <span className="text-slate-300">—</span>}
+    </td>
+  );
+})()}
+<td className="px-5 py-4 text-slate-400 text-xs font-bold">{rows.length} agents</td>
           </tr>
         </tfoot>
       </table>
