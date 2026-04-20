@@ -272,12 +272,12 @@ export default function AdminUserMgmt() {
           <button onClick={() => navigate('/dashboard')} className="w-full text-left p-3 rounded-xl hover:bg-slate-800 transition text-slate-300 text-sm">← Back to Dashboard</button>
           <div className="p-3 rounded-xl bg-blue-600 text-white font-semibold text-sm">User Management</div>
         </nav>
-        <div className="mt-8 p-4 bg-slate-800 rounded-2xl text-[10px] text-slate-400 space-y-2 leading-relaxed">
+        {/* <div className="mt-8 p-4 bg-slate-800 rounded-2xl text-[10px] text-slate-400 space-y-2 leading-relaxed">
           <p className="font-bold text-slate-200 uppercase tracking-wider text-[9px] mb-3">Role Guide</p>
           <p>🔵 <strong className="text-slate-300">Staff</strong> — Submits + views own dept</p>
           <p>🟢 <strong className="text-slate-300">Manager</strong> — Views selected depts & fields</p>
           <p>🟣 <strong className="text-slate-300">Superadmin</strong> — Full access</p>
-        </div>
+        </div> */}
       </div>
 
       {/* Main */}
