@@ -2,7 +2,7 @@ const mongoose = require('mongoose');
 
 const ALL_DEPARTMENTS = [
   'AYUSH', 'Bioclean', 'Theertha',
-  'KP(CRM)', 'KP – Factory Outlet', 'KP – Exclusive Outlet',
+  'KP – (CRM)', 'KP – Factory Outlet', 'KP – Exclusive Outlet',
   'Happiness', 'Purchase', 'Warehouse', 'Media', 'Marketing', 'Accounts',
 ];
 

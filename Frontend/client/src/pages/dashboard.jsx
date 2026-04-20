@@ -41,7 +41,7 @@ const departmentConfig = {
     { label: 'Remarks if Any',           type: 'textarea' },
   ],
   // KP
-  'KP –(CRM)': [
+  'KP – (CRM)': [
     { label: 'Total No. of Calls',       type: 'number' },
     { label: 'Quality Leads',            type: 'number' },
     { label: 'No. of Converted Calls',   type: 'number' },

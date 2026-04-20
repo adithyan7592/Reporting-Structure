@@ -5,7 +5,7 @@ import { useNavigate } from 'react-router-dom';
 
 const ALL_DEPARTMENTS = [
   'AYUSH', 'Bioclean', 'Theertha',
-  'KP –(CRM)', 'KP – Factory Outlet', 'KP – Exclusive Outlet',
+  'KP – (CRM)', 'KP – Factory Outlet', 'KP – Exclusive Outlet',
   'Happiness', 'Purchase', 'Warehouse', 'Media', 'Marketing', 'Accounts',
 ];
 
@@ -26,7 +26,7 @@ const DEPT_FIELDS = {
 
 const DEPT_GROUPS = [
   { label: 'CRM – AYUSH',    depts: ['AYUSH', 'Bioclean', 'Theertha'] },
-  { label: 'KP',              depts: ['KP(CRM)', 'KP – Factory Outlet', 'KP – Exclusive Outlet'] },
+  { label: 'KP',              depts: ['KP – (CRM)', 'KP – Factory Outlet', 'KP – Exclusive Outlet'] },
   { label: 'Support',         depts: ['Happiness', 'Purchase', 'Warehouse', 'Media', 'Marketing', 'Accounts'] },
 ];
 
@@ -35,10 +35,10 @@ const ROLE_PRESETS = [
   { group: 'CRM – AYUSH',    label: 'AYUSH Team Lead',                          jobTitle: 'Team Lead',           depts: ['AYUSH'],                                                                        primaryDept: 'AYUSH' },
   { group: 'CRM – AYUSH',    label: 'Bioclean Team Lead',                        jobTitle: 'Team Lead',           depts: ['Bioclean'],                                                                     primaryDept: 'Bioclean' },
   { group: 'CRM – AYUSH',    label: 'Theertha Team Lead',                        jobTitle: 'Team Lead',           depts: ['Theertha'],                                                                     primaryDept: 'Theertha' },
-  { group: 'KP',              label: 'AGM',                             jobTitle: 'AGM',                 depts: ['KP –(CRM)', 'KP – Factory Outlet', 'KP – Exclusive Outlet'],              primaryDept: 'KP –(CRM)' },
-  { group: 'KP',              label: 'OM',                              jobTitle: 'Operations Manager',  depts: ['KP –(CRM)', 'KP – Factory Outlet', 'KP – Exclusive Outlet'],              primaryDept: 'KP –(CRM)' },
-  { group: 'KP',              label: 'Team Lead',                       jobTitle: 'Team Lead',           depts: ['KP –(CRM)'],                                                               primaryDept: 'KP –(CRM)' },
-  { group: 'KP',              label: 'Technical Head',                      jobTitle: 'Technical Head',      depts: ['KP – (CRM)', 'KP – Factory Outlet', 'KP – Exclusive Outlet', 'Happiness'], primaryDept: 'KP –(CRM)' },
+  { group: 'KP',              label: 'AGM',                             jobTitle: 'AGM',                 depts: ['KP – (CRM)', 'KP – Factory Outlet', 'KP – Exclusive Outlet'],              primaryDept: 'KP – (CRM)' },
+  { group: 'KP',              label: 'OM',                              jobTitle: 'Operations Manager',  depts: ['KP – (CRM)', 'KP – Factory Outlet', 'KP – Exclusive Outlet'],              primaryDept: 'KP – (CRM)' },
+  { group: 'KP',              label: 'Team Lead',                       jobTitle: 'Team Lead',           depts: ['KP – (CRM)'],                                                               primaryDept: 'KP – (CRM)' },
+  { group: 'KP',              label: 'Technical Head',                      jobTitle: 'Technical Head',      depts: ['KP – (CRM)', 'KP – Factory Outlet', 'KP – Exclusive Outlet', 'Happiness'], primaryDept: 'KP – (CRM)' },
   { group: 'KP',              label: 'Factory Outlet — AGM',                      jobTitle: 'AGM',                 depts: ['KP – Factory Outlet'],                                                          primaryDept: 'KP – Factory Outlet' },
   { group: 'KP',              label: 'Factory Outlet — OM',                       jobTitle: 'Operations Manager',  depts: ['KP – Factory Outlet'],                                                          primaryDept: 'KP – Factory Outlet' },
   { group: 'KP',              label: 'Factory Outlet — Purchase Manager',          jobTitle: 'Purchase Manager',    depts: ['KP – Factory Outlet', 'Purchase'],                                              primaryDept: 'KP – Factory Outlet' },
