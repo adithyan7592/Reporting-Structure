@@ -16,7 +16,10 @@ const DEPT_FIELDS = {
   'KP – (CRM)':          ['Total No. of Calls', 'Quality Leads', 'No. of Converted Calls', 'No. of Quotations', 'No. of Followups', 'Factory Outlet Leads', 'Exclusive Outlet Leads', 'Total Sales Value', 'Remarks if Any'],
   'KP – Factory Outlet': ['Total No. of Walkins', 'Total No. of Bills', 'Total No. of Quotations', 'Total Sales Value', 'PO Status', 'GRN Status', 'No. of Home Deliveries', 'Painters Commission in Amt', 'Vehicle Running KM', 'Stock Alert', 'Outlet Remarks','Factory Outlet'],
   'KP – Exclusive Outlet': ['Total No. of Walkins', 'Total No. of Bills', 'Total No. of Quotations', 'Total Sales Value', 'PO Status', 'GRN Status', 'Stock Alert', 'Outlet Remarks','Exclusive Outlet'],
-  'Happiness':           ['No of New Complaints', 'Total No. of Pending Complaints', 'Total No. of Complaints > 6 days', 'No. of complaints solved', 'No of New Positive Reviews', 'No of New Negative Reviews', 'Complaint Resolution Cost', 'Remarks'],
+'Happiness – Technical Co-ordinator': ['No. of New Complaints', 'Total No. of Pending Complaints', 'Total No. of Complaints > 6 days', 'No. of complaints solved', 'No of New Positive Reviews', 'No of New Negative Reviews', 'Complaint Resolution Cost', 'Remarks'],
+'Happiness – Technical Head': ['Complaint Details', 'Solution Stage', 'Vehicle', 'Status (Service / Insurance / Tax)'],
+'Happiness – Insurance Co-ordinator': ['No. of New Insurance Issued by F Outlets', 'No. of New Insurance Issued by E Outlets', 'No. of Claims Pending', 'No. of Claims Provided', 'Total Claim Amount', 'Remarks'],
+'Happiness – Outlet Support Co-ordinator': ['New MOU', 'New Openings with Date', 'Board Design Provided & Details', 'Outlet Training & Details', 'Outlets Interior Completed', 'Outlets Cancelled if Any'],
   'Purchase': ['Report Type', 'No. of PO Placed For F. Outlets', 'Amount of PO F. Outlets', 'No. of PO Placed For E. Outlets', 'Amount of PO E. Outlets', 'No of Total Deliveries', 'No of Total GRN Received', 'Brand / Division', 'Item', 'Vendor', 'Amount', 'Exp. Delivery Date', 'Remarks'],
   'Warehouse':           ['No. of Loads Received', 'No. of Loads Dispatched', 'Total GRN Entries', 'Pending Delivery Orders', 'Damage/Return Stock', 'Warehouse Notes'],
   'Media':               ['Campaign Name', 'Platform', 'Leads Generated', 'Ad Spend', 'Notes'],
@@ -27,7 +30,7 @@ const DEPT_FIELDS = {
 const DEPT_GROUPS = [
   { label: 'CRM – AYUSH',    depts: ['AYUSH', 'Bioclean', 'Theertha'] },
   { label: 'KP',              depts: ['KP – (CRM)', 'KP – Factory Outlet', 'KP – Exclusive Outlet'] },
-  { label: 'Support',         depts: ['Happiness', 'Purchase', 'Warehouse', 'Media', 'Marketing', 'Accounts'] },
+  { label: 'Support',         depts: ['Happiness – Technical Co-ordinator', 'Happiness – Technical Head', 'Happiness – Insurance Co-ordinator', 'Happiness – Outlet Support Co-ordinator', 'Purchase', 'Warehouse', 'Media', 'Marketing', 'Accounts'] },
 ];
 
 const ROLE_PRESETS = [
@@ -44,9 +47,10 @@ const ROLE_PRESETS = [
   { group: 'KP',              label: 'Factory Outlet — Purchase Manager',          jobTitle: 'Purchase Manager',    depts: ['KP – Factory Outlet', 'Purchase'],                                              primaryDept: 'KP – Factory Outlet' },
   { group: 'KP',              label: 'Exclusive Outlet — Manager',                jobTitle: 'Manager',             depts: ['KP – Exclusive Outlet'],                                                        primaryDept: 'KP – Exclusive Outlet' },
   { group: 'KP',              label: 'Exclusive Outlet — Outlet Co-ordinator',    jobTitle: 'Outlet Co-ordinator', depts: ['KP – Exclusive Outlet'],                                                        primaryDept: 'KP – Exclusive Outlet' },
-  { group: 'Support',         label: 'Happiness — Technical Head',                jobTitle: 'Technical Head',      depts: ['Happiness'],                                                                    primaryDept: 'Happiness' },
-  { group: 'Support',         label: 'Happiness — Technical Co-ordinator',        jobTitle: 'Technical Co-ordinator', depts: ['Happiness'],                                                               primaryDept: 'Happiness' },
-  { group: 'Support',         label: 'Happiness — Insurance Co-ordinator',        jobTitle: 'Insurance Co-ordinator', depts: ['Happiness'],                                                               primaryDept: 'Happiness' },
+ { group: 'Support', label: 'Happiness — Technical Head',               jobTitle: 'Technical Head',               depts: ['Happiness – Technical Head'],               primaryDept: 'Happiness – Technical Head' },
+ { group: 'Support', label: 'Happiness — Technical Co-ordinator',       jobTitle: 'Technical Co-ordinator',       depts: ['Happiness – Technical Co-ordinator'],       primaryDept: 'Happiness – Technical Co-ordinator' },
+ { group: 'Support', label: 'Happiness — Insurance Co-ordinator',       jobTitle: 'Insurance Co-ordinator',       depts: ['Happiness – Insurance Co-ordinator'],       primaryDept: 'Happiness – Insurance Co-ordinator' },
+ { group: 'Support', label: 'Happiness — Outlet Support Co-ordinator',  jobTitle: 'Outlet Support Co-ordinator',  depts: ['Happiness – Outlet Support Co-ordinator'],  primaryDept: 'Happiness – Outlet Support Co-ordinator' },
   { group: 'Support',         label: 'Purchase Manager',                           jobTitle: 'Purchase Manager',    depts: ['Purchase'],                                                                     primaryDept: 'Purchase' },
   { group: 'Support',         label: 'Warehouse Manager',                          jobTitle: 'Warehouse Manager',   depts: ['Warehouse'],                                                                    primaryDept: 'Warehouse' },
   { group: 'Support',         label: 'Media — Head',                               jobTitle: 'Head',                depts: ['Media'],                                                                        primaryDept: 'Media' },

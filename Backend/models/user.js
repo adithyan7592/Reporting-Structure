@@ -3,7 +3,11 @@ const mongoose = require('mongoose');
 const ALL_DEPARTMENTS = [
   'AYUSH', 'Bioclean', 'Theertha',
   'KP – (CRM)', 'KP – Factory Outlet', 'KP – Exclusive Outlet',
-  'Happiness', 'Purchase', 'Warehouse', 'Media', 'Marketing', 'Accounts',
+'Happiness – Technical Co-ordinator',
+'Happiness – Technical Head',
+'Happiness – Insurance Co-ordinator',
+'Happiness – Outlet Support Co-ordinator',
+'Purchase', 'Warehouse', 'Media', 'Marketing', 'Accounts',
 ];
 
 // Per-dept access: which fields a manager can see in that department
