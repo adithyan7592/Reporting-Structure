@@ -6,7 +6,11 @@ import { useNavigate } from 'react-router-dom';
 const ALL_DEPARTMENTS = [
   'AYUSH', 'Bioclean', 'Theertha',
   'KP – (CRM)', 'KP – Factory Outlet', 'KP – Exclusive Outlet',
-  'Happiness', 'Purchase', 'Warehouse', 'Media', 'Marketing', 'Accounts',
+'Happiness – Technical Co-ordinator',
+'Happiness – Technical Head',
+'Happiness – Insurance Co-ordinator',
+'Happiness – Outlet Support Co-ordinator',
+'Purchase', 'Warehouse', 'Media', 'Marketing', 'Accounts',
 ];
 
 const DEPT_FIELDS = {
@@ -41,7 +45,7 @@ const ROLE_PRESETS = [
   { group: 'KP',              label: 'AGM',                             jobTitle: 'AGM',                 depts: ['KP – (CRM)', 'KP – Factory Outlet', 'KP – Exclusive Outlet'],              primaryDept: 'KP – (CRM)' },
   { group: 'KP',              label: 'OM',                              jobTitle: 'Operations Manager',  depts: ['KP – (CRM)', 'KP – Factory Outlet', 'KP – Exclusive Outlet'],              primaryDept: 'KP – (CRM)' },
   { group: 'KP',              label: 'Team Lead',                       jobTitle: 'Team Lead',           depts: ['KP – (CRM)'],                                                               primaryDept: 'KP – (CRM)' },
-  { group: 'KP',              label: 'Technical Head',                      jobTitle: 'Technical Head',      depts: ['KP – (CRM)', 'KP – Factory Outlet', 'KP – Exclusive Outlet', 'Happiness'], primaryDept: 'KP – (CRM)' },
+  { group: 'KP', label: 'Technical Head', jobTitle: 'Technical Head', depts: ['KP – (CRM)', 'KP – Factory Outlet', 'KP – Exclusive Outlet', 'Happiness – Technical Co-ordinator', 'Happiness – Technical Head'], primaryDept: 'KP – (CRM)' },
   { group: 'KP',              label: 'Factory Outlet — AGM',                      jobTitle: 'AGM',                 depts: ['KP – Factory Outlet'],                                                          primaryDept: 'KP – Factory Outlet' },
   { group: 'KP',              label: 'Factory Outlet — OM',                       jobTitle: 'Operations Manager',  depts: ['KP – Factory Outlet'],                                                          primaryDept: 'KP – Factory Outlet' },
   { group: 'KP',              label: 'Factory Outlet — Purchase Manager',          jobTitle: 'Purchase Manager',    depts: ['KP – Factory Outlet', 'Purchase'],                                              primaryDept: 'KP – Factory Outlet' },
