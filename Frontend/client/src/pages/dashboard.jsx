@@ -73,7 +73,7 @@ const departmentConfig = {
     { label: 'GRN Status',              type: 'text' },
     { label: 'Stock Alert',             type: 'number' },
     { label: 'Outlet Remarks',          type: 'textarea' },
-     { label: 'Exclusive Outlet', type: 'text' },
+    { label: 'Exclusive Outlet', type: 'text' },
   ],
   'Happiness': [
     { label: 'No of New Complaints',              type: 'number' },
