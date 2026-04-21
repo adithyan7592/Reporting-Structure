@@ -1,45 +1,53 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import Login from './pages/login';
 import Dashboard from './pages/dashboard';
-import AdminUserMgmt from './pages/AdminUserMgmt'; 
+import AdminUserMgmt from './pages/AdminUserMgmt';
+
+function ProtectedRoute({ children }) {
+  const token = localStorage.getItem('token');
+  if (!token) return <Navigate to="/login" replace />;
+  return children;
+}
+
+function AdminRoute({ children }) {
+  const token = localStorage.getItem('token');
+  const role = localStorage.getItem('role');
+  if (!token) return <Navigate to="/login" replace />;
+  // Allow both superadmin and manager
+  if (role !== 'superadmin' && role !== 'manager') return <Navigate to="/dashboard" replace />;
+  return children;
+}
 
 function App() {
-  // Function to check current auth status
-  const checkAuth = () => {
-    const token = localStorage.getItem('token');
-    const role = localStorage.getItem('role');
-    return { isAuth: !!token, role };
-  };
-
-  const auth = checkAuth();
-
   return (
     <Router>
       <Routes>
-        {/* Public Route */}
+        {/* Public */}
         <Route path="/login" element={<Login />} />
 
-        {/* Dashboard: Available to any authenticated user */}
-        <Route 
-          path="/dashboard" 
-          element={checkAuth().isAuth ? <Dashboard /> : <Navigate to="/login" />} 
-        />
-
-        {/* Admin: Strictly for Superadmins */}
-        <Route 
-          path="/admin" 
+        {/* Dashboard — any logged in user */}
+        <Route
+          path="/dashboard"
           element={
-            checkAuth().isAuth && checkAuth().role === 'superadmin' 
-              ? <AdminUserMgmt /> 
-              : <Navigate to="/dashboard" />
-          } 
+            <ProtectedRoute>
+              <Dashboard />
+            </ProtectedRoute>
+          }
         />
 
-        {/* Default Landing */}
-        <Route path="/" element={<Navigate to="/login" />} />
-        
-        {/* Catch-all to prevent 404s */}
-        <Route path="*" element={<Navigate to="/login" />} />
+        {/* Admin — superadmin and manager */}
+        <Route
+          path="/admin"
+          element={
+            <AdminRoute>
+              <AdminUserMgmt />
+            </AdminRoute>
+          }
+        />
+
+        {/* Default */}
+        <Route path="/" element={<Navigate to="/login" replace />} />
+        <Route path="*" element={<Navigate to="/login" replace />} />
       </Routes>
     </Router>
   );
