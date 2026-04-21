@@ -62,6 +62,7 @@ const departmentConfig = {
     { label: 'Vehicle Running KM',            type: 'number' },
     { label: 'Stock Alert',                   type: 'number' },
     { label: 'Outlet Remarks',                type: 'textarea' },
+    { label: 'Factory Outlet', type: 'text' },
   ],
   'KP – Exclusive Outlet': [
     { label: 'Total No. of Walkins',    type: 'number' },
@@ -72,6 +73,7 @@ const departmentConfig = {
     { label: 'GRN Status',              type: 'text' },
     { label: 'Stock Alert',             type: 'number' },
     { label: 'Outlet Remarks',          type: 'textarea' },
+     { label: 'Exclusive Outlet', type: 'text' },
   ],
   'Happiness': [
     { label: 'No of New Complaints',              type: 'number' },
