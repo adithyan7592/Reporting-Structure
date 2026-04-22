@@ -25,7 +25,8 @@ const DEPT_FIELDS = {
 'Happiness – Insurance Co-ordinator': ['No. of New Insurance Issued by F Outlets', 'No. of New Insurance Issued by E Outlets', 'No. of Claims Pending', 'No. of Claims Provided', 'Total Claim Amount', 'Remarks'],
 'Happiness – Outlet Support Co-ordinator': ['New MOU', 'New Openings with Date', 'Board Design Provided & Details', 'Outlet Training & Details', 'Outlets Interior Completed', 'Outlets Cancelled if Any'],
   'Purchase': ['Report Type', 'No. of PO Placed For F. Outlets', 'Amount of PO F. Outlets', 'No. of PO Placed For E. Outlets', 'Amount of PO E. Outlets', 'No of Total Deliveries', 'No of Total GRN Received', 'Brand / Division', 'Item', 'Vendor', 'Amount', 'Exp. Delivery Date', 'Remarks'],
-  'Warehouse':           ['No. of Loads Received', 'No. of Loads Dispatched', 'Total GRN Entries', 'Pending Delivery Orders', 'Damage/Return Stock', 'Warehouse Notes'],
+  'Warehouse – KP':    ['No. of Dispatch to F Outlets', 'No. of Dispatch to E Outlets', 'No. of Stock Received', 'Vendors Name', 'No. of Pending Dispatches', 'Reason for Pending', 'Stock Alert', 'Remarks'],
+'Warehouse – Ayush': ['No. of List Received', 'No. of List Dispatched', 'Dispatched List Numbers', 'No. of List Pending', 'Pending List Numbers', 'Reason for Pending', 'Stock Received if Any', 'Stock Alert', 'Remarks'],
   'Media – Camera Man':  ['No. of Work Out', 'Work Explanation', 'Next Day Work'],
 'Media – Video Editor': ['No. of Videos Out', 'Out Explanation', 'Next Day Work'],
 'Media – Designer':    ['No. of Designs Completed', 'Design Explanation', 'Next Day Work'],
@@ -36,7 +37,7 @@ const DEPT_FIELDS = {
 const DEPT_GROUPS = [
   { label: 'CRM – AYUSH',    depts: ['AYUSH', 'Bioclean', 'Theertha'] },
   { label: 'KP',              depts: ['KP – (CRM)', 'KP – Factory Outlet', 'KP – Exclusive Outlet'] },
-  { label: 'Support',         depts: ['Happiness – Technical Co-ordinator', 'Happiness – Technical Head', 'Happiness – Insurance Co-ordinator', 'Happiness – Outlet Support Co-ordinator', 'Purchase', 'Warehouse', 'Media – Camera Man', 'Media – Video Editor', 'Media – Designer', 'Marketing', 'Accounts'] },
+  { label: 'Support',         depts: ['Happiness – Technical Co-ordinator', 'Happiness – Technical Head', 'Happiness – Insurance Co-ordinator', 'Happiness – Outlet Support Co-ordinator', 'Purchase', 'Warehouse – KP', 'Warehouse – Ayush', 'Media – Camera Man', 'Media – Video Editor', 'Media – Designer', 'Marketing', 'Accounts'] },
 ];
 
 const ROLE_PRESETS = [
@@ -58,7 +59,8 @@ const ROLE_PRESETS = [
  { group: 'Support', label: 'Happiness — Insurance Co-ordinator',       jobTitle: 'Insurance Co-ordinator',       depts: ['Happiness – Insurance Co-ordinator'],       primaryDept: 'Happiness – Insurance Co-ordinator' },
  { group: 'Support', label: 'Happiness — Outlet Support Co-ordinator',  jobTitle: 'Outlet Support Co-ordinator',  depts: ['Happiness – Outlet Support Co-ordinator'],  primaryDept: 'Happiness – Outlet Support Co-ordinator' },
   { group: 'Support',         label: 'Purchase Manager',                           jobTitle: 'Purchase Manager',    depts: ['Purchase'],                                                                     primaryDept: 'Purchase' },
-  { group: 'Support',         label: 'Warehouse Manager',                          jobTitle: 'Warehouse Manager',   depts: ['Warehouse'],                                                                    primaryDept: 'Warehouse' },
+{ group: 'Support', label: 'KP Warehouse Incharge',    jobTitle: 'Warehouse Incharge', depts: ['Warehouse – KP'],    primaryDept: 'Warehouse – KP' },
+{ group: 'Support', label: 'Ayush Warehouse Incharge',  jobTitle: 'Warehouse Incharge', depts: ['Warehouse – Ayush'], primaryDept: 'Warehouse – Ayush' },
 { group: 'Support', label: 'Media — Head', jobTitle: 'Head', depts: ['Media – Camera Man', 'Media – Video Editor', 'Media – Designer'], primaryDept: 'Media – Camera Man' },
   { group: 'Support',         label: 'Marketing — Head',                           jobTitle: 'Head',                depts: ['Marketing'],                                                                    primaryDept: 'Marketing' },
 ];
