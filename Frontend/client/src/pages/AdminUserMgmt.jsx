@@ -10,7 +10,7 @@ const ALL_DEPARTMENTS = [
 'Happiness – Technical Head',
 'Happiness – Insurance Co-ordinator',
 'Happiness – Outlet Support Co-ordinator',
-'Purchase', 'Warehouse', 'Media', 'Marketing', 'Accounts',
+'Purchase', 'Warehouse', 'Media – Camera Man', 'Media – Video Editor', 'Media – Designer', 'Marketing', 'Accounts',
 ];
 
 const DEPT_FIELDS = {
@@ -26,7 +26,9 @@ const DEPT_FIELDS = {
 'Happiness – Outlet Support Co-ordinator': ['New MOU', 'New Openings with Date', 'Board Design Provided & Details', 'Outlet Training & Details', 'Outlets Interior Completed', 'Outlets Cancelled if Any'],
   'Purchase': ['Report Type', 'No. of PO Placed For F. Outlets', 'Amount of PO F. Outlets', 'No. of PO Placed For E. Outlets', 'Amount of PO E. Outlets', 'No of Total Deliveries', 'No of Total GRN Received', 'Brand / Division', 'Item', 'Vendor', 'Amount', 'Exp. Delivery Date', 'Remarks'],
   'Warehouse':           ['No. of Loads Received', 'No. of Loads Dispatched', 'Total GRN Entries', 'Pending Delivery Orders', 'Damage/Return Stock', 'Warehouse Notes'],
-  'Media':               ['Campaign Name', 'Platform', 'Leads Generated', 'Ad Spend', 'Notes'],
+  'Media – Camera Man':  ['No. of Work Out', 'Work Explanation', 'Next Day Work'],
+'Media – Video Editor': ['No. of Videos Out', 'Out Explanation', 'Next Day Work'],
+'Media – Designer':    ['No. of Designs Completed', 'Design Explanation', 'Next Day Work'],
   'Marketing':           ['Campaign Name', 'Platform', 'Leads Generated', 'Budget Spent', 'Notes'],
   'Accounts':            ['Total Collections (Daily)', 'Total Payments Made', 'Pending Vendor Invoices', 'Bank Deposit Amount', 'Outstanding Dues (New)', 'Accounts Summary'],
 };
@@ -34,7 +36,7 @@ const DEPT_FIELDS = {
 const DEPT_GROUPS = [
   { label: 'CRM – AYUSH',    depts: ['AYUSH', 'Bioclean', 'Theertha'] },
   { label: 'KP',              depts: ['KP – (CRM)', 'KP – Factory Outlet', 'KP – Exclusive Outlet'] },
-  { label: 'Support',         depts: ['Happiness – Technical Co-ordinator', 'Happiness – Technical Head', 'Happiness – Insurance Co-ordinator', 'Happiness – Outlet Support Co-ordinator', 'Purchase', 'Warehouse', 'Media', 'Marketing', 'Accounts'] },
+  { label: 'Support',         depts: ['Happiness – Technical Co-ordinator', 'Happiness – Technical Head', 'Happiness – Insurance Co-ordinator', 'Happiness – Outlet Support Co-ordinator', 'Purchase', 'Warehouse', 'Media – Camera Man', 'Media – Video Editor', 'Media – Designer', 'Marketing', 'Accounts'] },
 ];
 
 const ROLE_PRESETS = [
@@ -57,7 +59,7 @@ const ROLE_PRESETS = [
  { group: 'Support', label: 'Happiness — Outlet Support Co-ordinator',  jobTitle: 'Outlet Support Co-ordinator',  depts: ['Happiness – Outlet Support Co-ordinator'],  primaryDept: 'Happiness – Outlet Support Co-ordinator' },
   { group: 'Support',         label: 'Purchase Manager',                           jobTitle: 'Purchase Manager',    depts: ['Purchase'],                                                                     primaryDept: 'Purchase' },
   { group: 'Support',         label: 'Warehouse Manager',                          jobTitle: 'Warehouse Manager',   depts: ['Warehouse'],                                                                    primaryDept: 'Warehouse' },
-  { group: 'Support',         label: 'Media — Head',                               jobTitle: 'Head',                depts: ['Media'],                                                                        primaryDept: 'Media' },
+{ group: 'Support', label: 'Media — Head', jobTitle: 'Head', depts: ['Media – Camera Man', 'Media – Video Editor', 'Media – Designer'], primaryDept: 'Media – Camera Man' },
   { group: 'Support',         label: 'Marketing — Head',                           jobTitle: 'Head',                depts: ['Marketing'],                                                                    primaryDept: 'Marketing' },
 ];
 

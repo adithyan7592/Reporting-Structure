@@ -135,13 +135,21 @@ const departmentConfig = {
     { label: 'Damage/Return Stock',     type: 'number' },
     { label: 'Warehouse Notes',         type: 'textarea' },
   ],
-  'Media': [
-    { label: 'Campaign Name',   type: 'text' },
-    { label: 'Platform',        type: 'text' },
-    { label: 'Leads Generated', type: 'number' },
-    { label: 'Ad Spend',        type: 'number' },
-    { label: 'Notes',           type: 'textarea' },
-  ],
+'Media – Camera Man': [
+  { label: 'No. of Work Out',    type: 'number' },
+  { label: 'Work Explanation',   type: 'textarea' },
+  { label: 'Next Day Work',      type: 'textarea' },
+],
+'Media – Video Editor': [
+  { label: 'No. of Videos Out',  type: 'number' },
+  { label: 'Out Explanation',    type: 'textarea' },
+  { label: 'Next Day Work',      type: 'textarea' },
+],
+'Media – Designer': [
+  { label: 'No. of Designs Completed', type: 'number' },
+  { label: 'Design Explanation',       type: 'textarea' },
+  { label: 'Next Day Work',            type: 'textarea' },
+],
   'Marketing': [
     { label: 'Campaign Name',   type: 'text' },
     { label: 'Platform',        type: 'text' },

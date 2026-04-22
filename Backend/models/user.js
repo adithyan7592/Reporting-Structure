@@ -7,7 +7,7 @@ const ALL_DEPARTMENTS = [
   'Happiness – Technical Head',
   'Happiness – Insurance Co-ordinator',
   'Happiness – Outlet Support Co-ordinator',
-  'Purchase', 'Warehouse', 'Media', 'Marketing', 'Accounts',
+'Purchase', 'Warehouse', 'Media – Camera Man', 'Media – Video Editor', 'Media – Designer', 'Marketing', 'Accounts',
 ];
 
 // Per-dept access: which fields a manager can see in that department
