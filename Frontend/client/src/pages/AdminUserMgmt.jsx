@@ -270,7 +270,11 @@ export default function AdminUserMgmt() {
 
   const filteredUsers = users.filter(u => filterRole === 'all' || u.role === filterRole);
 
-  const roleChip = (r) => ({ manager: 'bg-emerald-100 text-emerald-700', staff: 'bg-blue-50 text-blue-600' }[r] || 'bg-slate-100 text-slate-600');
+  const roleChip = (r) => ({
+  management: 'bg-rose-100 text-rose-700',
+  manager:    'bg-emerald-100 text-emerald-700',
+  staff:      'bg-blue-50 text-blue-600',
+}[r] || 'bg-slate-100 text-slate-600');
 
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col md:flex-row">
@@ -345,7 +349,8 @@ export default function AdminUserMgmt() {
                   <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Role</label>
                   <select className="w-full p-3 border border-slate-200 rounded-xl bg-slate-50 font-medium text-sm" value={formData.role} onChange={e => setFormData({ ...formData, role: e.target.value })} disabled={role === 'manager'}>
                     <option value="staff">Staff / Agent</option>
-                    {role === 'superadmin' && <option value="manager">Manager</option>}
+                  {role === 'superadmin' && <option value="management">Management</option>}
+{role === 'superadmin' && <option value="manager">Manager</option>}
                   </select>
                 </div>
                 <div>
@@ -400,12 +405,12 @@ export default function AdminUserMgmt() {
             <div className="p-6 border-b border-slate-100 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
               <h2 className="text-xl font-black text-slate-900">Active Accounts</h2>
               <div className="flex gap-2">
-                {['all', 'manager', 'staff'].map(r => (
-                  <button key={r} onClick={() => setFilterRole(r)}
-                    className={`px-4 py-2 rounded-xl text-xs font-bold border transition ${filterRole === r ? 'bg-slate-900 text-white border-slate-900' : 'border-slate-200 text-slate-500 hover:bg-slate-50'}`}>
-                    {r === 'all' ? 'All' : r === 'manager' ? '🟢 Managers' : '🔵 Staff'}
-                  </button>
-                ))}
+              {['all', 'management', 'manager', 'staff'].map(r => (
+  <button key={r} onClick={() => setFilterRole(r)}
+    className={`px-4 py-2 rounded-xl text-xs font-bold border transition ${filterRole === r ? 'bg-slate-900 text-white border-slate-900' : 'border-slate-200 text-slate-500 hover:bg-slate-50'}`}>
+    {r === 'all' ? 'All' : r === 'management' ? '🔴 Management' : r === 'manager' ? '🟢 Managers' : '🔵 Staff'}
+  </button>
+))}
               </div>
             </div>
 

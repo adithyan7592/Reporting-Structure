@@ -14,7 +14,7 @@ function AdminRoute({ children }) {
   const role = localStorage.getItem('role');
   if (!token) return <Navigate to="/login" replace />;
   // Allow both superadmin and manager
-  if (role !== 'superadmin' && role !== 'manager') return <Navigate to="/dashboard" replace />;
+if (role !== 'superadmin' && role !== 'management' && role !== 'manager') return <Navigate to="/dashboard" replace />;
   return children;
 }
 

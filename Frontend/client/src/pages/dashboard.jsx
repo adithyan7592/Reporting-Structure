@@ -431,13 +431,13 @@ export default function Dashboard() {
   try { managedDepts = JSON.parse(localStorage.getItem('managedDepts') || '[]'); } catch { managedDepts = []; }
 
   const navigate = useNavigate();
-  const isViewer         = role === 'superadmin' || role === 'manager';
-  const canSeeAdminPanel = role === 'superadmin';
+const isViewer = role === 'superadmin' || role === 'management' || role === 'manager';
+const canSeeAdminPanel = role === 'superadmin' || role === 'management';
 
-  const viewableDepts = role === 'superadmin' ? ALL_DEPTS : managedDepts.map(d => d.dept);
+const viewableDepts = (role === 'superadmin' || role === 'management') ? ALL_DEPTS : managedDepts.map(d => d.dept);
 
   const getAllowedFields = (deptName) => {
-    if (role === 'superadmin') return null;
+  if (role === 'superadmin' || role === 'management') return null;
     const entry = managedDepts.find(d => d.dept === deptName);
     if (!entry) return [];
     const allForDept = (departmentConfig[deptName] || []).map(f => f.label);
@@ -486,11 +486,12 @@ export default function Dashboard() {
     return matchesSearch && matchesDate;
   }), [reports, searchQuery, selectedDate]);
 
-  const roleBadge = {
-    superadmin: { label: 'Super Admin',        bg: 'bg-purple-600' },
-    manager:    { label: jobTitle || 'Manager', bg: 'bg-emerald-600' },
-    staff:      { label: dept,                  bg: 'bg-blue-600' },
-  }[role] || { label: dept, bg: 'bg-blue-600' };
+const roleBadge = {
+  superadmin:  { label: 'Super Admin',        bg: 'bg-purple-600' },
+  management:  { label: 'Management',         bg: 'bg-rose-600' },
+  manager:     { label: jobTitle || 'Manager', bg: 'bg-emerald-600' },
+  staff:       { label: dept,                  bg: 'bg-blue-600' },
+}[role] || { label: dept, bg: 'bg-blue-600' };
 
   const currentAllowedFields = getAllowedFields(activeDept);
 
@@ -514,11 +515,11 @@ export default function Dashboard() {
         </div>
         <nav className="space-y-2 flex-1">
           <div className="p-3 rounded-xl bg-blue-600 font-semibold shadow-lg text-sm">Dashboard</div>
-          {(canSeeAdminPanel || role === 'manager') && (
-            <button onClick={() => navigate('/admin')} className="w-full text-left p-3 rounded-xl border border-blue-400/30 text-blue-400 hover:bg-blue-400 hover:text-white transition text-sm">
-              {role === 'manager' ? '👥 Manage Agents' : 'Admin Settings'}
-            </button>
-          )}
+         {(canSeeAdminPanel || role === 'manager') && (
+  <button onClick={() => navigate('/admin')} className="w-full text-left p-3 rounded-xl border border-blue-400/30 text-blue-400 hover:bg-blue-400 hover:text-white transition text-sm">
+    {role === 'manager' ? '👥 Manage Agents' : 'Admin Settings'}
+  </button>
+)}
           {role === 'staff' && (
             <button onClick={() => setIsModalOpen(true)} className="w-full text-left p-3 rounded-xl bg-emerald-600 text-white font-semibold mt-4 hover:bg-emerald-700 transition text-sm">+ New Entry</button>
           )}

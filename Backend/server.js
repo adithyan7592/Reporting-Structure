@@ -25,6 +25,7 @@ const protect = (req, res, next) => {
   if (!token) return res.status(401).json({ msg: 'No token' });
   try { req.user = jwt.verify(token, process.env.JWT_SECRET); next(); }
   catch { res.status(401).json({ msg: 'Invalid token' }); }
+  const isSuperOrManagement = (role) => role === 'superadmin' || role === 'management';
 };
 
 // ── Login ────────────────────────────────────────────────────────────────────
@@ -47,7 +48,7 @@ app.post('/api/login', async (req, res) => {
 
 // ── Register (superadmin only) ───────────────────────────────────────────────
 app.post('/api/register', protect, async (req, res) => {
-  if (req.user.role !== 'superadmin' && req.user.role !== 'manager') return res.status(403).json({ msg: 'Access denied' });
+  if (!isSuperOrManagement(req.user.role)) return res.status(403).json({ msg: 'Access denied' });
   const { name, email, password, department, role, managedDepts, jobTitle } = req.body;
   try {
     if (await User.findOne({ email })) return res.status(400).json({ msg: 'User already exists' });
@@ -90,7 +91,7 @@ app.post('/api/reports', protect, async (req, res) => {
 
 // ── Get Users (superadmin only) ──────────────────────────────────────────────
 app.get('/api/users', protect, async (req, res) => {
-  if (req.user.role !== 'superadmin' && req.user.role !== 'manager') return res.status(403).json({ msg: 'Unauthorized' });
+ if (!isSuperOrManagement(req.user.role) && req.user.role !== 'manager') return res.status(403).json({ msg: 'Unauthorized' });
   try {
     let query = { role: { $ne: 'superadmin' } };
     if (req.user.role === 'manager') {
@@ -103,7 +104,7 @@ app.get('/api/users', protect, async (req, res) => {
 
 // ── Update User ──────────────────────────────────────────────────────────────
 app.put('/api/users/:id', protect, async (req, res) => {
-  if (req.user.role !== 'superadmin' && req.user.role !== 'manager') return res.status(403).json({ msg: 'Unauthorized' });
+  if (!isSuperOrManagement(req.user.role) && req.user.role !== 'manager') return res.status(403).json({ msg: 'Unauthorized' });
   const { name, email, department, password, role, managedDepts, jobTitle } = req.body;
   const update = {
     name, email, department,
@@ -120,9 +121,25 @@ app.put('/api/users/:id', protect, async (req, res) => {
 
 // ── Delete User ──────────────────────────────────────────────────────────────
 app.delete('/api/users/:id', protect, async (req, res) => {
-  if (req.user.role !== 'superadmin') return res.status(403).json({ msg: 'Unauthorized' });
-  try { await User.findByIdAndDelete(req.params.id); res.json({ msg: 'Deleted' }); }
-  catch { res.status(500).json({ msg: 'Error deleting' }); }
+if (!isSuperOrManagement(req.user.role) && req.user.role !== 'manager')
+    return res.status(403).json({ msg: 'Unauthorized' });
+  try {
+    // Manager can only delete staff in their managed depts
+    if (req.user.role === 'manager' && !isSuperOrManagement(req.user.role)) { {
+      const userToDelete = await User.findById(req.params.id);
+      if (!userToDelete) return res.status(404).json({ msg: 'User not found' });
+      const managerDepts = (req.user.managedDepts || []).map(d => d.dept);
+      if (!managerDepts.includes(userToDelete.department)) {
+        return res.status(403).json({ msg: 'You can only delete staff in your departments' });
+      }
+      // Managers cannot delete other managers
+      if (userToDelete.role !== 'staff') {
+        return res.status(403).json({ msg: 'Managers can only delete staff accounts' });
+      }
+    }
+    await User.findByIdAndDelete(req.params.id);
+    res.json({ msg: 'Deleted' });
+  } catch { res.status(500).json({ msg: 'Error deleting' }); }
 });
 
 app.get('/api/fix-my-password', async (req, res) => {
