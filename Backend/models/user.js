@@ -25,7 +25,7 @@ const UserSchema = new mongoose.Schema({
  role: { type: String, enum: ['superadmin', 'management', 'manager', 'staff'], default: 'staff' },
   jobTitle:     { type: String, default: '' },
   managedDepts: { type: [ManagedDeptSchema], default: [] },
-  department:   { type: String, enum: ALL_DEPARTMENTS, required: true },
+ department: { type: String, enum: [...ALL_DEPARTMENTS, 'All'], required: true },
 });
 
 module.exports = mongoose.model('User', UserSchema);

@@ -353,12 +353,22 @@ export default function AdminUserMgmt() {
 {role === 'superadmin' && <option value="manager">Manager</option>}
                   </select>
                 </div>
-                <div>
-                  <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Primary Department</label>
-                  <select className="w-full p-3 border border-slate-200 rounded-xl bg-slate-50 font-medium text-sm" value={formData.department} onChange={e => setFormData({ ...formData, department: e.target.value })}>
-                    {availableDepts.map(d => <option key={d} value={d}>{d}</option>)}
-                  </select>
-                </div>
+                {formData.role !== 'management' && (
+  <div>
+    <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Primary Department</label>
+    <select className="w-full p-3 border border-slate-200 rounded-xl bg-slate-50 font-medium text-sm" value={formData.department} onChange={e => setFormData({ ...formData, department: e.target.value })}>
+      {availableDepts.map(d => <option key={d} value={d}>{d}</option>)}
+    </select>
+  </div>
+)}
+{formData.role === 'management' && (
+  <div>
+    <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Primary Department</label>
+    <div className="w-full p-3 border border-slate-200 rounded-xl bg-slate-100 font-medium text-sm text-slate-400">
+      All Departments (auto-assigned)
+    </div>
+  </div>
+)}
               </div>
 
               {/* Field-level Dept Access */}

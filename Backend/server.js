@@ -53,13 +53,13 @@ app.post('/api/register', protect, async (req, res) => {
   try {
     if (await User.findOne({ email })) return res.status(400).json({ msg: 'User already exists' });
     const hashed = await bcrypt.hash(password, await bcrypt.genSalt(10));
-    await new User({
-      name, email, password: hashed, department,
-      role: role || 'staff',
-      // managedDepts: array of { dept, fields } for managers
-      managedDepts: role === 'manager' ? (managedDepts || []) : [],
-      jobTitle: jobTitle || '',
-    }).save();
+  await new User({
+  name, email, password: hashed,
+  department: role === 'management' ? 'All' : department,
+  role: role || 'staff',
+  managedDepts: role === 'manager' ? (managedDepts || []) : [],
+  jobTitle: jobTitle || '',
+}).save();
     res.status(201).json({ msg: `Account created for ${name}` });
   } catch (err) { res.status(500).json({ msg: 'Error creating account' }); }
 });
