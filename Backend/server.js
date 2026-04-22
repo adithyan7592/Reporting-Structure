@@ -16,17 +16,28 @@ app.use(cors({
   credentials: true,
 }));
 
-mongoose.connect(process.env.MONGO_URI)
+mongoose.connect(process.env.MONGO_URI, {
+  serverSelectionTimeoutMS: 10000,
+  socketTimeoutMS: 45000,
+  maxPoolSize: 10,
+  heartbeatFrequencyMS: 10000,
+})
   .then(() => console.log('✅ MongoDB Connected'))
   .catch(err => console.log('❌ MongoDB Error:', err));
+
+// ── BUG 1 FIX: isSuperOrManagement was INSIDE protect() so it was never accessible
+// It must be defined at the top level
+const isSuperOrManagement = (role) => role === 'superadmin' || role === 'management';
 
 const protect = (req, res, next) => {
   const token = req.headers.authorization?.split(' ')[1];
   if (!token) return res.status(401).json({ msg: 'No token' });
   try { req.user = jwt.verify(token, process.env.JWT_SECRET); next(); }
   catch { res.status(401).json({ msg: 'Invalid token' }); }
-  const isSuperOrManagement = (role) => role === 'superadmin' || role === 'management';
 };
+
+// ── Health Check ─────────────────────────────────────────────────────────────
+app.get('/api/health', (req, res) => res.status(200).json({ status: 'ok' }));
 
 // ── Login ────────────────────────────────────────────────────────────────────
 app.post('/api/login', async (req, res) => {
@@ -36,7 +47,6 @@ app.post('/api/login', async (req, res) => {
     if (!user) return res.status(400).json({ msg: 'User does not exist' });
     if (!await bcrypt.compare(password, user.password)) return res.status(400).json({ msg: 'Invalid credentials' });
 
-    // managedDepts is now array of { dept, fields }
     const token = jwt.sign(
       { id: user._id, role: user.role, department: user.department, managedDepts: user.managedDepts, jobTitle: user.jobTitle, name: user.name },
       process.env.JWT_SECRET, { expiresIn: '1d' }
@@ -46,26 +56,30 @@ app.post('/api/login', async (req, res) => {
   } catch (err) { res.status(500).json({ msg: 'Server error' }); }
 });
 
-// ── Register (superadmin only) ───────────────────────────────────────────────
+// ── Register ─────────────────────────────────────────────────────────────────
 app.post('/api/register', protect, async (req, res) => {
-  if (!isSuperOrManagement(req.user.role)) return res.status(403).json({ msg: 'Access denied' });
+  if (!isSuperOrManagement(req.user.role) && req.user.role !== 'manager')
+    return res.status(403).json({ msg: 'Access denied' });
+
   const { name, email, password, department, role, managedDepts, jobTitle } = req.body;
   try {
     if (await User.findOne({ email })) return res.status(400).json({ msg: 'User already exists' });
     const hashed = await bcrypt.hash(password, await bcrypt.genSalt(10));
-  await new User({
-  name, email, password: hashed,
-  department: role === 'management' ? 'All' : department,
-  role: role || 'staff',
-  managedDepts: role === 'manager' ? (managedDepts || []) : [],
-  jobTitle: jobTitle || '',
-}).save();
+    await new User({
+      name, email, password: hashed,
+      department: role === 'management' ? 'All' : department,
+      role: role || 'staff',
+      managedDepts: role === 'manager' ? (managedDepts || []) : [],
+      jobTitle: jobTitle || '',
+    }).save();
     res.status(201).json({ msg: `Account created for ${name}` });
-  } catch (err) { res.status(500).json({ msg: 'Error creating account' }); }
+  } catch (err) {
+    console.error('Register error:', err);
+    res.status(500).json({ msg: 'Error creating account' });
+  }
 });
 
-// ── Get Reports ──────────────────────────────────────────────────────────────
-// superadmin → all | manager → depts in their managedDepts | staff → own dept
+// ── Get Reports ───────────────────────────────────────────────────────────────
 app.get('/api/reports', protect, async (req, res) => {
   try {
     let query = {};
@@ -76,38 +90,48 @@ app.get('/api/reports', protect, async (req, res) => {
     } else if (req.user.role === 'staff') {
       query.department = req.user.department;
     }
+    // superadmin and management see all reports (no query filter)
     res.json(await Report.find(query).sort({ createdAt: -1 }));
   } catch { res.status(500).json({ msg: 'Error fetching reports' }); }
 });
 
-// ── Submit Report ────────────────────────────────────────────────────────────
+// ── Submit Report ─────────────────────────────────────────────────────────────
 app.post('/api/reports', protect, async (req, res) => {
   try {
     const { title, data } = req.body;
-    const r = await new Report({ title, data: data || {}, staffName: req.user.name, department: req.user.department, createdBy: req.user.id }).save();
+    const r = await new Report({
+      title, data: data || {},
+      staffName: req.user.name,
+      department: req.user.department,
+      createdBy: req.user.id
+    }).save();
     res.status(201).json(r);
   } catch (err) { res.status(500).json({ msg: 'Error saving report' }); }
 });
 
-// ── Get Users (superadmin only) ──────────────────────────────────────────────
+// ── Get Users ─────────────────────────────────────────────────────────────────
 app.get('/api/users', protect, async (req, res) => {
- if (!isSuperOrManagement(req.user.role) && req.user.role !== 'manager') return res.status(403).json({ msg: 'Unauthorized' });
+  if (!isSuperOrManagement(req.user.role) && req.user.role !== 'manager')
+    return res.status(403).json({ msg: 'Unauthorized' });
   try {
-    let query = { role: { $ne: 'superadmin' } };
+    let query = { role: { $nin: ['superadmin'] } };
     if (req.user.role === 'manager') {
       const depts = (req.user.managedDepts || []).map(d => d.dept);
       query = { role: 'staff', department: { $in: depts } };
     }
-    res.json(await User.find(query).select('-password').sort({ name: 1 }));
+    res.json(await User.find(query).select('-password').sort({ role: 1, name: 1 }));
   } catch { res.status(500).json({ msg: 'Error fetching users' }); }
 });
 
-// ── Update User ──────────────────────────────────────────────────────────────
+// ── Update User ───────────────────────────────────────────────────────────────
 app.put('/api/users/:id', protect, async (req, res) => {
-  if (!isSuperOrManagement(req.user.role) && req.user.role !== 'manager') return res.status(403).json({ msg: 'Unauthorized' });
+  if (!isSuperOrManagement(req.user.role) && req.user.role !== 'manager')
+    return res.status(403).json({ msg: 'Unauthorized' });
+
   const { name, email, department, password, role, managedDepts, jobTitle } = req.body;
   const update = {
-    name, email, department,
+    name, email,
+    department: role === 'management' ? 'All' : department,
     role: role || 'staff',
     managedDepts: role === 'manager' ? (managedDepts || []) : [],
     jobTitle: jobTitle || '',
@@ -119,36 +143,28 @@ app.put('/api/users/:id', protect, async (req, res) => {
   } catch { res.status(500).json({ msg: 'Error updating' }); }
 });
 
-// ── Delete User ──────────────────────────────────────────────────────────────
+// ── Delete User ───────────────────────────────────────────────────────────────
+// BUG 2 FIX: Missing closing brace on the if block + double braces
 app.delete('/api/users/:id', protect, async (req, res) => {
-if (!isSuperOrManagement(req.user.role) && req.user.role !== 'manager')
+  if (!isSuperOrManagement(req.user.role) && req.user.role !== 'manager')
     return res.status(403).json({ msg: 'Unauthorized' });
   try {
-    // Manager can only delete staff in their managed depts
-    if (req.user.role === 'manager' && !isSuperOrManagement(req.user.role)) { {
+    // Managers can only delete staff in their managed depts
+    if (req.user.role === 'manager') {
       const userToDelete = await User.findById(req.params.id);
       if (!userToDelete) return res.status(404).json({ msg: 'User not found' });
       const managerDepts = (req.user.managedDepts || []).map(d => d.dept);
-      if (!managerDepts.includes(userToDelete.department)) {
+      if (!managerDepts.includes(userToDelete.department))
         return res.status(403).json({ msg: 'You can only delete staff in your departments' });
-      }
-      // Managers cannot delete other managers
-      if (userToDelete.role !== 'staff') {
+      if (userToDelete.role !== 'staff')
         return res.status(403).json({ msg: 'Managers can only delete staff accounts' });
-      }
     }
     await User.findByIdAndDelete(req.params.id);
     res.json({ msg: 'Deleted' });
   } catch { res.status(500).json({ msg: 'Error deleting' }); }
 });
 
-app.get('/api/fix-my-password', async (req, res) => {
-  try {
-    const u = await User.findOneAndUpdate({ email: 'admin@system.com' }, { password: await bcrypt.hash('admin123', 10) }, { new: true });
-    res.send(u ? '<h1>Done!</h1>' : '<h1>Not found</h1>');
-  } catch (e) { res.status(500).send(e.message); }
-});
-// ── Edit Report (manager or superadmin) ──────────────────────────────────────
+// ── Edit Report ───────────────────────────────────────────────────────────────
 app.put('/api/reports/:id', protect, async (req, res) => {
   if (req.user.role === 'staff') return res.status(403).json({ msg: 'Unauthorized' });
   try {
@@ -156,26 +172,31 @@ app.put('/api/reports/:id', protect, async (req, res) => {
     const report = await Report.findById(req.params.id);
     if (!report) return res.status(404).json({ msg: 'Report not found' });
 
-    // Manager can only edit reports from their managed depts
     if (req.user.role === 'manager') {
       const depts = (req.user.managedDepts || []).map(d => d.dept);
-      if (!depts.includes(report.department)) return res.status(403).json({ msg: 'Access denied' });
+      if (!depts.includes(report.department))
+        return res.status(403).json({ msg: 'Access denied' });
     }
 
     const updated = await Report.findByIdAndUpdate(
       req.params.id,
-      {
-        $set: {
-          data,
-          isEdited: true,
-          editedAt: new Date(),
-          editedBy: req.user.name,
-        }
-      },
+      { $set: { data, isEdited: true, editedAt: new Date(), editedBy: req.user.name } },
       { new: true }
     );
     res.json(updated);
   } catch (err) { res.status(500).json({ msg: 'Error updating report' }); }
+});
+
+// ── Fix Password (temp) ───────────────────────────────────────────────────────
+app.get('/api/fix-my-password', async (req, res) => {
+  try {
+    const u = await User.findOneAndUpdate(
+      { email: 'admin@system.com' },
+      { password: await bcrypt.hash('admin123', 10) },
+      { new: true }
+    );
+    res.send(u ? '<h1>Done!</h1>' : '<h1>Not found</h1>');
+  } catch (e) { res.status(500).send(e.message); }
 });
 
 app.listen(process.env.PORT || 5000, () => console.log('🚀 Server running'));
