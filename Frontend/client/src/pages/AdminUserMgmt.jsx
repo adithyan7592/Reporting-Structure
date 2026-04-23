@@ -242,8 +242,8 @@ const showToast = (msg, type = 'success') => {
       body: JSON.stringify(formData),
     });
     const data = await res.json();
-   if (res.ok) { showToast('✅ User updated successfully!'); setEditingUser(null); fetchUsers(); }
-else showToast('❌ Update failed', 'error');
+    if (res.ok) { showToast(`✅ ${data.msg}`); setFormData(emptyForm); setSelectedPreset(null); fetchUsers(); }
+    else showToast(`❌ ${data.msg}`, 'error');
   };
 
   const handleUpdate = async (e) => {
@@ -253,17 +253,20 @@ else showToast('❌ Update failed', 'error');
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${localStorage.getItem('token')}` },
       body: JSON.stringify(editingUser),
     });
- 
- const handleDelete = async () => {
-  if (!confirmDelete) return;
-  const res = await fetch(`${API_BASE}/users/${confirmDelete.id}`, {
-    method: 'DELETE',
-    headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
-  });
-  setConfirmDelete(null);
-  if (res.ok) { showToast(`✅ ${confirmDelete.name} deleted`); fetchUsers(); }
-  else showToast('❌ Delete failed', 'error');
-};
+    if (res.ok) { showToast('✅ User updated successfully!'); setEditingUser(null); fetchUsers(); }
+    else showToast('❌ Update failed', 'error');
+  };
+
+  const handleDelete = async () => {
+    if (!confirmDelete) return;
+    const res = await fetch(`${API_BASE}/users/${confirmDelete.id}`, {
+      method: 'DELETE',
+      headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
+    });
+    setConfirmDelete(null);
+    if (res.ok) { showToast(`✅ ${confirmDelete.name} deleted`); fetchUsers(); }
+    else showToast('❌ Delete failed', 'error');
+  };
 
   // Handlers for form managedDepts
   const formHandlers = {
@@ -519,19 +522,29 @@ else showToast('❌ Update failed', 'error');
                   <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Job Title</label>
                   <input className="w-full p-3 bg-slate-50 border rounded-xl mt-1 font-medium text-sm" value={editingUser.jobTitle || ''} onChange={e => setEditingUser({ ...editingUser, jobTitle: e.target.value })} />
                 </div>
-                <div>
-                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Role</label>
-                  <select className="w-full p-3 bg-slate-50 border rounded-xl mt-1 font-medium text-sm" value={editingUser.role} onChange={e => setEditingUser({ ...editingUser, role: e.target.value })} disabled={role === 'manager'}>
-                    <option value="staff">Staff / Agent</option>
-                    {role === 'superadmin' && <option value="manager">Manager</option>}
-                  </select>
-                </div>
-                <div>
-                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Primary Department</label>
-                  <select className="w-full p-3 bg-slate-50 border rounded-xl mt-1 font-medium text-sm" value={editingUser.department} onChange={e => setEditingUser({ ...editingUser, department: e.target.value })}>
-                    {availableDepts.map(d => <option key={d} value={d}>{d}</option>)}
-                  </select>
-                </div>
+                {editingUser.role !== 'management' && (
+                  <div>
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Role</label>
+                    <select className="w-full p-3 bg-slate-50 border rounded-xl mt-1 font-medium text-sm" value={editingUser.role} onChange={e => setEditingUser({ ...editingUser, role: e.target.value })} disabled={role === 'manager'}>
+                      <option value="staff">Staff / Agent</option>
+                      {role === 'superadmin' && <option value="management">Management</option>}
+                      {role === 'superadmin' && <option value="manager">Manager</option>}
+                    </select>
+                  </div>
+                )}
+                {editingUser.role !== 'management' ? (
+                  <div>
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Primary Department</label>
+                    <select className="w-full p-3 bg-slate-50 border rounded-xl mt-1 font-medium text-sm" value={editingUser.department} onChange={e => setEditingUser({ ...editingUser, department: e.target.value })}>
+                      {availableDepts.map(d => <option key={d} value={d}>{d}</option>)}
+                    </select>
+                  </div>
+                ) : (
+                  <div>
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Primary Department</label>
+                    <div className="w-full p-3 border border-slate-200 rounded-xl bg-slate-100 font-medium text-sm text-slate-400 mt-1">All Departments (auto-assigned)</div>
+                  </div>
+                )}
               </div>
 
               {editingUser.role === 'manager' && (
