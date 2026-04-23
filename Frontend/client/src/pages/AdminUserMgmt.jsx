@@ -204,8 +204,15 @@ export default function AdminUserMgmt() {
   const [users, setUsers] = useState([]);
   const [editingUser, setEditingUser] = useState(null);
   const [filterRole, setFilterRole] = useState('all');
-  const [expandedUser, setExpandedUser] = useState(null);
-  const navigate = useNavigate();
+const [expandedUser, setExpandedUser] = useState(null);
+const [toast, setToast] = useState(null);
+const [confirmDelete, setConfirmDelete] = useState(null);
+const navigate = useNavigate();
+
+const showToast = (msg, type = 'success') => {
+  setToast({ msg, type });
+  setTimeout(() => setToast(null), 3500);
+};
 
   useEffect(() => { fetchUsers(); }, []);
 
@@ -235,8 +242,8 @@ export default function AdminUserMgmt() {
       body: JSON.stringify(formData),
     });
     const data = await res.json();
-    if (res.ok) { alert(`✅ ${data.msg}`); setFormData(emptyForm); setSelectedPreset(null); fetchUsers(); }
-    else alert(`❌ ${data.msg}`);
+   if (res.ok) { showToast('✅ User updated successfully!'); setEditingUser(null); fetchUsers(); }
+else showToast('❌ Update failed', 'error');
   };
 
   const handleUpdate = async (e) => {
@@ -250,11 +257,16 @@ export default function AdminUserMgmt() {
     else alert('❌ Update failed');
   };
 
-  const handleDelete = async (id, name) => {
-    if (!confirm(`Delete ${name}? This cannot be undone.`)) return;
-    const res = await fetch(`${API_BASE}/users/${id}`, { method: 'DELETE', headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } });
-    if (res.ok) fetchUsers();
-  };
+ const handleDelete = async () => {
+  if (!confirmDelete) return;
+  const res = await fetch(`${API_BASE}/users/${confirmDelete.id}`, {
+    method: 'DELETE',
+    headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
+  });
+  setConfirmDelete(null);
+  if (res.ok) { showToast(`✅ ${confirmDelete.name} deleted`); fetchUsers(); }
+  else showToast('❌ Delete failed', 'error');
+};
 
   // Handlers for form managedDepts
   const formHandlers = {
@@ -414,51 +426,51 @@ export default function AdminUserMgmt() {
 
           {/* ── USER LIST ── */}
           <div className="bg-white rounded-3xl shadow-sm border border-slate-200 overflow-hidden">
-            <div className="p-6 border-b border-slate-100 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
-              <h2 className="text-xl font-black text-slate-900">Active Accounts</h2>
-              <div className="flex gap-2">
-              {['all', 'management', 'manager', 'staff'].map(r => (
+          <div className="p-4 sm:p-6 border-b border-slate-100 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+  <h2 className="text-xl font-black text-slate-900">Active Accounts</h2>
+  <div className="flex gap-2 overflow-x-auto pb-1 no-scrollbar w-full sm:w-auto">
+  {['all', 'management', 'manager', 'staff'].map(r => (
   <button key={r} onClick={() => setFilterRole(r)}
-    className={`px-4 py-2 rounded-xl text-xs font-bold border transition ${filterRole === r ? 'bg-slate-900 text-white border-slate-900' : 'border-slate-200 text-slate-500 hover:bg-slate-50'}`}>
+    className={`px-3 py-2 rounded-xl text-xs font-bold border transition whitespace-nowrap ${filterRole === r ? 'bg-slate-900 text-white border-slate-900' : 'border-slate-200 text-slate-500 hover:bg-slate-50'}`}>
     {r === 'all' ? 'All' : r === 'management' ? '🔴 Management' : r === 'manager' ? '🟢 Managers' : '🔵 Staff'}
   </button>
 ))}
-              </div>
-            </div>
+  </div>
+</div>
 
             <div className="divide-y divide-slate-50">
               {filteredUsers.map(u => (
-                <div key={u._id}>
-                  <div className="p-4 flex items-start justify-between hover:bg-slate-50 transition">
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <p className="font-bold text-slate-900">{u.name}</p>
-                        <span className={`px-2 py-0.5 rounded-full text-[10px] font-black ${roleChip(u.role)}`}>{u.role}</span>
-                        {u.jobTitle && <span className="text-slate-400 text-xs">{u.jobTitle}</span>}
-                      </div>
-                      <p className="text-slate-400 text-xs mt-0.5">{u.email}</p>
-
-                      {/* Manager dept/field summary */}
-                      {u.role === 'manager' && u.managedDepts?.length > 0 && (
-                        <div className="mt-2 flex flex-wrap gap-1">
-                          {u.managedDepts.map(d => (
-                            <span key={d.dept} className="bg-emerald-50 text-emerald-700 px-2 py-0.5 rounded-full text-[10px] font-bold">
-                              {d.dept} ({d.fields.length === (DEPT_FIELDS[d.dept] || []).length ? 'all fields' : `${d.fields.length} fields`})
-                            </span>
-                          ))}
-                        </div>
-                      )}
-                      {u.role === 'staff' && (
-                        <span className="inline-block mt-1 bg-blue-50 text-blue-600 px-2 py-0.5 rounded-full text-[10px] font-bold">{u.department}</span>
-                      )}
-                    </div>
-
-                    <div className="flex gap-3 ml-4 flex-shrink-0">
-                      <button onClick={() => setEditingUser({ ...u, password: '', managedDepts: u.managedDepts || [] })} className="text-blue-600 font-bold hover:underline text-xs">Edit</button>
-                      <button onClick={() => handleDelete(u._id, u.name)} className="text-red-400 font-bold hover:underline text-xs">Delete</button>
-                    </div>
-                  </div>
-                </div>
+                <div key={u._id} className="p-4 hover:bg-slate-50 transition">
+  <div className="flex items-start justify-between gap-2">
+    <div className="flex-1 min-w-0">
+      <div className="flex items-center gap-2 flex-wrap">
+        <p className="font-bold text-slate-900">{u.name}</p>
+        <span className={`px-2 py-0.5 rounded-full text-[10px] font-black whitespace-nowrap ${roleChip(u.role)}`}>{u.role}</span>
+        {u.jobTitle && <span className="text-slate-400 text-xs">{u.jobTitle}</span>}
+      </div>
+      <p className="text-slate-400 text-xs mt-0.5 break-all">{u.email}</p>
+    </div>
+    <div className="flex flex-col sm:flex-row gap-1.5 flex-shrink-0">
+      <button onClick={() => setEditingUser({ ...u, password: '', managedDepts: u.managedDepts || [] })} className="bg-blue-50 text-blue-600 font-bold text-xs px-3 py-1.5 rounded-lg hover:bg-blue-100 transition text-center">Edit</button>
+      <button onClick={() => setConfirmDelete({ id: u._id, name: u.name })} className="bg-red-50 text-red-500 font-bold text-xs px-3 py-1.5 rounded-lg hover:bg-red-100 transition text-center">Delete</button>
+    </div>
+  </div>
+  {u.role === 'manager' && u.managedDepts?.length > 0 && (
+    <div className="mt-2 flex flex-wrap gap-1">
+      {u.managedDepts.map(d => (
+        <span key={d.dept} className="bg-emerald-50 text-emerald-700 px-2 py-0.5 rounded-full text-[10px] font-bold max-w-full break-words">
+          {d.dept} ({d.fields.length === (DEPT_FIELDS[d.dept] || []).length ? 'all fields' : `${d.fields.length} fields`})
+        </span>
+      ))}
+    </div>
+  )}
+  {u.role === 'management' && (
+    <span className="inline-block mt-1 bg-rose-50 text-rose-600 px-2 py-0.5 rounded-full text-[10px] font-bold">All Departments</span>
+  )}
+  {u.role === 'staff' && (
+    <span className="inline-block mt-1 bg-blue-50 text-blue-600 px-2 py-0.5 rounded-full text-[10px] font-bold">{u.department}</span>
+  )}
+</div>
               ))}
               {filteredUsers.length === 0 && (
                 <div className="p-8 text-center text-slate-400 italic">No accounts found.</div>
@@ -467,6 +479,29 @@ export default function AdminUserMgmt() {
           </div>
         </div>
       </div>
+
+      {/* ── EDIT MODAL ── */}
+
+      {/* ── TOAST ── */}
+      {toast && (
+        <div className={`fixed bottom-6 left-1/2 -translate-x-1/2 z-[100] px-6 py-3 rounded-2xl shadow-2xl font-bold text-sm text-white ${toast.type === 'error' ? 'bg-red-500' : 'bg-emerald-600'}`}>
+          {toast.msg}
+        </div>
+      )}
+
+      {/* ── CONFIRM DELETE ── */}
+      {confirmDelete && (
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-3xl p-8 w-full max-w-sm shadow-2xl">
+            <h2 className="text-xl font-black text-slate-900 mb-2">Delete Account?</h2>
+            <p className="text-slate-500 text-sm mb-6">Are you sure you want to delete <span className="font-bold text-slate-900">{confirmDelete.name}</span>? This cannot be undone.</p>
+            <div className="flex gap-3">
+              <button onClick={() => setConfirmDelete(null)} className="flex-1 py-3 text-slate-500 font-bold border border-slate-200 rounded-2xl hover:bg-slate-50 transition text-sm">Cancel</button>
+              <button onClick={handleDelete} className="flex-1 py-3 bg-red-500 text-white font-bold rounded-2xl hover:bg-red-600 transition text-sm">Yes, Delete</button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* ── EDIT MODAL ── */}
       {editingUser && (
