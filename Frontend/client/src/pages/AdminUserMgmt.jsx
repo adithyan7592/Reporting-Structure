@@ -6,7 +6,11 @@ import { useNavigate } from 'react-router-dom';
 const ALL_DEPARTMENTS = [
   'AYUSH', 'Bioclean', 'Theertha',
   'KP – (CRM)', 'KP – Factory Outlet', 'KP – Exclusive Outlet',
-  'Happiness', 'Purchase', 'Warehouse', 'Media', 'Marketing', 'Accounts',
+'Happiness – Technical Co-ordinator',
+'Happiness – Technical Head',
+'Happiness – Insurance Co-ordinator',
+'Happiness – Outlet Support Co-ordinator',
+'Purchase', 'Warehouse – KP', 'Warehouse – Ayush', 'Media – Camera Man', 'Media – Video Editor', 'Media – Designer', 'Marketing', 'Accounts',
 ];
 
 const DEPT_FIELDS = {
@@ -21,8 +25,11 @@ const DEPT_FIELDS = {
 'Happiness – Insurance Co-ordinator': ['No. of New Insurance Issued by F Outlets', 'No. of New Insurance Issued by E Outlets', 'No. of Claims Pending', 'No. of Claims Provided', 'Total Claim Amount', 'Remarks'],
 'Happiness – Outlet Support Co-ordinator': ['New MOU', 'New Openings with Date', 'Board Design Provided & Details', 'Outlet Training & Details', 'Outlets Interior Completed', 'Outlets Cancelled if Any'],
   'Purchase': ['Report Type', 'No. of PO Placed For F. Outlets', 'Amount of PO F. Outlets', 'No. of PO Placed For E. Outlets', 'Amount of PO E. Outlets', 'No of Total Deliveries', 'No of Total GRN Received', 'Brand / Division', 'Item', 'Vendor', 'Amount', 'Exp. Delivery Date', 'Remarks'],
-  'Warehouse':           ['No. of Loads Received', 'No. of Loads Dispatched', 'Total GRN Entries', 'Pending Delivery Orders', 'Damage/Return Stock', 'Warehouse Notes'],
-  'Media':               ['Campaign Name', 'Platform', 'Leads Generated', 'Ad Spend', 'Notes'],
+  'Warehouse – KP':    ['No. of Dispatch to F Outlets', 'No. of Dispatch to E Outlets', 'No. of Stock Received', 'Vendors Name', 'No. of Pending Dispatches', 'Reason for Pending', 'Stock Alert', 'Remarks'],
+'Warehouse – Ayush': ['No. of List Received', 'No. of List Dispatched', 'Dispatched List Numbers', 'No. of List Pending', 'Pending List Numbers', 'Reason for Pending', 'Stock Received if Any', 'Stock Alert', 'Remarks'],
+  'Media – Camera Man':  ['No. of Work Out', 'Work Explanation', 'Next Day Work'],
+'Media – Video Editor': ['No. of Videos Out', 'Out Explanation', 'Next Day Work'],
+'Media – Designer':    ['No. of Designs Completed', 'Design Explanation', 'Next Day Work'],
   'Marketing':           ['Campaign Name', 'Platform', 'Leads Generated', 'Budget Spent', 'Notes'],
   'Accounts':            ['Total Collections (Daily)', 'Total Payments Made', 'Pending Vendor Invoices', 'Bank Deposit Amount', 'Outstanding Dues (New)', 'Accounts Summary'],
 };
@@ -30,7 +37,7 @@ const DEPT_FIELDS = {
 const DEPT_GROUPS = [
   { label: 'CRM – AYUSH',    depts: ['AYUSH', 'Bioclean', 'Theertha'] },
   { label: 'KP',              depts: ['KP – (CRM)', 'KP – Factory Outlet', 'KP – Exclusive Outlet'] },
-  { label: 'Support',         depts: ['Happiness – Technical Co-ordinator', 'Happiness – Technical Head', 'Happiness – Insurance Co-ordinator', 'Happiness – Outlet Support Co-ordinator', 'Purchase', 'Warehouse', 'Media', 'Marketing', 'Accounts'] },
+  { label: 'Support',         depts: ['Happiness – Technical Co-ordinator', 'Happiness – Technical Head', 'Happiness – Insurance Co-ordinator', 'Happiness – Outlet Support Co-ordinator', 'Purchase', 'Warehouse – KP', 'Warehouse – Ayush', 'Media – Camera Man', 'Media – Video Editor', 'Media – Designer', 'Marketing', 'Accounts'] },
 ];
 
 const ROLE_PRESETS = [
@@ -41,7 +48,7 @@ const ROLE_PRESETS = [
   { group: 'KP',              label: 'AGM',                             jobTitle: 'AGM',                 depts: ['KP – (CRM)', 'KP – Factory Outlet', 'KP – Exclusive Outlet'],              primaryDept: 'KP – (CRM)' },
   { group: 'KP',              label: 'OM',                              jobTitle: 'Operations Manager',  depts: ['KP – (CRM)', 'KP – Factory Outlet', 'KP – Exclusive Outlet'],              primaryDept: 'KP – (CRM)' },
   { group: 'KP',              label: 'Team Lead',                       jobTitle: 'Team Lead',           depts: ['KP – (CRM)'],                                                               primaryDept: 'KP – (CRM)' },
-  { group: 'KP',              label: 'Technical Head',                      jobTitle: 'Technical Head',      depts: ['KP – (CRM)', 'KP – Factory Outlet', 'KP – Exclusive Outlet', 'Happiness'], primaryDept: 'KP – (CRM)' },
+  { group: 'KP', label: 'Technical Head', jobTitle: 'Technical Head', depts: ['KP – (CRM)', 'KP – Factory Outlet', 'KP – Exclusive Outlet', 'Happiness – Technical Co-ordinator', 'Happiness – Technical Head'], primaryDept: 'KP – (CRM)' },
   { group: 'KP',              label: 'Factory Outlet — AGM',                      jobTitle: 'AGM',                 depts: ['KP – Factory Outlet'],                                                          primaryDept: 'KP – Factory Outlet' },
   { group: 'KP',              label: 'Factory Outlet — OM',                       jobTitle: 'Operations Manager',  depts: ['KP – Factory Outlet'],                                                          primaryDept: 'KP – Factory Outlet' },
   { group: 'KP',              label: 'Factory Outlet — Purchase Manager',          jobTitle: 'Purchase Manager',    depts: ['KP – Factory Outlet', 'Purchase'],                                              primaryDept: 'KP – Factory Outlet' },
@@ -52,8 +59,9 @@ const ROLE_PRESETS = [
  { group: 'Support', label: 'Happiness — Insurance Co-ordinator',       jobTitle: 'Insurance Co-ordinator',       depts: ['Happiness – Insurance Co-ordinator'],       primaryDept: 'Happiness – Insurance Co-ordinator' },
  { group: 'Support', label: 'Happiness — Outlet Support Co-ordinator',  jobTitle: 'Outlet Support Co-ordinator',  depts: ['Happiness – Outlet Support Co-ordinator'],  primaryDept: 'Happiness – Outlet Support Co-ordinator' },
   { group: 'Support',         label: 'Purchase Manager',                           jobTitle: 'Purchase Manager',    depts: ['Purchase'],                                                                     primaryDept: 'Purchase' },
-  { group: 'Support',         label: 'Warehouse Manager',                          jobTitle: 'Warehouse Manager',   depts: ['Warehouse'],                                                                    primaryDept: 'Warehouse' },
-  { group: 'Support',         label: 'Media — Head',                               jobTitle: 'Head',                depts: ['Media'],                                                                        primaryDept: 'Media' },
+{ group: 'Support', label: 'KP Warehouse Incharge',    jobTitle: 'Warehouse Incharge', depts: ['Warehouse – KP'],    primaryDept: 'Warehouse – KP' },
+{ group: 'Support', label: 'Ayush Warehouse Incharge',  jobTitle: 'Warehouse Incharge', depts: ['Warehouse – Ayush'], primaryDept: 'Warehouse – Ayush' },
+{ group: 'Support', label: 'Media — Head', jobTitle: 'Head', depts: ['Media – Camera Man', 'Media – Video Editor', 'Media – Designer'], primaryDept: 'Media – Camera Man' },
   { group: 'Support',         label: 'Marketing — Head',                           jobTitle: 'Head',                depts: ['Marketing'],                                                                    primaryDept: 'Marketing' },
 ];
 
@@ -264,7 +272,11 @@ export default function AdminUserMgmt() {
 
   const filteredUsers = users.filter(u => filterRole === 'all' || u.role === filterRole);
 
-  const roleChip = (r) => ({ manager: 'bg-emerald-100 text-emerald-700', staff: 'bg-blue-50 text-blue-600' }[r] || 'bg-slate-100 text-slate-600');
+  const roleChip = (r) => ({
+  management: 'bg-rose-100 text-rose-700',
+  manager:    'bg-emerald-100 text-emerald-700',
+  staff:      'bg-blue-50 text-blue-600',
+}[r] || 'bg-slate-100 text-slate-600');
 
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col md:flex-row">
@@ -339,15 +351,26 @@ export default function AdminUserMgmt() {
                   <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Role</label>
                   <select className="w-full p-3 border border-slate-200 rounded-xl bg-slate-50 font-medium text-sm" value={formData.role} onChange={e => setFormData({ ...formData, role: e.target.value })} disabled={role === 'manager'}>
                     <option value="staff">Staff / Agent</option>
-                    {role === 'superadmin' && <option value="manager">Manager</option>}
+                  {role === 'superadmin' && <option value="management">Management</option>}
+{role === 'superadmin' && <option value="manager">Manager</option>}
                   </select>
                 </div>
-                <div>
-                  <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Primary Department</label>
-                  <select className="w-full p-3 border border-slate-200 rounded-xl bg-slate-50 font-medium text-sm" value={formData.department} onChange={e => setFormData({ ...formData, department: e.target.value })}>
-                    {availableDepts.map(d => <option key={d} value={d}>{d}</option>)}
-                  </select>
-                </div>
+                {formData.role !== 'management' && (
+  <div>
+    <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Primary Department</label>
+    <select className="w-full p-3 border border-slate-200 rounded-xl bg-slate-50 font-medium text-sm" value={formData.department} onChange={e => setFormData({ ...formData, department: e.target.value })}>
+      {availableDepts.map(d => <option key={d} value={d}>{d}</option>)}
+    </select>
+  </div>
+)}
+{formData.role === 'management' && (
+  <div>
+    <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Primary Department</label>
+    <div className="w-full p-3 border border-slate-200 rounded-xl bg-slate-100 font-medium text-sm text-slate-400">
+      All Departments (auto-assigned)
+    </div>
+  </div>
+)}
               </div>
 
               {/* Field-level Dept Access */}
@@ -391,64 +414,50 @@ export default function AdminUserMgmt() {
 
           {/* ── USER LIST ── */}
           <div className="bg-white rounded-3xl shadow-sm border border-slate-200 overflow-hidden">
-            <div className="p-4 sm:p-6 border-b border-slate-100 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+            <div className="p-6 border-b border-slate-100 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
               <h2 className="text-xl font-black text-slate-900">Active Accounts</h2>
-              <div className="flex gap-2 overflow-x-auto pb-1 no-scrollbar w-full sm:w-auto">
-                {['all', 'management', 'manager', 'staff'].map(r => (
-                  <button key={r} onClick={() => setFilterRole(r)}
-                    className={`px-3 py-2 rounded-xl text-xs font-bold border transition whitespace-nowrap ${filterRole === r ? 'bg-slate-900 text-white border-slate-900' : 'border-slate-200 text-slate-500 hover:bg-slate-50'}`}>
-                    {r === 'all' ? 'All' : r === 'management' ? '🔴 Management' : r === 'manager' ? '🟢 Managers' : '🔵 Staff'}
-                  </button>
-                ))}
+              <div className="flex gap-2">
+              {['all', 'management', 'manager', 'staff'].map(r => (
+  <button key={r} onClick={() => setFilterRole(r)}
+    className={`px-4 py-2 rounded-xl text-xs font-bold border transition ${filterRole === r ? 'bg-slate-900 text-white border-slate-900' : 'border-slate-200 text-slate-500 hover:bg-slate-50'}`}>
+    {r === 'all' ? 'All' : r === 'management' ? '🔴 Management' : r === 'manager' ? '🟢 Managers' : '🔵 Staff'}
+  </button>
+))}
               </div>
             </div>
 
             <div className="divide-y divide-slate-50">
               {filteredUsers.map(u => (
-                <div key={u._id} className="p-4 hover:bg-slate-50 transition">
-                  {/* Top row — name, badge, actions */}
-                  <div className="flex items-start justify-between gap-2">
+                <div key={u._id}>
+                  <div className="p-4 flex items-start justify-between hover:bg-slate-50 transition">
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 flex-wrap">
                         <p className="font-bold text-slate-900">{u.name}</p>
-                        <span className={`px-2 py-0.5 rounded-full text-[10px] font-black whitespace-nowrap ${roleChip(u.role)}`}>{u.role}</span>
+                        <span className={`px-2 py-0.5 rounded-full text-[10px] font-black ${roleChip(u.role)}`}>{u.role}</span>
                         {u.jobTitle && <span className="text-slate-400 text-xs">{u.jobTitle}</span>}
                       </div>
-                      <p className="text-slate-400 text-xs mt-0.5 break-all">{u.email}</p>
+                      <p className="text-slate-400 text-xs mt-0.5">{u.email}</p>
+
+                      {/* Manager dept/field summary */}
+                      {u.role === 'manager' && u.managedDepts?.length > 0 && (
+                        <div className="mt-2 flex flex-wrap gap-1">
+                          {u.managedDepts.map(d => (
+                            <span key={d.dept} className="bg-emerald-50 text-emerald-700 px-2 py-0.5 rounded-full text-[10px] font-bold">
+                              {d.dept} ({d.fields.length === (DEPT_FIELDS[d.dept] || []).length ? 'all fields' : `${d.fields.length} fields`})
+                            </span>
+                          ))}
+                        </div>
+                      )}
+                      {u.role === 'staff' && (
+                        <span className="inline-block mt-1 bg-blue-50 text-blue-600 px-2 py-0.5 rounded-full text-[10px] font-bold">{u.department}</span>
+                      )}
                     </div>
-                    {/* Edit/Delete — stacked on mobile, inline on desktop */}
-                    <div className="flex flex-col sm:flex-row gap-1.5 flex-shrink-0">
-                      <button
-                        onClick={() => setEditingUser({ ...u, password: '', managedDepts: u.managedDepts || [] })}
-                        className="bg-blue-50 text-blue-600 font-bold text-xs px-3 py-1.5 rounded-lg hover:bg-blue-100 transition text-center whitespace-nowrap"
-                      >
-                        Edit
-                      </button>
-                      <button
-                        onClick={() => handleDelete(u._id, u.name)}
-                        className="bg-red-50 text-red-500 font-bold text-xs px-3 py-1.5 rounded-lg hover:bg-red-100 transition text-center whitespace-nowrap"
-                      >
-                        Delete
-                      </button>
+
+                    <div className="flex gap-3 ml-4 flex-shrink-0">
+                      <button onClick={() => setEditingUser({ ...u, password: '', managedDepts: u.managedDepts || [] })} className="text-blue-600 font-bold hover:underline text-xs">Edit</button>
+                      <button onClick={() => handleDelete(u._id, u.name)} className="text-red-400 font-bold hover:underline text-xs">Delete</button>
                     </div>
                   </div>
-
-                  {/* Dept tags — wrap on mobile */}
-                  {u.role === 'manager' && u.managedDepts?.length > 0 && (
-                    <div className="mt-2 flex flex-wrap gap-1">
-                      {u.managedDepts.map(d => (
-                        <span key={d.dept} className="bg-emerald-50 text-emerald-700 px-2 py-0.5 rounded-full text-[10px] font-bold max-w-full break-words">
-                          {d.dept} ({d.fields.length === (DEPT_FIELDS[d.dept] || []).length ? 'all fields' : `${d.fields.length} fields`})
-                        </span>
-                      ))}
-                    </div>
-                  )}
-                  {u.role === 'management' && (
-                    <span className="inline-block mt-1 bg-rose-50 text-rose-600 px-2 py-0.5 rounded-full text-[10px] font-bold">All Departments</span>
-                  )}
-                  {u.role === 'staff' && (
-                    <span className="inline-block mt-1 bg-blue-50 text-blue-600 px-2 py-0.5 rounded-full text-[10px] font-bold">{u.department}</span>
-                  )}
                 </div>
               ))}
               {filteredUsers.length === 0 && (
@@ -534,10 +543,6 @@ export default function AdminUserMgmt() {
     </div>
   );
 }
-
-
-
-
 
 
 
