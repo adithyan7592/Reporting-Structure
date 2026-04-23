@@ -253,10 +253,7 @@ else showToast('❌ Update failed', 'error');
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${localStorage.getItem('token')}` },
       body: JSON.stringify(editingUser),
     });
-    if (res.ok) { alert('✅ Updated!'); setEditingUser(null); fetchUsers(); }
-    else alert('❌ Update failed');
-  };
-
+ 
  const handleDelete = async () => {
   if (!confirmDelete) return;
   const res = await fetch(`${API_BASE}/users/${confirmDelete.id}`, {
