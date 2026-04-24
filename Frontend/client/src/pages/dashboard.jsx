@@ -39,7 +39,7 @@ const departmentConfig = {
     { label: 'Total Sales Value',        type: 'number' },
     { label: 'Remarks if Any',           type: 'textarea' },
   ],
-  'KP – (CRM)': [
+'KP – (CRM)': [
   { label: 'Total No. of Calls',       type: 'number' },
   { label: 'Quality Leads',            type: 'number' },
   { label: 'No. of Converted Calls',   type: 'number' },
@@ -363,14 +363,14 @@ function AgentDrillModal({ agent, dept, allowedFields, onClose, onEditReport }) 
                   ✏️ Edited by {selectedEntry.editedBy} · {new Date(selectedEntry.editedAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })} {new Date(selectedEntry.editedAt).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}
                 </p>
               )}
-              <div className="divide-y divide-slate-50">
-                {Object.entries(filterData(selectedEntry.data)).map(([key, val]) => (
-                  <div key={key} className="flex justify-between py-4">
-                    <span className="text-slate-400 text-sm font-semibold">{key}</span>
-                    <span className="text-slate-900 font-black text-sm">{val || '—'}</span>
-                  </div>
-                ))}
-              </div>
+            <div className="divide-y divide-slate-50">
+  {Object.entries(filterData(selectedEntry.data)).map(([key, val]) => (
+    <div key={key} className="py-4">
+      <p className="text-slate-400 text-[10px] font-black uppercase tracking-widest mb-1">{key}</p>
+      <p className="text-slate-900 font-semibold text-sm leading-relaxed whitespace-pre-wrap break-words">{val || '—'}</p>
+    </div>
+  ))}
+</div>
             </div>
           ) : (
             <div>
@@ -750,11 +750,11 @@ const roleBadge = {
               <h3 className="text-2xl font-black mt-3">{selectedReport.title}</h3>
               <p className="text-slate-400 text-sm mt-1">by <span className="text-blue-400">{selectedReport.staffName}</span></p>
             </div>
-            <div className="p-8 overflow-y-auto flex-1 divide-y divide-slate-50">
+          <div className="p-8 overflow-y-auto flex-1 divide-y divide-slate-50">
               {Object.entries(selectedReport.data || {}).map(([key, value]) => (
-                <div key={key} className="flex justify-between py-3">
-                  <span className="text-slate-400 font-bold text-xs uppercase tracking-wider">{key}</span>
-                  <span className="text-slate-900 font-black text-sm">{value || '—'}</span>
+                <div key={key} className="py-3">
+                  <p className="text-slate-400 font-black text-[10px] uppercase tracking-wider mb-1">{key}</p>
+                  <p className="text-slate-900 font-semibold text-sm leading-relaxed whitespace-pre-wrap break-words">{value || '—'}</p>
                 </div>
               ))}
               <div className="pt-4 flex justify-between text-[10px] font-bold text-slate-400 uppercase">
