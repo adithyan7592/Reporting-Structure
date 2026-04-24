@@ -5,7 +5,7 @@ import { useNavigate } from 'react-router-dom';
 
 const ALL_DEPARTMENTS = [
   'AYUSH', 'Bioclean', 'Theertha',
-  'KP – (CRM)', 'KP – Factory Outlet', 'KP – Exclusive Outlet',
+ 'KP – (CRM)', 'KP – (CRM) Accounts Assistant', 'KP – Factory Outlet', 'KP – Exclusive Outlet',
 'Happiness – Technical Co-ordinator',
 'Happiness – Technical Head',
 'Happiness – Insurance Co-ordinator',
@@ -17,7 +17,8 @@ const DEPT_FIELDS = {
   'AYUSH':               ['Total No. of Calls', 'No. of Quality Leads', 'No. of Converted Leads', 'No. of Follow-ups', 'Total Sales Value', 'Remarks if Any'],
   'Bioclean':            ['Total No. of Calls', 'No. of Quality Leads', 'No. of Converted Leads', 'No. of Follow-ups', 'Total Sales Value', 'Remarks if Any'],
   'Theertha':            ['Total No. of Calls', 'No. of Quality Leads', 'No. of Converted Leads', 'No. of Follow-ups', 'Total Sales Value', 'Remarks if Any'],
-  'KP – (CRM)':          ['Total No. of Calls', 'Quality Leads', 'No. of Converted Calls', 'No. of Quotations', 'No. of Followups', 'Factory Outlet Leads', 'Exclusive Outlet Leads', 'Total Sales Value', 'Remarks if Any'],
+  'KP – (CRM)': ['Total No. of Calls', 'Quality Leads', 'No. of Converted Calls', 'No. of Quotations', 'No. of Followups', 'Factory Outlet Leads', 'Exclusive Outlet Leads', 'Total Sales Value', 'Remarks if Any'],
+  'KP – (CRM) Accounts Assistant': ['No. of Quotations', 'Follow Up Calls', 'No. of Total Conversions', 'Total Sales Value'],
   'KP – Factory Outlet': ['Total No. of Walkins', 'Total No. of Bills', 'Total No. of Quotations', 'Total Sales Value', 'PO Status', 'GRN Status', 'No. of Home Deliveries', 'Painters Commission in Amt', 'Vehicle Running KM', 'Stock Alert', 'Outlet Remarks','Factory Outlet'],
   'KP – Exclusive Outlet': ['Total No. of Walkins', 'Total No. of Bills', 'Total No. of Quotations', 'Total Sales Value', 'PO Status', 'GRN Status', 'Stock Alert', 'Outlet Remarks','Exclusive Outlet'],
 'Happiness – Technical Co-ordinator': ['No. of New Complaints', 'Total No. of Pending Complaints', 'Total No. of Complaints > 6 days', 'No. of complaints solved', 'No of New Positive Reviews', 'No of New Negative Reviews', 'Complaint Resolution Cost', 'Remarks'],
@@ -36,7 +37,7 @@ const DEPT_FIELDS = {
 
 const DEPT_GROUPS = [
   { label: 'CRM – AYUSH',    depts: ['AYUSH', 'Bioclean', 'Theertha'] },
-  { label: 'KP',              depts: ['KP – (CRM)', 'KP – Factory Outlet', 'KP – Exclusive Outlet'] },
+  { label: 'KP', depts: ['KP – (CRM)', 'KP – (CRM) Accounts Assistant', 'KP – Factory Outlet', 'KP – Exclusive Outlet'] },
   { label: 'Support',         depts: ['Happiness – Technical Co-ordinator', 'Happiness – Technical Head', 'Happiness – Insurance Co-ordinator', 'Happiness – Outlet Support Co-ordinator', 'Purchase', 'Warehouse – KP', 'Warehouse – Ayush', 'Media – Camera Man', 'Media – Video Editor', 'Media – Designer', 'Marketing', 'Accounts'] },
 ];
 
@@ -47,7 +48,8 @@ const ROLE_PRESETS = [
   { group: 'CRM – AYUSH',    label: 'Theertha Team Lead',                        jobTitle: 'Team Lead',           depts: ['Theertha'],                                                                     primaryDept: 'Theertha' },
   { group: 'KP',              label: 'AGM',                             jobTitle: 'AGM',                 depts: ['KP – (CRM)', 'KP – Factory Outlet', 'KP – Exclusive Outlet'],              primaryDept: 'KP – (CRM)' },
   { group: 'KP',              label: 'OM',                              jobTitle: 'Operations Manager',  depts: ['KP – (CRM)', 'KP – Factory Outlet', 'KP – Exclusive Outlet'],              primaryDept: 'KP – (CRM)' },
-  { group: 'KP',              label: 'Team Lead',                       jobTitle: 'Team Lead',           depts: ['KP – (CRM)'],                                                               primaryDept: 'KP – (CRM)' },
+ { group: 'KP', label: 'Team Lead', jobTitle: 'Team Lead', depts: ['KP – (CRM)'], primaryDept: 'KP – (CRM)' },
+ { group: 'KP', label: 'CRM Accounts Assistant', jobTitle: 'Accounts Assistant', depts: ['KP – (CRM) Accounts Assistant'], primaryDept: 'KP – (CRM) Accounts Assistant' },
   { group: 'KP', label: 'Technical Head', jobTitle: 'Technical Head', depts: ['KP – (CRM)', 'KP – Factory Outlet', 'KP – Exclusive Outlet', 'Happiness – Technical Co-ordinator', 'Happiness – Technical Head'], primaryDept: 'KP – (CRM)' },
   { group: 'KP',              label: 'Factory Outlet — AGM',                      jobTitle: 'AGM',                 depts: ['KP – Factory Outlet'],                                                          primaryDept: 'KP – Factory Outlet' },
   { group: 'KP',              label: 'Factory Outlet — OM',                       jobTitle: 'Operations Manager',  depts: ['KP – Factory Outlet'],                                                          primaryDept: 'KP – Factory Outlet' },
