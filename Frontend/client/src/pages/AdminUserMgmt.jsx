@@ -10,7 +10,7 @@ const ALL_DEPARTMENTS = [
 'Happiness – Technical Head',
 'Happiness – Insurance Co-ordinator',
 'Happiness – Outlet Support Co-ordinator',
-'Purchase', 'Warehouse – KP', 'Warehouse – Ayush', 'Media – Camera Man', 'Media – Video Editor', 'Media – Designer', 'Marketing', 'Accounts',
+'Purchase', 'Warehouse – KP', 'Warehouse – Ayush', 'Media – Camera Man', 'Media – Video Editor', 'Media – Designer', 'Marketing', 'Accounts – Staff', 'Accounts – Manager',
 ];
 
 const DEPT_FIELDS = {
@@ -32,13 +32,14 @@ const DEPT_FIELDS = {
 'Media – Video Editor': ['No. of Videos Out', 'Out Explanation', 'Next Day Work'],
 'Media – Designer':    ['No. of Designs Completed', 'Design Explanation', 'Next Day Work'],
   'Marketing':           ['Campaign Name', 'Platform', 'Leads Generated', 'Budget Spent', 'Notes'],
-  'Accounts':            ['Total Collections (Daily)', 'Total Payments Made', 'Pending Vendor Invoices', 'Bank Deposit Amount', 'Outstanding Dues (New)', 'Accounts Summary'],
+ 'Accounts – Staff':   ['Total List Prepared', 'Total List Dispatched', 'List Sent to Post Office', 'List Pending', 'List Pending More than 3 Days', 'Accounts Remarks'],
+'Accounts – Manager': ['AYUSH – No. of Bills', 'AYUSH – Pending Bills', 'AYUSH – Payments Verified', 'AYUSH – Payments Pending', 'Theertha – No. of Bills', 'Theertha – Pending Bills', 'Theertha – Payments Verified', 'Theertha – Payments Pending', 'Bioclean – No. of Bills', 'Bioclean – Pending Bills', 'Bioclean – Payments Verified', 'Bioclean – Payments Pending', 'Khadi – No. of Bills', 'Khadi – Pending Bills', 'Khadi – Payments Verified', 'Khadi – Payments Pending', 'Suspense', 'Kerala Paints – Receipt', 'Kerala Paints – Expense', 'Bodhamudra – Receipt', 'Bodhamudra – Expense', 'Njavallikunnel Agencies – Amt', 'Njavallikunnel Paints – Amt', 'Other Pending Payments', 'Kerala Paints – Upcoming Expense', 'Bodhamudra – Upcoming Expense', 'Other Upcoming Payments'],
 };
 
 const DEPT_GROUPS = [
   { label: 'CRM – AYUSH',    depts: ['AYUSH', 'Bioclean', 'Theertha'] },
   { label: 'KP', depts: ['KP – (CRM)', 'KP – (CRM) Accounts Assistant', 'KP – Factory Outlet', 'KP – Exclusive Outlet'] },
-  { label: 'Support',         depts: ['Happiness – Technical Co-ordinator', 'Happiness – Technical Head', 'Happiness – Insurance Co-ordinator', 'Happiness – Outlet Support Co-ordinator', 'Purchase', 'Warehouse – KP', 'Warehouse – Ayush', 'Media – Camera Man', 'Media – Video Editor', 'Media – Designer', 'Marketing', 'Accounts'] },
+  { label: 'Support',         depts: ['Happiness – Technical Co-ordinator', 'Happiness – Technical Head', 'Happiness – Insurance Co-ordinator', 'Happiness – Outlet Support Co-ordinator', 'Purchase', 'Warehouse – KP', 'Warehouse – Ayush', 'Media – Camera Man', 'Media – Video Editor', 'Media – Designer', 'Marketing', 'Accounts – Staff', 'Accounts – Manager'] },
 ];
 
 const ROLE_PRESETS = [
