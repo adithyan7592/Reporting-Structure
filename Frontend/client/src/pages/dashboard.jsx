@@ -177,12 +177,12 @@ const departmentConfig = {
     { label: 'Notes',           type: 'textarea' },
   ],
   'Accounts': [
-    { label: 'Total Collections (Daily)', type: 'number' },
-    { label: 'Total Payments Made',       type: 'number' },
-    { label: 'Pending Vendor Invoices',   type: 'number' },
-    { label: 'Bank Deposit Amount',       type: 'number' },
-    { label: 'Outstanding Dues (New)',    type: 'number' },
-    { label: 'Accounts Summary',          type: 'textarea' },
+    { label: 'Total List Prepared', type: 'textarea' },
+    { label: 'Total List Dispatched',       type: 'textarea' },
+    { label: 'List Sent to Post Office',   type: 'textarea' },
+    { label: 'List Pending',       type: 'textarea' },
+    { label: 'List Pending More than 3 Days',    type: 'textarea' },
+    { label: 'Accounts Remarks',          type: 'textarea' },
   ],
 };
 
