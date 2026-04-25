@@ -113,6 +113,7 @@ const departmentConfig = {
   { label: 'Outlet Training (Outlet Names)',             type: 'textarea' },
   { label: 'Media Support (Board Design / Inauguration Notice / Painters Meeting Notice)', type: 'textarea' },
   { label: 'Machine Orders (Count & Outlet Names)',      type: 'textarea' },
+   { label: 'Other outlet supports',      type: 'textarea' },
 ],
  'Purchase': [
   // Report Type selector — controls which fields appear
