@@ -498,12 +498,14 @@ const viewableDepts = (role === 'superadmin' || role === 'management') ? ALL_DEP
     if (res.ok) { setEditingReport(null); setEditData({}); fetchReports(); }
   };
 
-  const filteredReports = useMemo(() => reports.filter(r => {
-    const matchesSearch = r.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      (r.staffName && r.staffName.toLowerCase().includes(searchQuery.toLowerCase()));
-    const matchesDate = !selectedDate || new Date(r.createdAt).toISOString().split('T')[0] === selectedDate;
-    return matchesSearch && matchesDate;
-  }), [reports, searchQuery, selectedDate]);
+const filteredReports = useMemo(() => reports.filter(r => {
+  // Staff only see their own reports
+  if (role === 'staff' && r.staffName !== userName) return false;
+  const matchesSearch = r.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    (r.staffName && r.staffName.toLowerCase().includes(searchQuery.toLowerCase()));
+  const matchesDate = !selectedDate || new Date(r.createdAt).toISOString().split('T')[0] === selectedDate;
+  return matchesSearch && matchesDate;
+}), [reports, searchQuery, selectedDate, role, userName]);  
 
 const roleBadge = {
   superadmin:  { label: 'Super Admin',        bg: 'bg-purple-600' },
