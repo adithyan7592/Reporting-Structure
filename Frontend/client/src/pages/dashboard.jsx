@@ -106,12 +106,13 @@ const departmentConfig = {
   { label: 'Remarks',                                  type: 'textarea' },
 ],
 'Happiness – Outlet Support Co-ordinator': [
-  { label: 'New MOU',                          type: 'number' },
-  { label: 'New Openings with Date',           type: 'text' },
-  { label: 'Board Design Provided & Details',  type: 'textarea' },
-  { label: 'Outlet Training & Details',        type: 'textarea' },
-  { label: 'Outlets Interior Completed',       type: 'number' },
-  { label: 'Outlets Cancelled if Any',         type: 'number' },
+  { label: 'Today Opened Outlets (Count & Names)',       type: 'textarea' },
+  { label: 'Today Outlet Bookings (Count & Names)',      type: 'textarea' },
+  { label: 'Today Outlet Cancellations (Count & Names)', type: 'textarea' },
+  { label: 'MOU Signing (Outlet Names)',                 type: 'textarea' },
+  { label: 'Outlet Training (Outlet Names)',             type: 'textarea' },
+  { label: 'Media Support (Board Design / Inauguration Notice / Painters Meeting Notice)', type: 'textarea' },
+  { label: 'Machine Orders (Count & Outlet Names)',      type: 'textarea' },
 ],
  'Purchase': [
   // Report Type selector — controls which fields appear
