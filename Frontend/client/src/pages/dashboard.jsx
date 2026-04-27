@@ -172,11 +172,12 @@ const departmentConfig = {
   { label: 'Next Day Work',            type: 'textarea' },
 ],
   'Marketing': [
-    { label: 'Campaign Name',   type: 'text' },
-    { label: 'Platform',        type: 'text' },
-    { label: 'Leads Generated', type: 'number' },
-    { label: 'Budget Spent',    type: 'number' },
-    { label: 'Notes',           type: 'textarea' },
+    { label: 'Completed Tasks',        type: 'textarea' },
+    { label: 'Campaign Activity', type: 'textarea' },
+    { label: 'Issues Reported & Resolved',    type: 'textarea' },
+    { label: 'Status of Comments',           type: 'textarea' },
+    { label: 'Status of Order Fulfilments',           type: 'textarea' },
+     
   ],
 'Accounts – Staff': [
   { label: 'Total List Prepared',                type: 'textarea' },
