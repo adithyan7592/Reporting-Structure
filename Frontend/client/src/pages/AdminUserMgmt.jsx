@@ -23,7 +23,7 @@ const DEPT_FIELDS = {
   'KP – Exclusive Outlet': ['Total No. of Walkins', 'Total No. of Bills', 'Total No. of Quotations', 'Total Sales Value', 'PO Status', 'GRN Status', 'Stock Alert', 'Outlet Remarks','Exclusive Outlet'],
 'Happiness – Technical Co-ordinator': ['No. of New Complaints', 'Total No. of Pending Complaints', 'Total No. of Complaints > 6 days', 'No. of complaints solved', 'No of New Positive Reviews', 'No of New Negative Reviews', 'Complaint Resolution Cost', 'Remarks'],
 'Happiness – Technical Head': ['Complaint Details', 'Solution Stage', 'Vehicle', 'Status (Service / Insurance / Tax)'],
-'Happiness – Insurance Co-ordinator': ['No. of New Insurance Issued by F Outlets', 'No. of New Insurance Issued by E Outlets', 'No. of Claims Pending', 'No. of Claims Provided', 'Total Claim Amount', 'Remarks'],
+'Happiness – Insurance Co-ordinator': ['No of new insurance issued', 'No of insurance pending', 'New claims and claim amount', 'No of claims pending', 'Total calls(painters ,bonvoice )', 'No of calls  connected', 'No of calls  nc'],
 'Happiness – Outlet Support Co-ordinator': ['Today Opened Outlets (Count & Names)', 'Today Outlet Bookings (Count & Names)', 'Today Outlet Cancellations (Count & Names)', 'MOU Signing (Outlet Names)', 'Outlet Training (Outlet Names)', 'Media Support (Board Design / Inauguration Notice / Painters Meeting Notice)', 'Machine Orders (Count & Outlet Names)', 'Other outlet supports'],
   'Purchase': ['Report Type', 'No. of PO Placed For F. Outlets', 'Amount of PO F. Outlets', 'No. of PO Placed For E. Outlets', 'Amount of PO E. Outlets', 'No of Total Deliveries', 'No of Total GRN Received', 'Brand / Division', 'Item', 'Vendor', 'Amount', 'Exp. Delivery Date', 'Remarks'],
   'Warehouse – KP':    ['No. of Dispatch to F Outlets', 'No. of Dispatch to E Outlets', 'No. of Stock Received', 'Vendors Name', 'No. of Pending Dispatches', 'Reason for Pending', 'Stock Alert', 'Remarks'],
@@ -200,13 +200,13 @@ export default function AdminUserMgmt() {
     ? managedDepts.map(d => d.dept)
     : ALL_DEPARTMENTS;
 
-  const emptyForm = { name: '', email: '', password: '', department: availableDepts[0] || 'AYUSH', role: 'staff', jobTitle: '', managedDepts: [] };
-  const [formData, setFormData] = useState(emptyForm);
-  const [activePresetGroup, setActivePresetGroup] = useState(PRESET_GROUPS[0]);
-  const [selectedPreset, setSelectedPreset] = useState(null);
-  const [users, setUsers] = useState([]);
-  const [editingUser, setEditingUser] = useState(null);
-  const [filterRole, setFilterRole] = useState('all');
+const emptyForm = { name: '', email: '', password: '', department: availableDepts[0] || 'AYUSH', role: 'staff', jobTitle: '', managedDepts: [] };
+const [formData, setFormData] = useState(emptyForm);
+const [activePresetGroup, setActivePresetGroup] = useState(PRESET_GROUPS[0]);
+const [selectedPreset, setSelectedPreset] = useState(null);
+const [users, setUsers] = useState([]);
+const [editingUser, setEditingUser] = useState(null);
+const [filterRole, setFilterRole] = useState('all');
 const [expandedUser, setExpandedUser] = useState(null);
 const [toast, setToast] = useState(null);
 const [confirmDelete, setConfirmDelete] = useState(null);
