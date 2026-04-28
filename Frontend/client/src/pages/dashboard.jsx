@@ -74,6 +74,7 @@ const departmentConfig = {
   { label: 'No of New Positive Reviews',         type: 'number' },
   { label: 'No of New Negative Reviews',         type: 'number' },
   { label: 'Complaint Resolution Cost',          type: 'number' },
+  { label: 'Other Activity',                     type: 'textarea' },
   { label: 'Remarks',                            type: 'textarea' },
 ],
 'Happiness – Technical Head': [
