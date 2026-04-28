@@ -15,7 +15,7 @@ function formatDateLabel(ymd) {
 
 // ── Dept field config ─────────────────────────────────────────────────────────
 const departmentConfig = {
-  'CRM – Ayush': [
+ 'CRM':  [
   { label: 'Brand', type: 'select', options: ['AYUSH', 'Bioclean', 'Theertha'] },
   { label: 'Total No. of Calls',       type: 'number' },
   { label: 'No. of Quality Leads',     type: 'number' },
@@ -223,7 +223,7 @@ function DailyTable({ reports, dept, selectedDay, allowedFields, onRowClick }) {
  const agentMap = {};
 dayReports.forEach(r => {
   const brand = r.data?.['Brand'] || '';
-  const key = dept === 'CRM – Ayush' && brand
+  const key = dept === 'CRM' && brand
     ? `${r.staffName || 'Unknown'}__${brand}`
     : r.staffName || 'Unknown';
   const name = r.staffName || 'Unknown';
@@ -251,7 +251,7 @@ const rows = Object.values(agentMap);
   }
 
   // ── CRM – Ayush: Brand-wise grouped view ──
-  if (dept === 'CRM – Ayush') {
+ if (dept === 'CRM') {
     const brands = ['AYUSH', 'Bioclean', 'Theertha'];
     return (
       <div className="divide-y divide-slate-100">
