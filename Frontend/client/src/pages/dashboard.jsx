@@ -91,6 +91,7 @@ const departmentConfig = {
   { label: 'Total calls(painters ,bonvoice )',                       type: 'number' },
   { label: 'No of calls  connected',                                  type: 'number' },
   { label: 'No of calls  nc',                                  type: 'number' },
+  { label: 'Others', type: 'textarea' },
 ],
 'Happiness – Outlet Support Co-ordinator': [
   { label: 'Today Opened Outlets (Count & Names)',       type: 'textarea' },
@@ -196,8 +197,6 @@ const departmentConfig = {
   { label: 'Kerala Paints – Expense',            type: 'number' },
   { label: 'Bodhamudra – Receipt',               type: 'number' },
   { label: 'Bodhamudra – Expense',               type: 'number' },
-  { label: 'Njavallikunnel Agencies – Amt',      type: 'number' },
-  { label: 'Njavallikunnel Paints – Amt',        type: 'number' },
   { label: 'Other Pending Payments',             type: 'textarea' },
   { label: 'Kerala Paints – Upcoming Expense',   type: 'number' },
   { label: 'Bodhamudra – Upcoming Expense',      type: 'number' },
