@@ -15,30 +15,15 @@ function formatDateLabel(ymd) {
 
 // ── Dept field config ─────────────────────────────────────────────────────────
 const departmentConfig = {
-  'AYUSH': [
-    { label: 'Total No. of Calls',       type: 'number' },
-    { label: 'No. of Quality Leads',     type: 'number' },
-    { label: 'No. of Converted Leads',   type: 'number' },
-    { label: 'No. of Follow-ups',        type: 'number' },
-    { label: 'Total Sales Value',        type: 'number' },
-    { label: 'Remarks if Any',           type: 'textarea' },
-  ],
-  'Bioclean': [
-    { label: 'Total No. of Calls',       type: 'number' },
-    { label: 'No. of Quality Leads',     type: 'number' },
-    { label: 'No. of Converted Leads',   type: 'number' },
-    { label: 'No. of Follow-ups',        type: 'number' },
-    { label: 'Total Sales Value',        type: 'number' },
-    { label: 'Remarks if Any',           type: 'textarea' },
-  ],
-  'Theertha': [
-    { label: 'Total No. of Calls',       type: 'number' },
-    { label: 'No. of Quality Leads',     type: 'number' },
-    { label: 'No. of Converted Leads',   type: 'number' },
-    { label: 'No. of Follow-ups',        type: 'number' },
-    { label: 'Total Sales Value',        type: 'number' },
-    { label: 'Remarks if Any',           type: 'textarea' },
-  ],
+  'CRM – Ayush': [
+  { label: 'Brand', type: 'select', options: ['AYUSH', 'Bioclean', 'Theertha'] },
+  { label: 'Total No. of Calls',       type: 'number' },
+  { label: 'No. of Quality Leads',     type: 'number' },
+  { label: 'No. of Converted Leads',   type: 'number' },
+  { label: 'No. of Follow-ups',        type: 'number' },
+  { label: 'Total Sales Value',        type: 'number' },
+  { label: 'Remarks if Any',           type: 'textarea' },
+],
 'KP – (CRM)': [
   { label: 'Total No. of Calls',       type: 'number' },
   { label: 'Quality Leads',            type: 'number' },

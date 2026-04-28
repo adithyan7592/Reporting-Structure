@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 // ── Org & field definitions ───────────────────────────────────────────────────
 
 const ALL_DEPARTMENTS = [
-  'AYUSH', 'Bioclean', 'Theertha',
+  'CRM – Ayush',
  'KP – (CRM)', 'KP – (CRM) Accounts Assistant', 'KP – Factory Outlet', 'KP – Exclusive Outlet',
 'Happiness – Technical Co-ordinator',
 'Happiness – Technical Head',
@@ -14,9 +14,7 @@ const ALL_DEPARTMENTS = [
 ];
 
 const DEPT_FIELDS = {
-  'AYUSH':               ['Total No. of Calls', 'No. of Quality Leads', 'No. of Converted Leads', 'No. of Follow-ups', 'Total Sales Value', 'Remarks if Any'],
-  'Bioclean':            ['Total No. of Calls', 'No. of Quality Leads', 'No. of Converted Leads', 'No. of Follow-ups', 'Total Sales Value', 'Remarks if Any'],
-  'Theertha':            ['Total No. of Calls', 'No. of Quality Leads', 'No. of Converted Leads', 'No. of Follow-ups', 'Total Sales Value', 'Remarks if Any'],
+  'CRM – Ayush': ['Brand', 'Total No. of Calls', 'No. of Quality Leads', 'No. of Converted Leads', 'No. of Follow-ups', 'Total Sales Value', 'Remarks if Any'],
   'KP – (CRM)': ['Total No. of Calls', 'Quality Leads', 'No. of Converted Calls', 'No. of Quotations', 'No. of Followups', 'Factory Outlet Leads', 'Exclusive Outlet Leads', 'Total Sales Value', 'Remarks if Any'],
   'KP – (CRM) Accounts Assistant': ['No. of Quotations', 'Follow Up Calls', 'No. of Total Conversions', 'Total Sales Value'],
   'KP – Factory Outlet': ['Total No. of Walkins', 'Total No. of Bills', 'Total No. of Quotations', 'Total Sales Value', 'PO Status', 'GRN Status', 'No. of Home Deliveries', 'Painters Commission in Amt', 'Vehicle Running KM', 'Stock Alert', 'Outlet Remarks','Factory Outlet'],
@@ -37,16 +35,13 @@ const DEPT_FIELDS = {
 };
 
 const DEPT_GROUPS = [
-  { label: 'CRM – AYUSH',    depts: ['AYUSH', 'Bioclean', 'Theertha'] },
+  { label: 'CRM – AYUSH', depts: ['CRM – Ayush'] },
   { label: 'KP', depts: ['KP – (CRM)', 'KP – (CRM) Accounts Assistant', 'KP – Factory Outlet', 'KP – Exclusive Outlet'] },
   { label: 'Support',         depts: ['Happiness – Technical Co-ordinator', 'Happiness – Technical Head', 'Happiness – Insurance Co-ordinator', 'Happiness – Outlet Support Co-ordinator', 'Purchase', 'Warehouse – KP', 'Warehouse – Ayush', 'Media – Camera Man', 'Media – Video Editor', 'Media – Designer', 'Marketing', 'Accounts – Staff', 'Accounts – Manager'] },
 ];
 
 const ROLE_PRESETS = [
-  { group: 'CRM – AYUSH',    label: 'AYUSH / Bioclean / Theertha — Team Lead', jobTitle: 'Team Lead',           depts: ['AYUSH', 'Bioclean', 'Theertha'],                                               primaryDept: 'AYUSH' },
-  { group: 'CRM – AYUSH',    label: 'AYUSH Team Lead',                          jobTitle: 'Team Lead',           depts: ['AYUSH'],                                                                        primaryDept: 'AYUSH' },
-  { group: 'CRM – AYUSH',    label: 'Bioclean Team Lead',                        jobTitle: 'Team Lead',           depts: ['Bioclean'],                                                                     primaryDept: 'Bioclean' },
-  { group: 'CRM – AYUSH',    label: 'Theertha Team Lead',                        jobTitle: 'Team Lead',           depts: ['Theertha'],                                                                     primaryDept: 'Theertha' },
+ { group: 'CRM – AYUSH', label: 'CRM Ayush Team Lead', jobTitle: 'Team Lead', depts: ['CRM – Ayush'], primaryDept: 'CRM – Ayush' },
   { group: 'KP',              label: 'AGM',                             jobTitle: 'AGM',                 depts: ['KP – (CRM)', 'KP – Factory Outlet', 'KP – Exclusive Outlet'],              primaryDept: 'KP – (CRM)' },
   { group: 'KP',              label: 'OM',                              jobTitle: 'Operations Manager',  depts: ['KP – (CRM)', 'KP – Factory Outlet', 'KP – Exclusive Outlet'],              primaryDept: 'KP – (CRM)' },
  { group: 'KP', label: 'Team Lead', jobTitle: 'Team Lead', depts: ['KP – (CRM)'], primaryDept: 'KP – (CRM)' },
