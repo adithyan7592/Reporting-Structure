@@ -209,6 +209,7 @@ const ALL_DEPTS = Object.keys(departmentConfig);
 
 // ── Daily Report Table ────────────────────────────────────────────────────────
 
+
 function DailyTable({ reports, dept, selectedDay, allowedFields, onRowClick }) {
   const allFields = departmentConfig[dept] || [];
   const visibleFields = allFields.filter(f => !allowedFields || allowedFields.includes(f.label));
@@ -241,6 +242,93 @@ function DailyTable({ reports, dept, selectedDay, allowedFields, onRowClick }) {
         <div className="text-5xl mb-4">📋</div>
         <p className="font-semibold text-lg">No reports submitted on this day</p>
         <p className="text-sm mt-1">for <span className="font-bold text-slate-500">{dept}</span></p>
+      </div>
+    );
+  }
+
+  // ── CRM – Ayush: Brand-wise grouped view ──
+  if (dept === 'CRM – Ayush') {
+    const brands = ['AYUSH', 'Bioclean', 'Theertha'];
+    return (
+      <div className="divide-y divide-slate-100">
+        {brands.map(brand => {
+          const brandRows = rows.filter(a => a.latest?.data?.['Brand'] === brand);
+          const brandTotals = {};
+          numericFields.forEach(f => {
+            brandTotals[f.label] = brandRows.reduce((sum, a) => sum + (parseFloat(a.latest?.data?.[f.label]) || 0), 0);
+          });
+          return (
+            <div key={brand}>
+              <div className="px-6 py-3 bg-slate-50 border-b border-slate-200 flex items-center gap-3">
+                <span className={`px-3 py-1 rounded-full text-xs font-black text-white ${
+                  brand === 'AYUSH' ? 'bg-emerald-600' :
+                  brand === 'Bioclean' ? 'bg-blue-600' : 'bg-purple-600'
+                }`}>{brand}</span>
+                <span className="text-slate-400 text-xs">{brandRows.length} agent{brandRows.length !== 1 ? 's' : ''}</span>
+              </div>
+              {brandRows.length === 0 ? (
+                <div className="px-6 py-4 text-slate-400 text-sm italic">No reports for {brand} today.</div>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left border-collapse text-sm min-w-max">
+                    <thead>
+                      <tr className="bg-slate-900 text-white">
+                        <th className="px-5 py-3 text-[10px] uppercase tracking-widest font-black sticky left-0 bg-slate-900 z-10 min-w-[40px]">Sl.</th>
+                        <th className="px-5 py-3 text-[10px] uppercase tracking-widest font-black sticky left-[56px] bg-slate-900 z-10 min-w-[160px]">Agent Name</th>
+                        {numericFields.map(f => (
+                          <th key={f.label} className="px-5 py-3 text-[10px] uppercase tracking-widest font-black whitespace-nowrap">{f.label}</th>
+                        ))}
+                        <th className="px-5 py-3 text-[10px] uppercase tracking-widest font-black sticky right-0 bg-slate-900 z-10">Action</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {brandRows.map((agent, idx) => {
+                        const data = agent.latest?.data || {};
+                        return (
+                          <tr key={agent.staffName} onClick={() => onRowClick?.(agent)}
+                            className="border-b border-slate-100 hover:bg-blue-50/60 cursor-pointer transition group">
+                            <td className="px-5 py-4 text-slate-400 font-bold text-xs sticky left-0 bg-white group-hover:bg-blue-50/60 z-10">{idx + 1}</td>
+                            <td className="px-5 py-4 sticky left-[56px] bg-white group-hover:bg-blue-50/60 z-10">
+                              <p className="font-bold text-slate-900">{agent.staffName}</p>
+                              {agent.entries.length > 1 && (
+                                <span className="text-[10px] font-black text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full">{agent.entries.length} entries</span>
+                              )}
+                              {agent.latest?.isEdited && (
+                                <span className="text-[10px] font-black text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full ml-1">✏️ Edited</span>
+                              )}
+                            </td>
+                            {numericFields.map(f => (
+                              <td key={f.label} className="px-5 py-4 text-slate-700 font-semibold tabular-nums">
+                                {parseFloat(data[f.label]) > 0
+                                  ? parseFloat(data[f.label]).toLocaleString('en-IN')
+                                  : <span className="text-slate-300">—</span>}
+                              </td>
+                            ))}
+                            <td className="px-5 py-4 sticky right-0 bg-white group-hover:bg-blue-50/60 z-10">
+                              <span className="text-blue-600 text-xs font-black group-hover:underline">View →</span>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                    <tfoot>
+                      <tr className="bg-slate-50 border-t-2 border-slate-200">
+                        <td className="px-5 py-3 sticky left-0 bg-slate-50 z-10"></td>
+                        <td className="px-5 py-3 font-black text-slate-900 uppercase text-xs tracking-wider sticky left-[56px] bg-slate-50 z-10">Total</td>
+                        {numericFields.map(f => (
+                          <td key={f.label} className="px-5 py-3 font-black text-slate-900 tabular-nums">
+                            {brandTotals[f.label] > 0 ? brandTotals[f.label].toLocaleString('en-IN') : <span className="text-slate-300">—</span>}
+                          </td>
+                        ))}
+                        <td className="px-5 py-3 text-slate-400 text-xs font-bold sticky right-0 bg-slate-50 z-10">{brandRows.length} agents</td>
+                      </tr>
+                    </tfoot>
+                  </table>
+                </div>
+              )}
+            </div>
+          );
+        })}
       </div>
     );
   }
@@ -337,6 +425,7 @@ function DailyTable({ reports, dept, selectedDay, allowedFields, onRowClick }) {
     </div>
   );
 }
+
 
 // ── Agent Drill-down Modal ────────────────────────────────────────────────────
 
