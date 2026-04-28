@@ -220,16 +220,20 @@ function DailyTable({ reports, dept, selectedDay, allowedFields, onRowClick }) {
     new Date(r.createdAt).toISOString().split('T')[0] === selectedDay
   );
 
-  const agentMap = {};
-  dayReports.forEach(r => {
-    const name = r.staffName || 'Unknown';
-    if (!agentMap[name]) agentMap[name] = { staffName: name, entries: [], latest: null };
-    agentMap[name].entries.push(r);
-    if (!agentMap[name].latest || new Date(r.createdAt) > new Date(agentMap[name].latest.createdAt))
-      agentMap[name].latest = r;
-  });
+ const agentMap = {};
+dayReports.forEach(r => {
+  const brand = r.data?.['Brand'] || '';
+  const key = dept === 'CRM – Ayush' && brand
+    ? `${r.staffName || 'Unknown'}__${brand}`
+    : r.staffName || 'Unknown';
+  const name = r.staffName || 'Unknown';
+  if (!agentMap[key]) agentMap[key] = { staffName: name, brand, entries: [], latest: null };
+  agentMap[key].entries.push(r);
+  if (!agentMap[key].latest || new Date(r.createdAt) > new Date(agentMap[key].latest.createdAt))
+    agentMap[key].latest = r;
+});
 
-  const rows = Object.values(agentMap);
+const rows = Object.values(agentMap);
 
   const totals = {};
   numericFields.forEach(f => {
@@ -252,7 +256,7 @@ function DailyTable({ reports, dept, selectedDay, allowedFields, onRowClick }) {
     return (
       <div className="divide-y divide-slate-100">
         {brands.map(brand => {
-          const brandRows = rows.filter(a => a.latest?.data?.['Brand'] === brand);
+         const brandRows = rows.filter(a => a.brand === brand);
           const brandTotals = {};
           numericFields.forEach(f => {
             brandTotals[f.label] = brandRows.reduce((sum, a) => sum + (parseFloat(a.latest?.data?.[f.label]) || 0), 0);
