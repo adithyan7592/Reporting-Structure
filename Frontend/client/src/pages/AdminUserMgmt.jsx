@@ -29,7 +29,7 @@ const DEPT_FIELDS = {
 'Media – Camera Man':  ['No. of Work Out', 'Work Explanation', 'Next Day Work'],
 'Media – Video Editor': ['No. of Videos Out', 'Out Explanation', 'Next Day Work'],
 'Media – Designer':    ['No. of Designs Completed', 'Design Explanation', 'Next Day Work'],
-'Marketing': ['Completed Tasks', 'Campaign Activity', 'Issues Reported & Resolved', 'Status of Comments', 'Status of Order Fulfilments'],
+'Marketing': ['Completed Tasks', 'Campaign Activity', 'Issues Reported & Resolved', 'Status of Comments', 'Status of Order Fulfilments', 'Time Taken'],
 'Accounts – Staff':   ['Total List Prepared', 'Total List Dispatched', 'List Sent to Post Office', 'List Pending', 'List Pending More than 3 Days', 'Accounts Remarks'],
 'Accounts – Manager': ['AYUSH – No. of Bills', 'AYUSH – Pending Bills', 'AYUSH – Payments Verified', 'AYUSH – Payments Pending', 'Theertha – No. of Bills', 'Theertha – Pending Bills', 'Theertha – Payments Verified', 'Theertha – Payments Pending', 'Bioclean – No. of Bills', 'Bioclean – Pending Bills', 'Bioclean – Payments Verified', 'Bioclean – Payments Pending', 'Khadi – No. of Bills', 'Khadi – Pending Bills', 'Khadi – Payments Verified', 'Khadi – Payments Pending', 'Suspense', 'Kerala Paints – Receipt', 'Kerala Paints – Expense', 'Bodhamudra – Receipt', 'Bodhamudra – Expense',  'Other Pending Payments', 'Kerala Paints – Upcoming Expense', 'Bodhamudra – Upcoming Expense', 'Other Upcoming Payments'],
 };

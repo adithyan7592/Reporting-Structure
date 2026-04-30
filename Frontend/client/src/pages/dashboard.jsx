@@ -164,7 +164,8 @@ const departmentConfig = {
     { label: 'Campaign Activity', type: 'textarea' },
     { label: 'Issues Reported & Resolved',    type: 'textarea' },
     { label: 'Status of Comments',           type: 'textarea' },
-    { label: 'Status of Order Fulfilments',           type: 'textarea' },
+   { label: 'Status of Order Fulfilments', type: 'textarea' },
+   { label: 'Time Taken',                  type: 'text' },
      
   ],
 'Accounts – Staff': [
