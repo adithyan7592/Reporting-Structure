@@ -88,9 +88,9 @@ const departmentConfig = {
   { label: 'No of insurance pending', type: 'number' },
   { label: 'New claims and claim amount',                    type: 'textarea' },
   { label: 'No of claims pending ',                   type: 'number' },
-  { label: 'Total calls(painters ,bonvoice )',                       type: 'number' },
-  { label: 'No of calls  connected',                                  type: 'number' },
-  { label: 'No of calls  nc',                                  type: 'number' },
+ { label: 'Total calls(painters ,bonvoice )', type: 'number' },
+{ label: 'No of calls  connected',           type: 'number' },
+{ label: 'No of calls  nc',                  type: 'number' },
   { label: 'Others', type: 'textarea' },
 ],
 'Happiness – Outlet Support Co-ordinator': [
