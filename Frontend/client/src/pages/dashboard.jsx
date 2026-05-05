@@ -821,12 +821,13 @@ const roleBadge = {
             return (
               <div key={field.label} className={field.type === 'textarea' ? 'md:col-span-2' : ''}>
                 <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">{field.label}</label>
-                {field.type === 'textarea' ? (
-                  <textarea
-                    className="w-full bg-slate-50 border border-slate-200 p-4 rounded-2xl outline-none focus:ring-2 focus:ring-blue-500 h-28 font-semibold"
-                    placeholder="..."
-                    onChange={e => setDynamicData({ ...dynamicData, [field.label]: e.target.value })}
-                  />
+             {field.type === 'textarea' ? (
+  <textarea
+    className="w-full bg-slate-50 border border-slate-200 p-4 rounded-2xl outline-none focus:ring-2 focus:ring-blue-500 h-28 font-semibold"
+    placeholder="..."
+    required={dept === 'KP – (CRM)'}
+    onChange={e => setDynamicData({ ...dynamicData, [field.label]: e.target.value })}
+  />
                 ) : field.type === 'select' ? (
                   <select
                     className="w-full bg-slate-50 border border-slate-200 p-4 rounded-2xl outline-none focus:ring-2 focus:ring-blue-500 font-semibold"
@@ -837,12 +838,13 @@ const roleBadge = {
                     {field.options.map(opt => <option key={opt} value={opt}>{opt}</option>)}
                   </select>
                 ) : (
-                  <input
-                    type={field.type}
-                    className="w-full bg-slate-50 border border-slate-200 p-4 rounded-2xl outline-none focus:ring-2 focus:ring-blue-500 font-semibold"
-                    placeholder={field.type === 'number' ? '0' : ''}
-                    onChange={e => setDynamicData({ ...dynamicData, [field.label]: e.target.value })}
-                  />
+  <input
+    type={field.type}
+    className="w-full bg-slate-50 border border-slate-200 p-4 rounded-2xl outline-none focus:ring-2 focus:ring-blue-500 font-semibold"
+    placeholder={field.type === 'number' ? '0' : ''}
+    required={dept === 'KP – (CRM)'}
+    onChange={e => setDynamicData({ ...dynamicData, [field.label]: e.target.value })}
+  />
                 )}
               </div>
             );
