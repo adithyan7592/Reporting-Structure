@@ -25,8 +25,6 @@ mongoose.connect(process.env.MONGO_URI, {
   .then(() => console.log('✅ MongoDB Connected'))
   .catch(err => console.log('❌ MongoDB Error:', err));
 
-// ── BUG 1 FIX: isSuperOrManagement was INSIDE protect() so it was never accessible
-// It must be defined at the top level
 const isSuperOrManagement = (role) => role === 'superadmin' || role === 'management';
 
 const protect = (req, res, next) => {
@@ -143,8 +141,6 @@ app.put('/api/users/:id', protect, async (req, res) => {
   } catch { res.status(500).json({ msg: 'Error updating' }); }
 });
 
-// ── Delete User ───────────────────────────────────────────────────────────────
-// BUG 2 FIX: Missing closing brace on the if block + double braces
 app.delete('/api/users/:id', protect, async (req, res) => {
   if (!isSuperOrManagement(req.user.role) && req.user.role !== 'manager')
     return res.status(403).json({ msg: 'Unauthorized' });
@@ -187,16 +183,5 @@ app.put('/api/reports/:id', protect, async (req, res) => {
   } catch (err) { res.status(500).json({ msg: 'Error updating report' }); }
 });
 
-// ── Fix Password (temp) ───────────────────────────────────────────────────────
-app.get('/api/fix-my-password', async (req, res) => {
-  try {
-    const u = await User.findOneAndUpdate(
-      { email: 'admin@system.com' },
-      { password: await bcrypt.hash('admin123', 10) },
-      { new: true }
-    );
-    res.send(u ? '<h1>Done!</h1>' : '<h1>Not found</h1>');
-  } catch (e) { res.status(500).send(e.message); }
-});
 
 app.listen(process.env.PORT || 5000, () => console.log('🚀 Server running'));

@@ -15,7 +15,7 @@ const ALL_DEPARTMENTS = [
 
 const DEPT_FIELDS = {
   'CRM': ['Brand', 'Total No. of Calls', 'No. of Quality Leads', 'No. of Converted Leads', 'No. of Follow-ups', 'Total Sales Value', 'Remarks if Any'],
-  'KP – (CRM)': ['Total No. of Calls', 'Quality Leads', 'No. of Converted Calls', 'No. of Quotations', 'No. of Followups', 'Factory Outlet Leads', 'Exclusive Outlet Leads', 'Total Sales Value', 'Remarks if Any'],
+  'KP – (CRM)': ['Total No. of Calls', 'Quality Leads', 'No. of Converted Calls', 'No. of Quotations', 'No. of Followups', 'Factory Outlet Leads', 'Exclusive Outlet Leads', 'Total Sales Value', 'Remarks if Any', 'Painters – No of calls Connected', 'Painters – No of Conversions', 'Painters – Purchase Amount'],
   'KP – (CRM) Accounts Assistant': ['No. of Quotations', 'Follow Up Calls', 'No. of Total Conversions', 'Total Sales Value'],
   'KP – Factory Outlet': ['Total No. of Walkins', 'Total No. of Bills', 'Total No. of Quotations', 'Total Sales Value', 'PO Status', 'GRN Status', 'No. of Home Deliveries', 'Painters Commission in Amt', 'Vehicle Running KM', 'Stock Alert', 'Outlet Remarks','Factory Outlet'],
   'KP – Exclusive Outlet': ['Total No. of Walkins', 'Total No. of Bills', 'Total No. of Quotations', 'Total Sales Value', 'PO Status', 'GRN Status', 'Stock Alert', 'Outlet Remarks','Exclusive Outlet'],
