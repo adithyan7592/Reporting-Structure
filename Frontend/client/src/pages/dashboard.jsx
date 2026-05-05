@@ -45,20 +45,27 @@ const departmentConfig = {
   { label: 'No. of Total Conversions', type: 'number' },
   { label: 'Total Sales Value',        type: 'number' },
 ],
-  'KP – Factory Outlet': [
-    { label: 'Total No. of Walkins',          type: 'number' },
-    { label: 'Total No. of Bills',            type: 'number' },
-    { label: 'Total No. of Quotations',       type: 'number' },
-    { label: 'Total Sales Value',             type: 'number' },
-    { label: 'PO Status',                     type: 'text' },
-    { label: 'GRN Status',                    type: 'text' },
-    { label: 'No. of Home Deliveries',        type: 'number' },
-    { label: 'Painters Commission in Amt',    type: 'number' },
-    { label: 'Vehicle Running KM',            type: 'number' },
-    { label: 'Stock Alert',                   type: 'number' },
-    { label: 'Outlet Remarks',                type: 'textarea' },
-    { label: 'Factory Outlet', type: 'text' },
-  ],
+ 'KP – Factory Outlet': [
+  { label: 'Total No. of Walkins',            type: 'number' },
+  { label: 'Total No. of Bills',              type: 'number' },
+  { label: 'Total No. of Quotations',         type: 'number' },
+  { label: 'Total Sales Value',               type: 'number' },
+  { label: 'PO Status',                       type: 'text' },
+  { label: 'GRN Status',                      type: 'text' },
+  { label: 'No. of Home Deliveries',          type: 'number' },
+  { label: 'Painters Commission in Amt',      type: 'number' },
+  { label: 'Vehicle Running KM',              type: 'number' },
+  { label: 'Stock Alert',                     type: 'number' },
+  { label: 'Outlet Remarks',                  type: 'textarea' },
+  { label: 'Factory Outlet',                  type: 'text' },
+  // ── PAINTERS REPORT ──
+  { label: 'Painters – No. of Painters Connected', type: 'number' },
+  { label: 'Painters – No. of Conversions',        type: 'number' },
+  { label: 'Painters – Purchase Amount',           type: 'number' },
+  { label: 'Painters – No. of Commission',         type: 'number' },
+  { label: 'Painters – Commission Amount',         type: 'number' },
+  { label: 'Painters – No. of Painters Visited',   type: 'number' },
+],
   'KP – Exclusive Outlet': [
     { label: 'Total No. of Walkins',    type: 'number' },
     { label: 'Total No. of Bills',      type: 'number' },
@@ -825,7 +832,7 @@ const roleBadge = {
   <textarea
     className="w-full bg-slate-50 border border-slate-200 p-4 rounded-2xl outline-none focus:ring-2 focus:ring-blue-500 h-28 font-semibold"
     placeholder="..."
-    required={dept === 'KP – (CRM)'}
+    required={dept === 'KP – (CRM)' || dept === 'KP – Factory Outlet'}
     onChange={e => setDynamicData({ ...dynamicData, [field.label]: e.target.value })}
   />
                 ) : field.type === 'select' ? (
@@ -842,7 +849,7 @@ const roleBadge = {
     type={field.type}
     className="w-full bg-slate-50 border border-slate-200 p-4 rounded-2xl outline-none focus:ring-2 focus:ring-blue-500 font-semibold"
     placeholder={field.type === 'number' ? '0' : ''}
-    required={dept === 'KP – (CRM)'}
+    required={dept === 'KP – (CRM)' || dept === 'KP – Factory Outlet'}
     onChange={e => setDynamicData({ ...dynamicData, [field.label]: e.target.value })}
   />
                 )}
