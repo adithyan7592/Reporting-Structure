@@ -171,14 +171,9 @@ const departmentConfig = {
   { label: 'Next Day Work',            type: 'textarea' },
 ],
   'Marketing': [
-    { label: 'Completed Tasks',        type: 'textarea' },
-    { label: 'Campaign Activity', type: 'textarea' },
-    { label: 'Issues Reported & Resolved',    type: 'textarea' },
-    { label: 'Status of Comments',           type: 'textarea' },
-   { label: 'Status of Order Fulfilments', type: 'textarea' },
-   { label: 'Time Taken',                  type: 'text' },
-     
-  ],
+  { label: 'Issues Reported & Resolved',  type: 'textarea' },
+  { label: 'Status of Order Fulfilments', type: 'textarea' },
+],
 'Accounts – Staff': [
   { label: 'Total List Prepared',                type: 'textarea' },
   { label: 'Total List Dispatched',              type: 'textarea' },
@@ -546,6 +541,91 @@ function AgentDrillModal({ agent, dept, allowedFields, onClose, onEditReport }) 
     </div>
   );
 }
+// ── Marketing Task Entry Form ─────────────────────────────────────────────────
+function MarketingTaskForm({ reportTitle, setReportTitle, onSubmit, onClose }) {
+  const [tasks, setTasks] = useState([{ task: '', timeTaken: '' }]);
+  const [issues, setIssues] = useState('');
+  const [orderStatus, setOrderStatus] = useState('');
+
+  const addTask = () => setTasks([...tasks, { task: '', timeTaken: '' }]);
+  const removeTask = (idx) => setTasks(tasks.filter((_, i) => i !== idx));
+  const updateTask = (idx, key, value) => {
+    const updated = [...tasks];
+    updated[idx][key] = value;
+    setTasks(updated);
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    const data = {
+      'Tasks': tasks.map((t, i) => `${i + 1}. ${t.task} (${t.timeTaken})`).join('\n'),
+      'Issues Reported & Resolved': issues,
+      'Status of Order Fulfilments': orderStatus,
+    };
+    onSubmit(data);
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-6">
+      <div>
+        <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Subject / Title</label>
+        <input type="text" className="w-full bg-slate-50 border border-slate-200 p-4 rounded-2xl outline-none focus:ring-2 focus:ring-blue-500 font-semibold"
+          placeholder="e.g. Daily Report – 28 Apr" value={reportTitle} onChange={e => setReportTitle(e.target.value)} required />
+      </div>
+
+      {/* Dynamic Tasks */}
+      <div>
+        <div className="flex items-center justify-between mb-3">
+          <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest">Tasks Completed</label>
+          <button type="button" onClick={addTask}
+            className="text-xs font-black text-blue-600 bg-blue-50 px-3 py-1.5 rounded-xl hover:bg-blue-100 transition">
+            + Add Task
+          </button>
+        </div>
+        <div className="space-y-3">
+          {tasks.map((t, idx) => (
+            <div key={idx} className="flex gap-3 items-start">
+              <div className="flex-shrink-0 w-6 h-6 rounded-full bg-slate-200 flex items-center justify-center text-xs font-black text-slate-500 mt-4">{idx + 1}</div>
+              <div className="flex-1 grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <input type="text"
+                  className="w-full bg-slate-50 border border-slate-200 p-3 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 font-medium text-sm"
+                  placeholder="Task description..."
+                  value={t.task} required
+                  onChange={e => updateTask(idx, 'task', e.target.value)} />
+                <input type="text"
+                  className="w-full bg-slate-50 border border-slate-200 p-3 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 font-medium text-sm"
+                  placeholder="Time taken (e.g. 2 hrs)"
+                  value={t.timeTaken} required
+                  onChange={e => updateTask(idx, 'timeTaken', e.target.value)} />
+              </div>
+              {tasks.length > 1 && (
+                <button type="button" onClick={() => removeTask(idx)}
+                  className="text-red-400 hover:text-red-600 font-black text-lg mt-3 flex-shrink-0">✕</button>
+              )}
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Fixed fields */}
+      <div>
+        <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Issues Reported & Resolved</label>
+        <textarea className="w-full bg-slate-50 border border-slate-200 p-4 rounded-2xl outline-none focus:ring-2 focus:ring-blue-500 h-24 font-semibold"
+          placeholder="..." value={issues} onChange={e => setIssues(e.target.value)} />
+      </div>
+      <div>
+        <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Status of Order Fulfilments</label>
+        <textarea className="w-full bg-slate-50 border border-slate-200 p-4 rounded-2xl outline-none focus:ring-2 focus:ring-blue-500 h-24 font-semibold"
+          placeholder="..." value={orderStatus} onChange={e => setOrderStatus(e.target.value)} />
+      </div>
+
+      <div className="flex justify-end gap-4 pt-4">
+        <button type="button" onClick={onClose} className="px-6 py-3 text-slate-400 font-bold">Cancel</button>
+        <button type="submit" className="px-10 py-4 bg-blue-600 text-white rounded-2xl font-bold hover:bg-blue-700 transition shadow-lg">Save Entry</button>
+      </div>
+    </form>
+  );
+}
 
 // ── Main Dashboard ────────────────────────────────────────────────────────────
 
@@ -788,7 +868,23 @@ const roleBadge = {
 {isModalOpen && (
   <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-md flex items-center justify-center p-4 z-50">
     <div className="bg-white rounded-[2.5rem] p-8 md:p-10 w-full max-w-2xl max-h-[90vh] overflow-y-auto shadow-2xl">
-      <h2 className="text-3xl font-black text-slate-900 mb-8">{dept} Report</h2>
+     <h2 className="text-3xl font-black text-slate-900 mb-8">{dept} Report</h2>
+      {dept === 'Marketing' ? (
+        <MarketingTaskForm
+          reportTitle={reportTitle}
+          setReportTitle={setReportTitle}
+          onClose={() => { setIsModalOpen(false); setDynamicData({}); }}
+          onSubmit={async (data) => {
+            const res = await fetch('https://reporting-structure.onrender.com/api/reports', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${localStorage.getItem('token')}` },
+              body: JSON.stringify({ title: reportTitle, data }),
+            });
+            if (res.ok) { setIsModalOpen(false); setReportTitle(''); fetchReports(); }
+            else { const d = await res.json(); alert(`Failed: ${d.msg}`); }
+          }}
+        />
+      ) : (
       <form onSubmit={handleCreateReport} className="space-y-6">
         <div>
           <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Subject / Title</label>
@@ -862,6 +958,7 @@ const roleBadge = {
           <button type="submit" className="px-10 py-4 bg-blue-600 text-white rounded-2xl font-bold hover:bg-blue-700 transition shadow-lg">Save Entry</button>
         </div>
       </form>
+       )}
     </div>
   </div>
 )}
