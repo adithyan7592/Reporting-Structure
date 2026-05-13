@@ -170,6 +170,11 @@ const departmentConfig = {
   { label: 'Design Explanation',       type: 'textarea' },
   { label: 'Next Day Work',            type: 'textarea' },
 ],
+'Media – Content Creator': [
+  { label: 'No. of Contents Created',  type: 'number' },
+  { label: 'Content Explanation',      type: 'textarea' },
+  { label: 'Next Day Work',            type: 'textarea' },
+],
   'Marketing': [
   { label: 'Issues Reported & Resolved',  type: 'textarea' },
   { label: 'Status of Order Fulfilments', type: 'textarea' },

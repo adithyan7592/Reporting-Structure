@@ -10,7 +10,7 @@ const ALL_DEPARTMENTS = [
 'Happiness – Technical Head',
 'Happiness – Insurance Co-ordinator',
 'Happiness – Outlet Support Co-ordinator',
-'Purchase', 'Warehouse – KP', 'Warehouse – Ayush', 'Media – Camera Man', 'Media – Video Editor', 'Media – Designer', 'Marketing', 'Accounts – Staff', 'Accounts – Manager',
+'Purchase', 'Warehouse – KP', 'Warehouse – Ayush', 'Media – Camera Man', 'Media – Video Editor', 'Media – Designer','Media – Content Creator', 'Marketing', 'Accounts – Staff', 'Accounts – Manager',
 ];
 
 const DEPT_FIELDS = {
@@ -28,7 +28,8 @@ const DEPT_FIELDS = {
 'Warehouse – Ayush': ['No. of List Received', 'No. of List Dispatched', 'Dispatched List Numbers', 'No. of List Pending', 'Pending List Numbers', 'Reason for Pending', 'Stock Received if Any', 'Stock Alert', 'Remarks'],
 'Media – Camera Man':  ['No. of Work Out', 'Work Explanation', 'Next Day Work'],
 'Media – Video Editor': ['No. of Videos Out', 'Out Explanation', 'Next Day Work'],
-'Media – Designer':    ['No. of Designs Completed', 'Design Explanation', 'Next Day Work'],
+'Media – Designer':         ['No. of Designs Completed', 'Design Explanation', 'Next Day Work'],
+'Media – Content Creator':  ['No. of Contents Created', 'Content Explanation', 'Next Day Work'],
 'Marketing': ['Tasks', 'Issues Reported & Resolved', 'Status of Order Fulfilments'],
 'Accounts – Staff':   ['Total List Prepared', 'Total List Dispatched', 'List Sent to Post Office', 'List Pending', 'List Pending More than 3 Days', 'Accounts Remarks'],
 'Accounts – Manager': ['AYUSH – No. of Bills', 'AYUSH – Pending Bills', 'AYUSH – Payments Verified', 'AYUSH – Payments Pending', 'Theertha – No. of Bills', 'Theertha – Pending Bills', 'Theertha – Payments Verified', 'Theertha – Payments Pending', 'Bioclean – No. of Bills', 'Bioclean – Pending Bills', 'Bioclean – Payments Verified', 'Bioclean – Payments Pending', 'Khadi – No. of Bills', 'Khadi – Pending Bills', 'Khadi – Payments Verified', 'Khadi – Payments Pending', 'Suspense', 'Kerala Paints – Receipt', 'Kerala Paints – Expense', 'Bodhamudra – Receipt', 'Bodhamudra – Expense',  'Other Pending Payments', 'Kerala Paints – Upcoming Expense', 'Bodhamudra – Upcoming Expense', 'Other Upcoming Payments'],
@@ -37,7 +38,7 @@ const DEPT_FIELDS = {
 const DEPT_GROUPS = [
 { label: 'CRM', depts: ['CRM'] },
   { label: 'KP', depts: ['KP – (CRM)', 'KP – (CRM) Accounts Assistant', 'KP – Factory Outlet', 'KP – Exclusive Outlet'] },
-  { label: 'Support',         depts: ['Happiness – Technical Co-ordinator', 'Happiness – Technical Head', 'Happiness – Insurance Co-ordinator', 'Happiness – Outlet Support Co-ordinator', 'Purchase', 'Warehouse – KP', 'Warehouse – Ayush', 'Media – Camera Man', 'Media – Video Editor', 'Media – Designer', 'Marketing', 'Accounts – Staff', 'Accounts – Manager'] },
+  { label: 'Support',         depts: ['Happiness – Technical Co-ordinator', 'Happiness – Technical Head', 'Happiness – Insurance Co-ordinator', 'Happiness – Outlet Support Co-ordinator', 'Purchase', 'Warehouse – KP', 'Warehouse – Ayush', 'Media – Camera Man', 'Media – Video Editor', 'Media – Designer','Media – Content Creator', 'Marketing', 'Accounts – Staff', 'Accounts – Manager'] },
 ];
 
 const ROLE_PRESETS = [
@@ -59,7 +60,7 @@ const ROLE_PRESETS = [
   { group: 'Support',         label: 'Purchase Manager',                           jobTitle: 'Purchase Manager',    depts: ['Purchase'],                                                                     primaryDept: 'Purchase' },
 { group: 'Support', label: 'KP Warehouse Incharge',    jobTitle: 'Warehouse Incharge', depts: ['Warehouse – KP'],    primaryDept: 'Warehouse – KP' },
 { group: 'Support', label: 'Ayush Warehouse Incharge',  jobTitle: 'Warehouse Incharge', depts: ['Warehouse – Ayush'], primaryDept: 'Warehouse – Ayush' },
-{ group: 'Support', label: 'Media — Head', jobTitle: 'Head', depts: ['Media – Camera Man', 'Media – Video Editor', 'Media – Designer'], primaryDept: 'Media – Camera Man' },
+{ group: 'Support', label: 'Media — Head', jobTitle: 'Head', depts: ['Media – Camera Man', 'Media – Video Editor', 'Media – Designer', 'Media – Content Creator'], primaryDept: 'Media – Camera Man' },
   { group: 'Support',         label: 'Marketing — Head',                           jobTitle: 'Head',                depts: ['Marketing'],                                                                    primaryDept: 'Marketing' },
 ];
 
