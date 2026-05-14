@@ -187,7 +187,7 @@ const departmentConfig = {
   { label: 'List Pending More than 3 Days',      type: 'textarea' },
   { label: 'Accounts Remarks',                   type: 'textarea' },
 ],
-'Accounts – Manager': [
+'Accounts – Staff Manager': [
   { label: 'AYUSH – No. of Bills',               type: 'number' },
   { label: 'AYUSH – Pending Bills',              type: 'number' },
   { label: 'AYUSH – Payments Verified',          type: 'number' },
@@ -213,6 +213,13 @@ const departmentConfig = {
   { label: 'Kerala Paints – Upcoming Expense',   type: 'number' },
   { label: 'Bodhamudra – Upcoming Expense',      type: 'number' },
   { label: 'Other Upcoming Payments',            type: 'textarea' },
+],
+'Accounts – Manager': [
+  { label: 'Brand / Division', type: 'select', options: ['AYUSH', 'KP', 'Bodhamudra', 'KP-IPL'] },
+  { label: 'Vendor',           type: 'text' },
+  { label: 'Amount',           type: 'number' },
+  { label: 'Status',           type: 'text' },
+  { label: 'Remarks',          type: 'textarea' },
 ],
 };
 
