@@ -713,6 +713,35 @@ const viewableDepts = (role === 'superadmin' || role === 'management') ? ALL_DEP
     if (res.ok) { setEditingReport(null); setEditData({}); fetchReports(); }
   };
 
+const downloadCSV = (deptReports, deptName) => {
+  if (!deptReports.length) { alert('No reports to download for this department.'); return; }
+
+  // Collect all unique field keys across all reports
+  const allKeys = [...new Set(deptReports.flatMap(r => Object.keys(r.data || {})))];
+  const headers = ['Date', 'Staff Name', 'Title', ...allKeys, 'Edited By', 'Edited At'];
+
+  const rows = deptReports.map(r => {
+    const date = new Date(r.createdAt).toLocaleDateString('en-IN');
+    const editedBy = r.isEdited ? r.editedBy : '';
+    const editedAt = r.isEdited ? new Date(r.editedAt).toLocaleDateString('en-IN') : '';
+    const dataFields = allKeys.map(k => {
+      const val = r.data?.[k] ?? '';
+      // Wrap in quotes to handle commas in textarea values
+      return `"${String(val).replace(/"/g, '""')}"`;
+    });
+    return [date, `"${r.staffName}"`, `"${r.title}"`, ...dataFields, editedBy, editedAt].join(',');
+  });
+
+  const csvContent = [headers.join(','), ...rows].join('\n');
+  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = `${deptName}_${selectedDay}.csv`;
+  link.click();
+  URL.revokeObjectURL(url);
+};
+
 const filteredReports = useMemo(() => reports.filter(r => {
   // Staff only see their own reports
   if (role === 'staff' && r.staffName !== userName) return false;
@@ -808,15 +837,31 @@ const roleBadge = {
 
             {/* Table card */}
             <div className="bg-white rounded-[2rem] shadow-sm border border-slate-200 overflow-hidden">
-              <div className="px-6 py-4 border-b border-slate-100 flex justify-between items-center">
-                <div>
-                  <span className="text-sm font-black text-slate-900">{activeDept}</span>
-                  <span className="text-slate-400 text-xs ml-2">
-                    · {new Date(selectedDay + 'T00:00:00').toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })}
-                  </span>
-                </div>
-                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider hidden sm:block">Click a row to view details →</span>
-              </div>
+            <div className="px-6 py-4 border-b border-slate-100 flex justify-between items-center gap-3">
+  <div>
+    <span className="text-sm font-black text-slate-900">{activeDept}</span>
+    <span className="text-slate-400 text-xs ml-2">
+      · {new Date(selectedDay + 'T00:00:00').toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })}
+    </span>
+  </div>
+  <div className="flex items-center gap-3">
+    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider hidden sm:block">Click a row to view details →</span>
+    {canSeeAdminPanel && (
+      <button
+        onClick={() => {
+          const deptReports = reports.filter(r =>
+            r.department === activeDept &&
+            new Date(r.createdAt).toISOString().split('T')[0] === selectedDay
+          );
+          downloadCSV(deptReports, activeDept);
+        }}
+        className="flex items-center gap-2 bg-emerald-600 text-white text-xs font-bold px-4 py-2 rounded-xl hover:bg-emerald-700 transition whitespace-nowrap"
+      >
+        ⬇ CSV
+      </button>
+    )}
+  </div>
+</div>
               <DailyTable
                 reports={reports}
                 dept={activeDept}
