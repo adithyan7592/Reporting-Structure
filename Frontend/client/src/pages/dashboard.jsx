@@ -721,7 +721,7 @@ const downloadCSV = (deptReports, deptName) => {
   const headers = ['Date', 'Staff Name', 'Title', ...allKeys, 'Edited By', 'Edited At'];
 
   const rows = deptReports.map(r => {
-    const date = new Date(r.createdAt).toLocaleDateString('en-IN');
+    const date = new Date(r.createdAt).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' });
     const editedBy = r.isEdited ? r.editedBy : '';
     const editedAt = r.isEdited ? new Date(r.editedAt).toLocaleDateString('en-IN') : '';
     const dataFields = allKeys.map(k => {
