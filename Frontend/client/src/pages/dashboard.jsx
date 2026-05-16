@@ -2,9 +2,15 @@ import { useEffect, useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 // ── Date helpers ──────────────────────────────────────────────────────────────
-function toYMD(d) { return d.toISOString().split('T')[0]; }
+function toYMD(d) {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
 function todayYMD() { return toYMD(new Date()); }
-function shiftDate(ymd, days) { const d = new Date(ymd + 'T00:00:00'); d.setDate(d.getDate() + days); return toYMD(d); }
+function shiftDate(ymd, days) {
+  const [y, m, d] = ymd.split('-').map(Number);
+  const date = new Date(y, m - 1, d + days);
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+}
 function formatDateLabel(ymd) {
   const d = new Date(ymd + 'T00:00:00');
   const today = todayYMD(), yesterday = shiftDate(today, -1);
@@ -22,7 +28,7 @@ const departmentConfig = {
   { label: 'No. of Converted Leads',   type: 'number' },
   { label: 'No. of Follow-ups',        type: 'number' },
   { label: 'Total Sales Value',        type: 'number' },
-  { label: 'Remarks if Any',           type: 'textarea' },
+  { label: 'Remarks if Any',           type: 'textarea' },3
 ],
 'KP – (CRM)': [
   { label: 'Total No. of Calls',            type: 'number' },
@@ -234,10 +240,9 @@ function DailyTable({ reports, dept, selectedDay, allowedFields, onRowClick }) {
   const numericFields = visibleFields.filter(f => f.type === 'number');
 
   const dayReports = reports.filter(r =>
-    r.department === dept &&
-    new Date(r.createdAt).toISOString().split('T')[0] === selectedDay
-  );
-
+  r.department === dept &&
+  toYMD(new Date(r.createdAt)) === selectedDay
+);
  const agentMap = {};
 dayReports.forEach(r => {
   const brand = r.data?.['Brand'] || '';
@@ -761,7 +766,7 @@ const filteredReports = useMemo(() => reports.filter(r => {
   if (role === 'staff' && r.staffName !== userName) return false;
   const matchesSearch = r.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
     (r.staffName && r.staffName.toLowerCase().includes(searchQuery.toLowerCase()));
-  const matchesDate = !selectedDate || new Date(r.createdAt).toISOString().split('T')[0] === selectedDate;
+ const matchesDate = !selectedDate || toYMD(new Date(r.createdAt)) === selectedDate;
   return matchesSearch && matchesDate;
 }), [reports, searchQuery, selectedDate, role, userName]);  
 
