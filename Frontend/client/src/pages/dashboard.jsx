@@ -718,19 +718,15 @@ const downloadCSV = (deptReports, deptName) => {
 
   // Collect all unique field keys across all reports
   const allKeys = [...new Set(deptReports.flatMap(r => Object.keys(r.data || {})))];
-  const headers = ['Date', 'Staff Name', 'Title', ...allKeys, 'Edited By', 'Edited At'];
+ const headers = ['Title', ...allKeys];
 
-  const rows = deptReports.map(r => {
-    const date = new Date(r.createdAt).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' });
-    const editedBy = r.isEdited ? r.editedBy : '';
-    const editedAt = r.isEdited ? new Date(r.editedAt).toLocaleDateString('en-IN') : '';
-    const dataFields = allKeys.map(k => {
-      const val = r.data?.[k] ?? '';
-      // Wrap in quotes to handle commas in textarea values
-      return `"${String(val).replace(/"/g, '""')}"`;
-    });
-    return [date, `"${r.staffName}"`, `"${r.title}"`, ...dataFields, editedBy, editedAt].join(',');
+const rows = deptReports.map(r => {
+  const dataFields = allKeys.map(k => {
+    const val = r.data?.[k] ?? '';
+    return `"${String(val).replace(/"/g, '""')}"`;
   });
+  return [`"${r.title}"`, ...dataFields].join(',');
+});
 
   const csvContent = [headers.join(','), ...rows].join('\n');
   const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
