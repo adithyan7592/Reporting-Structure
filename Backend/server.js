@@ -141,6 +141,16 @@ app.put('/api/users/:id', protect, async (req, res) => {
   } catch { res.status(500).json({ msg: 'Error updating' }); }
 });
 
+// ── Delete Report ─────────────────────────────────────────────────────────────
+app.delete('/api/reports/:id', protect, async (req, res) => {
+  if (!isSuperOrManagement(req.user.role))
+    return res.status(403).json({ msg: 'Unauthorized' });
+  try {
+    await Report.findByIdAndDelete(req.params.id);
+    res.json({ msg: 'Report deleted' });
+  } catch { res.status(500).json({ msg: 'Error deleting report' }); }
+});
+
 app.delete('/api/users/:id', protect, async (req, res) => {
   if (!isSuperOrManagement(req.user.role) && req.user.role !== 'manager')
     return res.status(403).json({ msg: 'Unauthorized' });

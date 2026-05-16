@@ -451,7 +451,7 @@ const rows = Object.values(agentMap);
 
 // ── Agent Drill-down Modal ────────────────────────────────────────────────────
 
-function AgentDrillModal({ agent, dept, allowedFields, onClose, onEditReport }) {
+function AgentDrillModal({ agent, dept, allowedFields, onClose, onEditReport, onDeleteReport }) {
   const [selectedEntry, setSelectedEntry] = useState(null);
   const role = localStorage.getItem('role');
 
@@ -532,13 +532,22 @@ function AgentDrillModal({ agent, dept, allowedFields, onClose, onEditReport }) 
         </div>
 
         {/* Footer */}
+   {/* Footer */}
         <div className="p-6 bg-slate-50 border-t border-slate-100 flex-shrink-0 flex gap-3">
           {selectedEntry && (role === 'manager' || role === 'superadmin') && (
             <button
               onClick={() => { onClose(); onEditReport(selectedEntry); }}
               className="flex-1 py-4 bg-emerald-600 text-white font-bold rounded-2xl hover:bg-emerald-700 transition"
             >
-              ✏️ Edit Report
+              ✏️ Edit
+            </button>
+          )}
+          {selectedEntry && (role === 'superadmin' || role === 'management') && (
+            <button
+              onClick={() => onDeleteReport(selectedEntry)}
+              className="flex-1 py-4 bg-red-500 text-white font-bold rounded-2xl hover:bg-red-600 transition"
+            >
+              🗑️ Delete
             </button>
           )}
           <button
@@ -712,6 +721,15 @@ const viewableDepts = (role === 'superadmin' || role === 'management') ? ALL_DEP
     });
     if (res.ok) { setEditingReport(null); setEditData({}); fetchReports(); }
   };
+
+  const handleDeleteReport = async (report) => {
+  const res = await fetch(`https://reporting-structure.onrender.com/api/reports/${report._id}`, {
+    method: 'DELETE',
+    headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
+  });
+  if (res.ok) { setSelectedAgent(null); fetchReports(); }
+  else alert('Failed to delete report.');
+};
 
 const downloadCSV = (deptReports, deptName) => {
   if (!deptReports.length) { alert('No reports to download for this department.'); return; }
@@ -1047,7 +1065,7 @@ const roleBadge = {
       )}
 
       {/* ── AGENT DRILL-DOWN ── */}
-      {selectedAgent && (
+     {selectedAgent && (
         <AgentDrillModal
           agent={selectedAgent}
           dept={activeDept}
@@ -1057,6 +1075,7 @@ const roleBadge = {
             setEditingReport(report);
             setEditData({ ...report.data });
           }}
+          onDeleteReport={handleDeleteReport}
         />
       )}
 
