@@ -57,7 +57,7 @@ export default function Login() {
           <span className="text-white text-lg font-black tracking-tight">TS</span>
         </div>
         <h1 className="text-4xl font-black text-white tracking-tight leading-none mb-2">Trendsetters</h1>
-        <p className="text-white/40 text-sm mb-12">Kerala Paints Reporting System</p>
+        <p className="text-white/40 text-sm mb-12">Internal Reporting System</p>
         <div className="flex gap-3 mb-12">
           {[{ val: '15+', lbl: 'Departments' }, { val: '∞', lbl: 'Daily Reports' }, { val: 'v2.0', lbl: 'Version' }].map(s => (
             <div key={s.lbl} className="flex-1 bg-white/[0.04] border border-white/[0.08] rounded-xl p-4">
