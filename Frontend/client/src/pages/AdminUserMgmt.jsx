@@ -10,7 +10,7 @@ const ALL_DEPARTMENTS = [
 'Happiness – Technical Head',
 'Happiness – Insurance Co-ordinator',
 'Happiness – Outlet Support Co-ordinator',
-'Purchase', 'Warehouse – KP', 'Warehouse – Ayush', 'Media – Camera Man', 'Media – Video Editor', 'Media – Designer','Media – Content Creator', 'Marketing', 'Accounts – Staff', 'Accounts – Staff Manager', 'Accounts – Manager',
+'Purchase', 'Warehouse – KP', 'Warehouse – Ayush', 'Media – Camera Man', 'Media – Video Editor', 'Media – Designer','Media – Content Creator', 'Marketing', 'Accounts – Staff', 'Accounts – Staff Manager', 'Accounts – Manager','Assistant Sales Manager',
 ];
 
 const DEPT_FIELDS = {
@@ -34,11 +34,12 @@ const DEPT_FIELDS = {
 'Accounts – Staff':   ['Total List Prepared', 'Total List Dispatched', 'List Sent to Post Office', 'List Pending', 'List Pending More than 3 Days', 'Accounts Remarks'],
 'Accounts – Staff Manager': ['AYUSH – No. of Bills', 'AYUSH – Pending Bills', 'AYUSH – Payments Verified', 'AYUSH – Payments Pending', 'Theertha – No. of Bills', 'Theertha – Pending Bills', 'Theertha – Payments Verified', 'Theertha – Payments Pending', 'Bioclean – No. of Bills', 'Bioclean – Pending Bills', 'Bioclean – Payments Verified', 'Bioclean – Payments Pending', 'Khadi – No. of Bills', 'Khadi – Pending Bills', 'Khadi – Payments Verified', 'Khadi – Payments Pending', 'Suspense', 'Kerala Paints – Receipt', 'Kerala Paints – Expense', 'Bodhamudra – Receipt', 'Bodhamudra – Expense', 'Other Pending Payments', 'Kerala Paints – Upcoming Expense', 'Bodhamudra – Upcoming Expense', 'Other Upcoming Payments'],
 'Accounts – Manager': ['Brand / Division', 'Vendor', 'Amount', 'Status', 'Remarks'],
+'Assistant Sales Manager': ['Report Type', 'Outlet Sales', 'Outlet Purchase', 'Customers Handled'],
 };
 
 const DEPT_GROUPS = [
 { label: 'CRM', depts: ['CRM'] },
-  { label: 'KP', depts: ['KP – (CRM)', 'KP – (CRM) Accounts Assistant', 'KP – Factory Outlet', 'KP – Exclusive Outlet'] },
+ { label: 'KP', depts: ['KP – (CRM)', 'KP – (CRM) Accounts Assistant', 'KP – Factory Outlet', 'KP – Exclusive Outlet', 'Assistant Sales Manager'] },
   { label: 'Support',         depts: ['Happiness – Technical Co-ordinator', 'Happiness – Technical Head', 'Happiness – Insurance Co-ordinator', 'Happiness – Outlet Support Co-ordinator', 'Purchase', 'Warehouse – KP', 'Warehouse – Ayush', 'Media – Camera Man', 'Media – Video Editor', 'Media – Designer','Media – Content Creator', 'Marketing', 'Accounts – Staff', 'Accounts – Staff Manager', 'Accounts – Manager'] },
 ];
 
@@ -63,6 +64,7 @@ const ROLE_PRESETS = [
 { group: 'Support', label: 'Ayush Warehouse Incharge',  jobTitle: 'Warehouse Incharge', depts: ['Warehouse – Ayush'], primaryDept: 'Warehouse – Ayush' },
 { group: 'Support', label: 'Media — Head', jobTitle: 'Head', depts: ['Media – Camera Man', 'Media – Video Editor', 'Media – Designer', 'Media – Content Creator'], primaryDept: 'Media – Camera Man' },
   { group: 'Support',         label: 'Marketing — Head',                           jobTitle: 'Head',                depts: ['Marketing'],                                                                    primaryDept: 'Marketing' },
+  { group: 'KP', label: 'Assistant Sales Manager', jobTitle: 'Assistant Sales Manager', depts: ['Assistant Sales Manager'], primaryDept: 'Assistant Sales Manager' },
 ];
 
 const PRESET_GROUPS = [...new Set(ROLE_PRESETS.map(p => p.group))];

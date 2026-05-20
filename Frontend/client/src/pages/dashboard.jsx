@@ -227,6 +227,9 @@ const departmentConfig = {
   { label: 'Status',           type: 'text' },
   { label: 'Remarks',          type: 'textarea' },
 ],
+'Assistant Sales Manager': [
+  { label: 'Report Type', type: 'report_selector', options: ['Outlet Sales', 'Outlet Purchase', 'Customers Handled'] },
+],
 };
 
 const ALL_DEPTS = Object.keys(departmentConfig);
@@ -498,13 +501,99 @@ function AgentDrillModal({ agent, dept, allowedFields, onClose, onEditReport, on
                   ✏️ Edited by {selectedEntry.editedBy} · {new Date(selectedEntry.editedAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })} {new Date(selectedEntry.editedAt).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}
                 </p>
               )}
-            <div className="divide-y divide-slate-50">
-  {Object.entries(filterData(selectedEntry.data)).map(([key, val]) => (
-    <div key={key} className="py-4">
-      <p className="text-slate-400 text-[10px] font-black uppercase tracking-widest mb-1">{key}</p>
-      <p className="text-slate-900 font-semibold text-sm leading-relaxed whitespace-pre-wrap break-words">{val || '—'}</p>
-    </div>
-  ))}
+   <div className="divide-y divide-slate-50">
+  {Object.entries(filterData(selectedEntry.data)).map(([key, val]) => {
+
+    if ((key === 'Outlet Sales' || key === 'Outlet Purchase') && val) {
+      const rows = val.split('\n').map(line => {
+        const parts = line.replace(/^\d+\.\s*/, '').split(' | ');
+        return { outlet: parts[0] || '', district: parts[1] || '', sales: parts[2] || '' };
+      });
+      return (
+        <div key={key} className="py-4">
+          <p className="text-slate-400 text-[10px] font-black uppercase tracking-widest mb-3">{key}</p>
+          <div className="overflow-x-auto rounded-xl border border-slate-200">
+            <table className="w-full text-sm">
+              <thead className="bg-slate-900 text-white">
+                <tr>
+                  <th className="px-4 py-2.5 text-[10px] uppercase tracking-widest font-black text-left w-10">No.</th>
+                  <th className="px-4 py-2.5 text-[10px] uppercase tracking-widest font-black text-left">Outlet</th>
+                  <th className="px-4 py-2.5 text-[10px] uppercase tracking-widest font-black text-left">District</th>
+                  <th className="px-4 py-2.5 text-[10px] uppercase tracking-widest font-black text-left">Total Sales</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {rows.map((r, i) => (
+                  <tr key={i} className="hover:bg-slate-50">
+                    <td className="px-4 py-2.5 text-slate-400 font-bold text-xs">{i + 1}</td>
+                    <td className="px-4 py-2.5 font-semibold text-slate-900">{r.outlet}</td>
+                    <td className="px-4 py-2.5 text-slate-600">{r.district}</td>
+                    <td className="px-4 py-2.5 font-bold text-emerald-700">{r.sales}</td>
+                  </tr>
+                ))}
+              </tbody>
+              <tfoot>
+                <tr className="bg-slate-50 border-t-2 border-slate-200">
+                  <td colSpan={3} className="px-4 py-2.5 font-black text-slate-900 text-xs uppercase tracking-wider">Total</td>
+                  <td className="px-4 py-2.5 font-black text-emerald-700">
+                    ₹{rows.reduce((sum, r) => sum + (parseFloat(r.sales.replace('₹', '')) || 0), 0).toLocaleString('en-IN')}
+                  </td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+        </div>
+      );
+    }
+
+    if (key === 'Customers Handled' && val) {
+      const rows = val.split('\n').map(line => {
+        const parts = line.replace(/^\d+\.\s*/, '').split(' | ');
+        return { date: parts[0] || '', name: parts[1] || '', phone: parts[2] || '', outlet: parts[3] || '', remark: parts[4] || '', agent: (parts[5] || '').replace('Agent: ', '') };
+      });
+      return (
+        <div key={key} className="py-4">
+          <p className="text-slate-400 text-[10px] font-black uppercase tracking-widest mb-3">{key}</p>
+          <div className="overflow-x-auto rounded-xl border border-slate-200">
+            <table className="w-full text-sm min-w-max">
+              <thead className="bg-slate-900 text-white">
+                <tr>
+                  <th className="px-4 py-2.5 text-[10px] uppercase tracking-widest font-black text-left w-10">No.</th>
+                  <th className="px-4 py-2.5 text-[10px] uppercase tracking-widest font-black text-left">Date</th>
+                  <th className="px-4 py-2.5 text-[10px] uppercase tracking-widest font-black text-left">Name</th>
+                  <th className="px-4 py-2.5 text-[10px] uppercase tracking-widest font-black text-left">Phone</th>
+                  <th className="px-4 py-2.5 text-[10px] uppercase tracking-widest font-black text-left">Outlet</th>
+                  <th className="px-4 py-2.5 text-[10px] uppercase tracking-widest font-black text-left">Remark</th>
+                  <th className="px-4 py-2.5 text-[10px] uppercase tracking-widest font-black text-left">Agent</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {rows.map((r, i) => (
+                  <tr key={i} className="hover:bg-slate-50">
+                    <td className="px-4 py-2.5 text-slate-400 font-bold text-xs">{i + 1}</td>
+                    <td className="px-4 py-2.5 text-slate-600">{r.date}</td>
+                    <td className="px-4 py-2.5 font-semibold text-slate-900">{r.name}</td>
+                    <td className="px-4 py-2.5 text-slate-600">{r.phone}</td>
+                    <td className="px-4 py-2.5 text-slate-600">{r.outlet}</td>
+                    <td className="px-4 py-2.5 text-slate-600">{r.remark}</td>
+                    <td className="px-4 py-2.5 text-blue-600 font-semibold">{r.agent}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <p className="text-slate-400 text-xs mt-2 font-semibold">{rows.length} customer{rows.length !== 1 ? 's' : ''} handled</p>
+        </div>
+      );
+    }
+
+    return (
+      <div key={key} className="py-4">
+        <p className="text-slate-400 text-[10px] font-black uppercase tracking-widest mb-1">{key}</p>
+        <p className="text-slate-900 font-semibold text-sm leading-relaxed whitespace-pre-wrap break-words">{val || '—'}</p>
+      </div>
+    );
+  })}
 </div>
             </div>
           ) : (
@@ -567,6 +656,172 @@ function AgentDrillModal({ agent, dept, allowedFields, onClose, onEditReport, on
     </div>
   );
 }
+
+// ── Assistant Sales Manager Form ─────────────────────────────────────────────
+function SalesManagerForm({ reportTitle, setReportTitle, onSubmit, onClose }) {
+  const [reportType, setReportType] = useState('Outlet Sales');
+  const [outletSalesRows, setOutletSalesRows] = useState([{ outlet: '', district: '', totalSales: '' }]);
+  const [outletPurchaseRows, setOutletPurchaseRows] = useState([{ outlet: '', district: '', totalSales: '' }]);
+  const [customersRows, setCustomersRows] = useState([{ date: '', name: '', phone: '', outlet: '', remark: '', agent: '' }]);
+
+  const addRow = (setter, emptyRow) => setter(prev => [...prev, { ...emptyRow }]);
+  const removeRow = (setter, idx) => setter(prev => prev.filter((_, i) => i !== idx));
+  const updateRow = (setter, idx, key, value) => setter(prev => prev.map((r, i) => i === idx ? { ...r, [key]: value } : r));
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    let data = { 'Report Type': reportType };
+    if (reportType === 'Outlet Sales') {
+      data['Outlet Sales'] = outletSalesRows.map((r, i) => `${i + 1}. ${r.outlet} | ${r.district} | ₹${r.totalSales}`).join('\n');
+    } else if (reportType === 'Outlet Purchase') {
+      data['Outlet Purchase'] = outletPurchaseRows.map((r, i) => `${i + 1}. ${r.outlet} | ${r.district} | ₹${r.totalSales}`).join('\n');
+    } else {
+      data['Customers Handled'] = customersRows.map((r, i) => `${i + 1}. ${r.date} | ${r.name} | ${r.phone} | ${r.outlet} | ${r.remark} | Agent: ${r.agent}`).join('\n');
+    }
+    onSubmit(data);
+  };
+
+  const inputCls = "bg-slate-50 border border-slate-200 rounded-xl p-3 outline-none focus:ring-2 focus:ring-blue-500 font-medium text-sm w-full";
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-6">
+      <div>
+        <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Subject / Title</label>
+        <input type="text" className={inputCls} placeholder="e.g. Weekly Report – Week 1 May"
+          value={reportTitle} onChange={e => setReportTitle(e.target.value)} required />
+      </div>
+
+      <div>
+        <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Report Type</label>
+        <div className="flex gap-3 flex-wrap">
+          {['Outlet Sales', 'Outlet Purchase', 'Customers Handled'].map(opt => (
+            <button key={opt} type="button" onClick={() => setReportType(opt)}
+              className={`flex-1 py-3 rounded-2xl font-bold text-sm border-2 transition ${reportType === opt ? 'bg-blue-600 text-white border-blue-600' : 'bg-slate-50 text-slate-500 border-slate-200 hover:border-blue-400'}`}>
+              {opt}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* OUTLET SALES */}
+      {reportType === 'Outlet Sales' && (
+        <div>
+          <div className="flex items-center justify-between mb-3">
+            <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest">Outlet Sales Entries</label>
+            <button type="button" onClick={() => addRow(setOutletSalesRows, { outlet: '', district: '', totalSales: '' })}
+              className="text-xs font-black text-blue-600 bg-blue-50 px-3 py-1.5 rounded-xl hover:bg-blue-100 transition">+ Add Row</button>
+          </div>
+          <div className="overflow-x-auto rounded-2xl border border-slate-200">
+            <table className="w-full text-sm">
+              <thead className="bg-slate-900 text-white">
+                <tr>
+                  <th className="px-4 py-3 text-[10px] uppercase tracking-widest font-black text-left w-10">No.</th>
+                  <th className="px-4 py-3 text-[10px] uppercase tracking-widest font-black text-left">Outlet</th>
+                  <th className="px-4 py-3 text-[10px] uppercase tracking-widest font-black text-left">District</th>
+                  <th className="px-4 py-3 text-[10px] uppercase tracking-widest font-black text-left">Total Sales</th>
+                  <th className="px-4 py-3 w-8"></th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {outletSalesRows.map((row, idx) => (
+                  <tr key={idx} className="hover:bg-slate-50">
+                    <td className="px-4 py-2 text-slate-400 font-bold text-xs">{idx + 1}</td>
+                    <td className="px-2 py-2"><input className={inputCls} placeholder="Outlet name" value={row.outlet} required onChange={e => updateRow(setOutletSalesRows, idx, 'outlet', e.target.value)} /></td>
+                    <td className="px-2 py-2"><input className={inputCls} placeholder="District" value={row.district} required onChange={e => updateRow(setOutletSalesRows, idx, 'district', e.target.value)} /></td>
+                    <td className="px-2 py-2"><input className={inputCls} placeholder="Amount" type="number" value={row.totalSales} required onChange={e => updateRow(setOutletSalesRows, idx, 'totalSales', e.target.value)} /></td>
+                    <td className="px-2 py-2">{outletSalesRows.length > 1 && <button type="button" onClick={() => removeRow(setOutletSalesRows, idx)} className="text-red-400 hover:text-red-600 font-black text-lg">✕</button>}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {/* OUTLET PURCHASE */}
+      {reportType === 'Outlet Purchase' && (
+        <div>
+          <div className="flex items-center justify-between mb-3">
+            <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest">Outlet Purchase Entries</label>
+            <button type="button" onClick={() => addRow(setOutletPurchaseRows, { outlet: '', district: '', totalSales: '' })}
+              className="text-xs font-black text-blue-600 bg-blue-50 px-3 py-1.5 rounded-xl hover:bg-blue-100 transition">+ Add Row</button>
+          </div>
+          <div className="overflow-x-auto rounded-2xl border border-slate-200">
+            <table className="w-full text-sm">
+              <thead className="bg-slate-900 text-white">
+                <tr>
+                  <th className="px-4 py-3 text-[10px] uppercase tracking-widest font-black text-left w-10">No.</th>
+                  <th className="px-4 py-3 text-[10px] uppercase tracking-widest font-black text-left">Outlet</th>
+                  <th className="px-4 py-3 text-[10px] uppercase tracking-widest font-black text-left">District</th>
+                  <th className="px-4 py-3 text-[10px] uppercase tracking-widest font-black text-left">Total Sales</th>
+                  <th className="px-4 py-3 w-8"></th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {outletPurchaseRows.map((row, idx) => (
+                  <tr key={idx} className="hover:bg-slate-50">
+                    <td className="px-4 py-2 text-slate-400 font-bold text-xs">{idx + 1}</td>
+                    <td className="px-2 py-2"><input className={inputCls} placeholder="Outlet name" value={row.outlet} required onChange={e => updateRow(setOutletPurchaseRows, idx, 'outlet', e.target.value)} /></td>
+                    <td className="px-2 py-2"><input className={inputCls} placeholder="District" value={row.district} required onChange={e => updateRow(setOutletPurchaseRows, idx, 'district', e.target.value)} /></td>
+                    <td className="px-2 py-2"><input className={inputCls} placeholder="Amount" type="number" value={row.totalSales} required onChange={e => updateRow(setOutletPurchaseRows, idx, 'totalSales', e.target.value)} /></td>
+                    <td className="px-2 py-2">{outletPurchaseRows.length > 1 && <button type="button" onClick={() => removeRow(setOutletPurchaseRows, idx)} className="text-red-400 hover:text-red-600 font-black text-lg">✕</button>}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {/* CUSTOMERS HANDLED */}
+      {reportType === 'Customers Handled' && (
+        <div>
+          <div className="flex items-center justify-between mb-3">
+            <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest">Customers Handled Entries</label>
+            <button type="button" onClick={() => addRow(setCustomersRows, { date: '', name: '', phone: '', outlet: '', remark: '', agent: '' })}
+              className="text-xs font-black text-blue-600 bg-blue-50 px-3 py-1.5 rounded-xl hover:bg-blue-100 transition">+ Add Row</button>
+          </div>
+          <div className="overflow-x-auto rounded-2xl border border-slate-200">
+            <table className="w-full text-sm min-w-max">
+              <thead className="bg-slate-900 text-white">
+                <tr>
+                  <th className="px-4 py-3 text-[10px] uppercase tracking-widest font-black text-left w-10">No.</th>
+                  <th className="px-4 py-3 text-[10px] uppercase tracking-widest font-black text-left">Date</th>
+                  <th className="px-4 py-3 text-[10px] uppercase tracking-widest font-black text-left">Name</th>
+                  <th className="px-4 py-3 text-[10px] uppercase tracking-widest font-black text-left">Phone</th>
+                  <th className="px-4 py-3 text-[10px] uppercase tracking-widest font-black text-left">Outlet</th>
+                  <th className="px-4 py-3 text-[10px] uppercase tracking-widest font-black text-left">Remark</th>
+                  <th className="px-4 py-3 text-[10px] uppercase tracking-widest font-black text-left">Agent</th>
+                  <th className="px-4 py-3 w-8"></th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {customersRows.map((row, idx) => (
+                  <tr key={idx} className="hover:bg-slate-50">
+                    <td className="px-4 py-2 text-slate-400 font-bold text-xs">{idx + 1}</td>
+                    <td className="px-2 py-2"><input className={inputCls} type="date" value={row.date} required onChange={e => updateRow(setCustomersRows, idx, 'date', e.target.value)} /></td>
+                    <td className="px-2 py-2"><input className={inputCls} placeholder="Name" value={row.name} required onChange={e => updateRow(setCustomersRows, idx, 'name', e.target.value)} /></td>
+                    <td className="px-2 py-2"><input className={inputCls} placeholder="Phone" value={row.phone} onChange={e => updateRow(setCustomersRows, idx, 'phone', e.target.value)} /></td>
+                    <td className="px-2 py-2"><input className={inputCls} placeholder="Outlet" value={row.outlet} onChange={e => updateRow(setCustomersRows, idx, 'outlet', e.target.value)} /></td>
+                    <td className="px-2 py-2"><input className={inputCls} placeholder="Remark" value={row.remark} onChange={e => updateRow(setCustomersRows, idx, 'remark', e.target.value)} /></td>
+                    <td className="px-2 py-2"><input className={inputCls} placeholder="Agent" value={row.agent} onChange={e => updateRow(setCustomersRows, idx, 'agent', e.target.value)} /></td>
+                    <td className="px-2 py-2">{customersRows.length > 1 && <button type="button" onClick={() => removeRow(setCustomersRows, idx)} className="text-red-400 hover:text-red-600 font-black text-lg">✕</button>}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      <div className="flex justify-end gap-4 pt-4">
+        <button type="button" onClick={onClose} className="px-6 py-3 text-slate-400 font-bold">Cancel</button>
+        <button type="submit" className="px-10 py-4 bg-blue-600 text-white rounded-2xl font-bold hover:bg-blue-700 transition shadow-lg">Save Entry</button>
+      </div>
+    </form>
+  );
+}
+
 // ── Marketing Task Entry Form ─────────────────────────────────────────────────
 function MarketingTaskForm({ reportTitle, setReportTitle, onSubmit, onClose }) {
   const [tasks, setTasks] = useState([{ task: '', timeTaken: '' }]);
@@ -944,9 +1199,24 @@ const roleBadge = {
 {isModalOpen && (
   <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-md flex items-center justify-center p-4 z-50">
     <div className="bg-white rounded-[2.5rem] p-8 md:p-10 w-full max-w-2xl max-h-[90vh] overflow-y-auto shadow-2xl">
-     <h2 className="text-3xl font-black text-slate-900 mb-8">{dept} Report</h2>
-      {dept === 'Marketing' ? (
-        <MarketingTaskForm
+     <h2 className="text-3xl font-black text-slate-900 mb-8">{dept} Report</h2> 
+   {dept === 'Assistant Sales Manager' ? (
+  <SalesManagerForm
+    reportTitle={reportTitle}
+    setReportTitle={setReportTitle}
+    onClose={() => { setIsModalOpen(false); setDynamicData({}); }}
+    onSubmit={async (data) => {
+      const res = await fetch('https://reporting-structure.onrender.com/api/reports', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${localStorage.getItem('token')}` },
+        body: JSON.stringify({ title: reportTitle, data }),
+      });
+      if (res.ok) { setIsModalOpen(false); setReportTitle(''); fetchReports(); }
+      else { const d = await res.json(); alert(`Failed: ${d.msg}`); }
+    }}
+  />
+) : dept === 'Marketing' ? (
+  <MarketingTaskForm
           reportTitle={reportTitle}
           setReportTitle={setReportTitle}
           onClose={() => { setIsModalOpen(false); setDynamicData({}); }}
@@ -1033,8 +1303,8 @@ const roleBadge = {
           <button type="button" onClick={() => { setIsModalOpen(false); setDynamicData({}); }} className="px-6 py-3 text-slate-400 font-bold">Cancel</button>
           <button type="submit" className="px-10 py-4 bg-blue-600 text-white rounded-2xl font-bold hover:bg-blue-700 transition shadow-lg">Save Entry</button>
         </div>
-      </form>
-       )}
+   </form>
+      )}
     </div>
   </div>
 )}
