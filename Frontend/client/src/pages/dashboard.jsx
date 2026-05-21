@@ -53,6 +53,7 @@ const departmentConfig = {
 ],
  'KP – Factory Outlet': [
   { label: 'Total No. of Walkins',            type: 'number' },
+  { label: 'No. of Direct Customer Bills',    type: 'number' },
   { label: 'Total No. of Bills',              type: 'number' },
   { label: 'Total No. of Quotations',         type: 'number' },
   { label: 'Total Sales Value',               type: 'number' },
