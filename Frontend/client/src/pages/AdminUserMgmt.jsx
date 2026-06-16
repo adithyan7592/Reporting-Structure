@@ -34,7 +34,7 @@ const DEPT_FIELDS = {
 'Accounts – Staff':   ['Total List Prepared', 'Total List Dispatched', 'List Sent to Post Office', 'List Pending', 'List Pending More than 3 Days', 'Accounts Remarks'],
 'Accounts – Staff Manager': ['AYUSH – No. of Bills', 'AYUSH – Pending Bills', 'AYUSH – Payments Verified', 'AYUSH – Payments Pending', 'Theertha – No. of Bills', 'Theertha – Pending Bills', 'Theertha – Payments Verified', 'Theertha – Payments Pending', 'Bioclean – No. of Bills', 'Bioclean – Pending Bills', 'Bioclean – Payments Verified', 'Bioclean – Payments Pending', 'Khadi – No. of Bills', 'Khadi – Pending Bills', 'Khadi – Payments Verified', 'Khadi – Payments Pending', 'Suspense', 'Kerala Paints – Receipt', 'Kerala Paints – Expense', 'Bodhamudra – Receipt', 'Bodhamudra – Expense', 'Other Pending Payments', 'Kerala Paints – Upcoming Expense', 'Bodhamudra – Upcoming Expense', 'Other Upcoming Payments'],
 'Accounts – Manager': ['Brand / Division', 'Vendor', 'Amount', 'Status', 'Remarks'],
-'Assistant Sales Manager': ['Report Type', 'Outlet Sales', 'Outlet Purchase', 'Customers Handled'],
+'Assistant Sales Manager': ['Report Type', 'Outlet Sales', 'Outlet Purchase', 'Outlet Outstanding', 'Staff Training Details', 'Total Weekly Purchase Entries', 'Total Weekly Sales Entries', 'Total P.O Count', 'Total Pending P.O'],
 };
 
 const DEPT_GROUPS = [
@@ -199,7 +199,7 @@ export default function AdminUserMgmt() {
     ? managedDepts.map(d => d.dept)
     : ALL_DEPARTMENTS;
 
-const emptyForm = { name: '', email: '', password: '', department: availableDepts[0] || 'AYUSH', role: 'staff', jobTitle: '', managedDepts: [] };
+const emptyForm = { name: '', email: '', password: '', department: availableDepts[0] || 'CRM', role: 'staff', jobTitle: '', managedDepts: [] };
 const [formData, setFormData] = useState(emptyForm);
 const [activePresetGroup, setActivePresetGroup] = useState(PRESET_GROUPS[0]);
 const [selectedPreset, setSelectedPreset] = useState(null);

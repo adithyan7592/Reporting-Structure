@@ -28,7 +28,7 @@ const departmentConfig = {
   { label: 'No. of Converted Leads',   type: 'number' },
   { label: 'No. of Follow-ups',        type: 'number' },
   { label: 'Total Sales Value',        type: 'number' },
-  { label: 'Remarks if Any',           type: 'textarea' },3
+  { label: 'Remarks if Any',           type: 'textarea' },
 ],
 'KP – (CRM)': [
   { label: 'Total No. of Calls',            type: 'number' },
@@ -102,13 +102,13 @@ const departmentConfig = {
   { label: 'Status (Service / Insurance / Tax)', type: 'text' },
 ],
 'Happiness – Insurance Co-ordinator': [
-  { label: 'No of new insurance issued ', type: 'number' },
+  { label: 'No of new insurance issued', type: 'number' },
   { label: 'No of insurance pending', type: 'number' },
-  { label: 'New claims and claim amount',                    type: 'textarea' },
-  { label: 'No of claims pending ',                   type: 'number' },
- { label: 'Total calls(painters ,bonvoice )', type: 'number' },
-{ label: 'No of calls  connected',           type: 'number' },
-{ label: 'No of calls  nc',                  type: 'number' },
+  { label: 'New claims and claim amount', type: 'textarea' },
+  { label: 'No of claims pending', type: 'number' },
+  { label: 'Total calls(painters ,bonvoice )', type: 'number' },
+  { label: 'No of calls  connected', type: 'number' },
+  { label: 'No of calls  nc', type: 'number' },
   { label: 'Others', type: 'textarea' },
 ],
 'Happiness – Outlet Support Co-ordinator': [
@@ -229,7 +229,7 @@ const departmentConfig = {
   { label: 'Remarks',          type: 'textarea' },
 ],
 'Assistant Sales Manager': [
-  { label: 'Report Type', type: 'report_selector', options: ['Outlet Sales', 'Outlet Purchase', 'Customers Handled'] },
+  { label: 'Report Type', type: 'report_selector', options: ['Outlet Sales', 'Outlet Purchase', 'Outlet Outstanding', 'Other Works'] },
 ],
 };
 
@@ -547,43 +547,45 @@ function AgentDrillModal({ agent, dept, allowedFields, onClose, onEditReport, on
       );
     }
 
-    if (key === 'Customers Handled' && val) {
+ if (key === 'Outlet Outstanding' && val) {
       const rows = val.split('\n').map(line => {
         const parts = line.replace(/^\d+\.\s*/, '').split(' | ');
-        return { date: parts[0] || '', name: parts[1] || '', phone: parts[2] || '', outlet: parts[3] || '', remark: parts[4] || '', agent: (parts[5] || '').replace('Agent: ', '') };
+        return { outlet: parts[0] || '', amount: parts[1] || '', district: parts[2] || '' };
       });
       return (
         <div key={key} className="py-4">
           <p className="text-slate-400 text-[10px] font-black uppercase tracking-widest mb-3">{key}</p>
           <div className="overflow-x-auto rounded-xl border border-slate-200">
-            <table className="w-full text-sm min-w-max">
+            <table className="w-full text-sm">
               <thead className="bg-slate-900 text-white">
                 <tr>
                   <th className="px-4 py-2.5 text-[10px] uppercase tracking-widest font-black text-left w-10">No.</th>
-                  <th className="px-4 py-2.5 text-[10px] uppercase tracking-widest font-black text-left">Date</th>
-                  <th className="px-4 py-2.5 text-[10px] uppercase tracking-widest font-black text-left">Name</th>
-                  <th className="px-4 py-2.5 text-[10px] uppercase tracking-widest font-black text-left">Phone</th>
                   <th className="px-4 py-2.5 text-[10px] uppercase tracking-widest font-black text-left">Outlet</th>
-                  <th className="px-4 py-2.5 text-[10px] uppercase tracking-widest font-black text-left">Remark</th>
-                  <th className="px-4 py-2.5 text-[10px] uppercase tracking-widest font-black text-left">Agent</th>
+                  <th className="px-4 py-2.5 text-[10px] uppercase tracking-widest font-black text-left">Amount</th>
+                  <th className="px-4 py-2.5 text-[10px] uppercase tracking-widest font-black text-left">District</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
                 {rows.map((r, i) => (
                   <tr key={i} className="hover:bg-slate-50">
                     <td className="px-4 py-2.5 text-slate-400 font-bold text-xs">{i + 1}</td>
-                    <td className="px-4 py-2.5 text-slate-600">{r.date}</td>
-                    <td className="px-4 py-2.5 font-semibold text-slate-900">{r.name}</td>
-                    <td className="px-4 py-2.5 text-slate-600">{r.phone}</td>
-                    <td className="px-4 py-2.5 text-slate-600">{r.outlet}</td>
-                    <td className="px-4 py-2.5 text-slate-600">{r.remark}</td>
-                    <td className="px-4 py-2.5 text-blue-600 font-semibold">{r.agent}</td>
+                    <td className="px-4 py-2.5 font-semibold text-slate-900">{r.outlet}</td>
+                    <td className="px-4 py-2.5 font-bold text-red-600">{r.amount}</td>
+                    <td className="px-4 py-2.5 text-slate-600">{r.district}</td>
                   </tr>
                 ))}
               </tbody>
+              <tfoot>
+                <tr className="bg-slate-50 border-t-2 border-slate-200">
+                  <td colSpan={2} className="px-4 py-2.5 font-black text-slate-900 text-xs uppercase tracking-wider">Total Outstanding</td>
+                  <td className="px-4 py-2.5 font-black text-red-600">
+                    ₹{rows.reduce((sum, r) => sum + (parseFloat(r.amount.replace('₹', '')) || 0), 0).toLocaleString('en-IN')}
+                  </td>
+                  <td></td>
+                </tr>
+              </tfoot>
             </table>
           </div>
-          <p className="text-slate-400 text-xs mt-2 font-semibold">{rows.length} customer{rows.length !== 1 ? 's' : ''} handled</p>
         </div>
       );
     }
@@ -663,7 +665,10 @@ function SalesManagerForm({ reportTitle, setReportTitle, onSubmit, onClose }) {
   const [reportType, setReportType] = useState('Outlet Sales');
   const [outletSalesRows, setOutletSalesRows] = useState([{ outlet: '', district: '', totalSales: '' }]);
   const [outletPurchaseRows, setOutletPurchaseRows] = useState([{ outlet: '', district: '', totalSales: '' }]);
-  const [customersRows, setCustomersRows] = useState([{ date: '', name: '', phone: '', outlet: '', remark: '', agent: '' }]);
+  const [outletOutstandingRows, setOutletOutstandingRows] = useState([{ outlet: '', amount: '', district: '' }]);
+  const [otherWorks, setOtherWorks] = useState({
+    staffTraining: '', weeklyPurchaseEntries: '', weeklySalesEntries: '', poCount: '', pendingPO: '',
+  });
 
   const addRow = (setter, emptyRow) => setter(prev => [...prev, { ...emptyRow }]);
   const removeRow = (setter, idx) => setter(prev => prev.filter((_, i) => i !== idx));
@@ -676,8 +681,14 @@ function SalesManagerForm({ reportTitle, setReportTitle, onSubmit, onClose }) {
       data['Outlet Sales'] = outletSalesRows.map((r, i) => `${i + 1}. ${r.outlet} | ${r.district} | ₹${r.totalSales}`).join('\n');
     } else if (reportType === 'Outlet Purchase') {
       data['Outlet Purchase'] = outletPurchaseRows.map((r, i) => `${i + 1}. ${r.outlet} | ${r.district} | ₹${r.totalSales}`).join('\n');
+    } else if (reportType === 'Outlet Outstanding') {
+      data['Outlet Outstanding'] = outletOutstandingRows.map((r, i) => `${i + 1}. ${r.outlet} | ₹${r.amount} | ${r.district}`).join('\n');
     } else {
-      data['Customers Handled'] = customersRows.map((r, i) => `${i + 1}. ${r.date} | ${r.name} | ${r.phone} | ${r.outlet} | ${r.remark} | Agent: ${r.agent}`).join('\n');
+      data['Staff Training Details']       = otherWorks.staffTraining;
+      data['Total Weekly Purchase Entries'] = otherWorks.weeklyPurchaseEntries;
+      data['Total Weekly Sales Entries']    = otherWorks.weeklySalesEntries;
+      data['Total P.O Count']               = otherWorks.poCount;
+      data['Total Pending P.O']             = otherWorks.pendingPO;
     }
     onSubmit(data);
   };
@@ -695,7 +706,7 @@ function SalesManagerForm({ reportTitle, setReportTitle, onSubmit, onClose }) {
       <div>
         <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Report Type</label>
         <div className="flex gap-3 flex-wrap">
-          {['Outlet Sales', 'Outlet Purchase', 'Customers Handled'].map(opt => (
+        {['Outlet Sales', 'Outlet Purchase', 'Outlet Outstanding', 'Other Works'].map(opt => (
             <button key={opt} type="button" onClick={() => setReportType(opt)}
               className={`flex-1 py-3 rounded-2xl font-bold text-sm border-2 transition ${reportType === opt ? 'bg-blue-600 text-white border-blue-600' : 'bg-slate-50 text-slate-500 border-slate-200 hover:border-blue-400'}`}>
               {opt}
@@ -773,44 +784,73 @@ function SalesManagerForm({ reportTitle, setReportTitle, onSubmit, onClose }) {
           </div>
         </div>
       )}
-
-      {/* CUSTOMERS HANDLED */}
-      {reportType === 'Customers Handled' && (
+      {/* OUTLET OUTSTANDING */}
+      {reportType === 'Outlet Outstanding' && (
         <div>
           <div className="flex items-center justify-between mb-3">
-            <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest">Customers Handled Entries</label>
-            <button type="button" onClick={() => addRow(setCustomersRows, { date: '', name: '', phone: '', outlet: '', remark: '', agent: '' })}
+            <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest">Outlet Outstanding Entries</label>
+            <button type="button" onClick={() => addRow(setOutletOutstandingRows, { outlet: '', amount: '', district: '' })}
               className="text-xs font-black text-blue-600 bg-blue-50 px-3 py-1.5 rounded-xl hover:bg-blue-100 transition">+ Add Row</button>
           </div>
           <div className="overflow-x-auto rounded-2xl border border-slate-200">
-            <table className="w-full text-sm min-w-max">
+            <table className="w-full text-sm">
               <thead className="bg-slate-900 text-white">
                 <tr>
                   <th className="px-4 py-3 text-[10px] uppercase tracking-widest font-black text-left w-10">No.</th>
-                  <th className="px-4 py-3 text-[10px] uppercase tracking-widest font-black text-left">Date</th>
-                  <th className="px-4 py-3 text-[10px] uppercase tracking-widest font-black text-left">Name</th>
-                  <th className="px-4 py-3 text-[10px] uppercase tracking-widest font-black text-left">Phone</th>
                   <th className="px-4 py-3 text-[10px] uppercase tracking-widest font-black text-left">Outlet</th>
-                  <th className="px-4 py-3 text-[10px] uppercase tracking-widest font-black text-left">Remark</th>
-                  <th className="px-4 py-3 text-[10px] uppercase tracking-widest font-black text-left">Agent</th>
+                  <th className="px-4 py-3 text-[10px] uppercase tracking-widest font-black text-left">Amount</th>
+                  <th className="px-4 py-3 text-[10px] uppercase tracking-widest font-black text-left">District</th>
                   <th className="px-4 py-3 w-8"></th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
-                {customersRows.map((row, idx) => (
+                {outletOutstandingRows.map((row, idx) => (
                   <tr key={idx} className="hover:bg-slate-50">
                     <td className="px-4 py-2 text-slate-400 font-bold text-xs">{idx + 1}</td>
-                    <td className="px-2 py-2"><input className={inputCls} type="date" value={row.date} required onChange={e => updateRow(setCustomersRows, idx, 'date', e.target.value)} /></td>
-                    <td className="px-2 py-2"><input className={inputCls} placeholder="Name" value={row.name} required onChange={e => updateRow(setCustomersRows, idx, 'name', e.target.value)} /></td>
-                    <td className="px-2 py-2"><input className={inputCls} placeholder="Phone" value={row.phone} onChange={e => updateRow(setCustomersRows, idx, 'phone', e.target.value)} /></td>
-                    <td className="px-2 py-2"><input className={inputCls} placeholder="Outlet" value={row.outlet} onChange={e => updateRow(setCustomersRows, idx, 'outlet', e.target.value)} /></td>
-                    <td className="px-2 py-2"><input className={inputCls} placeholder="Remark" value={row.remark} onChange={e => updateRow(setCustomersRows, idx, 'remark', e.target.value)} /></td>
-                    <td className="px-2 py-2"><input className={inputCls} placeholder="Agent" value={row.agent} onChange={e => updateRow(setCustomersRows, idx, 'agent', e.target.value)} /></td>
-                    <td className="px-2 py-2">{customersRows.length > 1 && <button type="button" onClick={() => removeRow(setCustomersRows, idx)} className="text-red-400 hover:text-red-600 font-black text-lg">✕</button>}</td>
+                    <td className="px-2 py-2"><input className={inputCls} placeholder="Outlet name" value={row.outlet} required onChange={e => updateRow(setOutletOutstandingRows, idx, 'outlet', e.target.value)} /></td>
+                    <td className="px-2 py-2"><input className={inputCls} placeholder="Amount" type="number" value={row.amount} required onChange={e => updateRow(setOutletOutstandingRows, idx, 'amount', e.target.value)} /></td>
+                    <td className="px-2 py-2"><input className={inputCls} placeholder="District" value={row.district} required onChange={e => updateRow(setOutletOutstandingRows, idx, 'district', e.target.value)} /></td>
+                    <td className="px-2 py-2">{outletOutstandingRows.length > 1 && <button type="button" onClick={() => removeRow(setOutletOutstandingRows, idx)} className="text-red-400 hover:text-red-600 font-black text-lg">✕</button>}</td>
                   </tr>
                 ))}
               </tbody>
             </table>
+          </div>
+        </div>
+      )}
+
+
+
+    {/* OTHER WORKS */}
+      {reportType === 'Other Works' && (
+        <div className="space-y-5">
+          <div>
+            <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Staff Training Details</label>
+            <textarea className="w-full bg-slate-50 border border-slate-200 p-4 rounded-2xl outline-none focus:ring-2 focus:ring-blue-500 h-24 font-semibold"
+              placeholder="..." value={otherWorks.staffTraining}
+              onChange={e => setOtherWorks({ ...otherWorks, staffTraining: e.target.value })} />
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+            <div>
+              <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Total Weekly Purchase Entries</label>
+              <input type="number" className={inputCls} placeholder="0" value={otherWorks.weeklyPurchaseEntries}
+                onChange={e => setOtherWorks({ ...otherWorks, weeklyPurchaseEntries: e.target.value })} />
+            </div>
+            <div>
+              <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Total Weekly Sales Entries</label>
+              <input type="number" className={inputCls} placeholder="0" value={otherWorks.weeklySalesEntries}
+                onChange={e => setOtherWorks({ ...otherWorks, weeklySalesEntries: e.target.value })} />
+            </div>
+            <div>
+              <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Total P.O Count</label>
+              <input type="number" className={inputCls} placeholder="0" value={otherWorks.poCount}
+                onChange={e => setOtherWorks({ ...otherWorks, poCount: e.target.value })} />
+            </div>
+            <div>
+              <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Total Pending P.O</label>
+              <input type="number" className={inputCls} placeholder="0" value={otherWorks.pendingPO}
+                onChange={e => setOtherWorks({ ...otherWorks, pendingPO: e.target.value })} />
+            </div>
           </div>
         </div>
       )}
@@ -1125,9 +1165,9 @@ const roleBadge = {
       <button
         onClick={() => {
           const deptReports = reports.filter(r =>
-            r.department === activeDept &&
-            new Date(r.createdAt).toISOString().split('T')[0] === selectedDay
-          );
+  r.department === activeDept &&
+  toYMD(new Date(r.createdAt)) === selectedDay
+);
           downloadCSV(deptReports, activeDept);
         }}
         className="flex items-center gap-2 bg-emerald-600 text-white text-xs font-bold px-4 py-2 rounded-xl hover:bg-emerald-700 transition whitespace-nowrap"
