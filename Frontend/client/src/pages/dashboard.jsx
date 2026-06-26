@@ -1076,66 +1076,141 @@ const roleBadge = {
   const currentAllowedFields = getAllowedFields(activeDept);
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col md:flex-row font-sans">
+    <div className="min-h-screen bg-slate-100 flex flex-col md:flex-row font-sans">
 
       {/* Mobile Header */}
-      <div className="md:hidden bg-slate-900 text-white p-4 flex justify-between items-center sticky top-0 z-40">
-        <h1 className="font-bold text-blue-400">{isViewer ? (jobTitle || 'Reports') : dept} Portal</h1>
-        <button onClick={() => setIsMenuOpen(!isMenuOpen)} className="p-2 text-2xl">{isMenuOpen ? '✕' : '☰'}</button>
+      <div className="md:hidden text-white p-4 flex justify-between items-center sticky top-0 z-40" style={{ background: 'linear-gradient(135deg, #0f172a, #1e1b4b)' }}>
+        <div className="flex items-center gap-2">
+          <div className="w-8 h-8 rounded-lg flex items-center justify-center text-white text-xs font-black" style={{ background: 'linear-gradient(135deg, #6366f1, #3b82f6)', boxShadow: '0 0 14px rgba(99,102,241,0.4)' }}>TS</div>
+          <span className="font-bold text-white text-sm">{isViewer ? (jobTitle || 'Reports') : dept}</span>
+        </div>
+        <button onClick={() => setIsMenuOpen(!isMenuOpen)} className="p-2 text-xl text-white/70 hover:text-white transition">{isMenuOpen ? '✕' : '☰'}</button>
       </div>
 
       {/* Sidebar */}
-      <div className={`${isMenuOpen ? 'translate-x-0' : '-translate-x-full'} md:translate-x-0 fixed md:relative z-30 w-64 bg-slate-900 text-white min-h-screen p-6 transition-transform duration-300 flex flex-col`}>
-        <div className="hidden md:block mb-8 text-center">
-          <span className={`inline-block px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest mb-3 ${roleBadge.bg}`}>{roleBadge.label}</span>
-          <h1 className="text-lg font-bold text-white">{userName}</h1>
-          {role === 'manager' && managedDepts.length > 0 && (
-            <p className="text-slate-400 text-[10px] mt-1 leading-relaxed">{managedDepts.map(d => d.dept).join(' · ')}</p>
-          )}
+      <div
+        className={`${isMenuOpen ? 'translate-x-0' : '-translate-x-full'} md:translate-x-0 fixed md:relative z-30 w-60 min-h-screen transition-transform duration-300 flex flex-col overflow-hidden`}
+        style={{ background: 'linear-gradient(160deg, #0f172a 0%, #1e1b4b 60%, #0f172a 100%)' }}
+      >
+        {/* Orb effects */}
+        <div className="absolute -top-16 -left-16 w-48 h-48 rounded-full pointer-events-none" style={{ background: 'rgba(99,102,241,0.15)', filter: 'blur(40px)' }} />
+        <div className="absolute -bottom-12 -right-12 w-40 h-40 rounded-full pointer-events-none" style={{ background: 'rgba(59,130,246,0.12)', filter: 'blur(40px)' }} />
+
+        {/* Brand + User */}
+        <div className="relative z-10 p-5 border-b border-white/[0.07]">
+          <div className="flex items-center gap-2.5 mb-5">
+            <div className="w-9 h-9 rounded-xl flex items-center justify-center text-white text-xs font-black flex-shrink-0" style={{ background: 'linear-gradient(135deg,#6366f1,#3b82f6)', boxShadow: '0 0 20px rgba(99,102,241,0.45)' }}>TS</div>
+            <div>
+              <p className="text-white text-sm font-bold leading-none">Trendsetters</p>
+              <p className="text-white/35 text-[10px] mt-0.5 font-medium">Kerala Paints Portal</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2.5 p-3 rounded-xl" style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)' }}>
+            <div className={`w-9 h-9 rounded-xl flex items-center justify-center text-white text-xs font-black flex-shrink-0 ${roleBadge.bg}`}>
+              {userName.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase() || 'U'}
+            </div>
+            <div className="min-w-0">
+              <p className="text-white text-sm font-semibold truncate leading-none">{userName || 'User'}</p>
+              <span className="inline-block mt-1 text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full" style={{ background: 'rgba(99,102,241,0.3)', border: '1px solid rgba(99,102,241,0.5)', color: '#a5b4fc' }}>{roleBadge.label}</span>
+            </div>
+          </div>
         </div>
-        <nav className="space-y-2 flex-1">
-          <div className="p-3 rounded-xl bg-blue-600 font-semibold shadow-lg text-sm">Dashboard</div>
-         {(canSeeAdminPanel || role === 'manager') && (
-  <button onClick={() => navigate('/admin')} className="w-full text-left p-3 rounded-xl border border-blue-400/30 text-blue-400 hover:bg-blue-400 hover:text-white transition text-sm">
-    {role === 'manager' ? '👥 Manage Agents' : 'Admin Settings'}
-  </button>
-)}
+
+        {/* Nav */}
+        <nav className="relative z-10 flex-1 p-4 space-y-1">
+          <p className="text-[9px] font-black uppercase tracking-[1.2px] text-white/25 px-1.5 mb-2">Navigation</p>
+
+          {/* Dashboard — active */}
+          <div className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl cursor-pointer" style={{ background: 'linear-gradient(135deg, rgba(99,102,241,0.3), rgba(59,130,246,0.2))', border: '1px solid rgba(99,102,241,0.4)' }}>
+            <div className="w-7 h-7 rounded-lg flex items-center justify-center text-sm flex-shrink-0" style={{ background: 'rgba(99,102,241,0.4)' }}>📊</div>
+            <span className="text-white text-sm font-semibold flex-1">Dashboard</span>
+            <div className="w-1.5 h-1.5 rounded-full bg-indigo-400" style={{ boxShadow: '0 0 6px rgba(99,102,241,0.9)' }} />
+          </div>
+
+          {(canSeeAdminPanel || role === 'manager') && (
+            <button onClick={() => { setIsMenuOpen(false); navigate('/admin'); }}
+              className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl transition-all group"
+              style={{ border: '1px solid transparent' }}
+              onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.06)'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.08)'; }}
+              onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.borderColor = 'transparent'; }}
+            >
+              <div className="w-7 h-7 rounded-lg flex items-center justify-center text-sm flex-shrink-0" style={{ background: 'rgba(255,255,255,0.06)' }}>⚙️</div>
+              <span className="text-white/50 text-sm font-semibold group-hover:text-white/80 transition">{role === 'manager' ? '👥 Manage Agents' : 'Admin Settings'}</span>
+            </button>
+          )}
+
           {role === 'staff' && (
-            <button onClick={() => setIsModalOpen(true)} className="w-full text-left p-3 rounded-xl bg-emerald-600 text-white font-semibold mt-4 hover:bg-emerald-700 transition text-sm">+ New Entry</button>
+            <button onClick={() => { setIsMenuOpen(false); setIsModalOpen(true); }}
+              className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl mt-2 transition-all"
+              style={{ background: 'linear-gradient(135deg, rgba(16,185,129,0.25), rgba(5,150,105,0.2))', border: '1px solid rgba(16,185,129,0.35)' }}
+            >
+              <div className="w-7 h-7 rounded-lg flex items-center justify-center text-sm flex-shrink-0" style={{ background: 'rgba(16,185,129,0.3)' }}>＋</div>
+              <span className="text-emerald-400 text-sm font-bold">New Entry</span>
+            </button>
+          )}
+
+          {role === 'manager' && managedDepts.length > 0 && (
+            <div className="mt-4 px-2">
+              <p className="text-[9px] font-black uppercase tracking-[1.2px] text-white/20 mb-2">Your Departments</p>
+              <div className="flex flex-wrap gap-1">
+                {managedDepts.map(d => (
+                  <span key={d.dept} className="text-[9px] font-semibold px-2 py-0.5 rounded-full" style={{ background: 'rgba(255,255,255,0.07)', color: 'rgba(255,255,255,0.4)', border: '1px solid rgba(255,255,255,0.08)' }}>{d.dept.split('–').pop().trim()}</span>
+                ))}
+              </div>
+            </div>
           )}
         </nav>
-        <button onClick={() => { localStorage.clear(); navigate('/login'); }} className="w-full text-left p-3 rounded-xl text-red-400 font-bold hover:text-red-300 transition text-sm">Logout</button>
-      </div>
 
-      {/* Main */}
-      <div className="flex-1 p-4 md:p-8 overflow-auto">
+        {/* Logout */}
+        <div className="relative z-10 p-4 border-t border-white/[0.07]">
+          <button
+            onClick={() => { localStorage.clear(); navigate('/login'); }}
+            className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl transition-all"
+            style={{ border: '1px solid transparent' }}
+            onMouseEnter={e => { e.currentTarget.style.background = 'rgba(239,68,68,0.1)'; e.currentTarget.style.borderColor = 'rgba(239,68,68,0.2)'; }}
+            onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.borderColor = 'transparent'; }}
+          >
+            <div className="w-7 h-7 rounded-lg flex items-center justify-center text-sm flex-shrink-0" style={{ background: 'rgba(239,68,68,0.1)' }}>🚪</div>
+            <span className="text-red-400/70 text-sm font-semibold">Logout</span>
+          </button>
+        </div>
+      </div>
+    {/* Main */}
+      <div className="flex-1 flex flex-col overflow-hidden">
+
+        {/* Top Bar */}
+        {isViewer && (
+          <div className="bg-white border-b border-slate-200 px-6 py-3.5 flex items-center justify-between gap-4 flex-shrink-0">
+            <div>
+              <h2 className="text-lg font-black text-slate-900 tracking-tight leading-none">Daily Report Summary</h2>
+              <p className="text-slate-400 text-xs mt-1 font-medium">
+                {formatDateLabel(selectedDay)} · {activeDept}
+                {currentAllowedFields && (
+                  <span className="ml-2 text-[10px] font-bold text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full">{currentAllowedFields.length} fields visible</span>
+                )}
+              </p>
+            </div>
+            <div className="flex items-center gap-2.5">
+              <div className="flex items-center gap-1.5 bg-slate-50 border border-slate-200 rounded-xl px-3 py-2">
+                <button onClick={() => setSelectedDay(shiftDate(selectedDay, -1))} className="w-6 h-6 rounded-lg bg-white border border-slate-200 flex items-center justify-center text-slate-500 hover:text-slate-900 hover:bg-slate-100 transition font-black text-base leading-none">‹</button>
+                <input type="date" value={selectedDay} max={todayYMD()} onChange={e => setSelectedDay(e.target.value)}
+                  className="text-sm font-bold text-slate-700 bg-transparent outline-none cursor-pointer text-center w-28" />
+                <button onClick={() => { if (selectedDay < todayYMD()) setSelectedDay(shiftDate(selectedDay, 1)); }}
+                  className={`w-6 h-6 rounded-lg bg-white border border-slate-200 flex items-center justify-center font-black text-base leading-none transition ${selectedDay >= todayYMD() ? 'text-slate-200 cursor-not-allowed' : 'text-slate-500 hover:text-slate-900 hover:bg-slate-100'}`}>›</button>
+                {selectedDay !== todayYMD() && (
+                  <button onClick={() => setSelectedDay(todayYMD())} className="ml-1 text-[10px] font-black uppercase tracking-wider text-indigo-600 hover:underline whitespace-nowrap">Today</button>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+
+        <div className="flex-1 p-4 md:p-6 overflow-auto">
 
         {/* ══ MANAGER / SUPERADMIN: Daily View ══ */}
         {isViewer && (
           <>
-            <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-6 gap-4">
-              <div>
-                <h2 className="text-2xl font-black text-slate-900 tracking-tight">Daily Report Summary</h2>
-                <p className="text-slate-400 text-sm mt-0.5">{formatDateLabel(selectedDay)} · {activeDept}
-                  {currentAllowedFields && (
-                    <span className="ml-2 text-[10px] font-bold text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full">
-                      {currentAllowedFields.length} fields visible
-                    </span>
-                  )}
-                </p>
-              </div>
-
-              {/* Day navigator */}
-              <div className="flex items-center gap-2 bg-white border border-slate-200 rounded-2xl shadow-sm px-4 py-2.5">
-                <button onClick={() => setSelectedDay(shiftDate(selectedDay, -1))} className="text-slate-400 hover:text-slate-900 font-black px-2 py-1 rounded-lg hover:bg-slate-100 transition text-lg leading-none">‹</button>
-                <input type="date" value={selectedDay} max={todayYMD()} onChange={e => setSelectedDay(e.target.value)}
-                  className="text-sm font-bold text-slate-700 bg-transparent outline-none cursor-pointer text-center" />
-                <button onClick={() => { if (selectedDay < todayYMD()) setSelectedDay(shiftDate(selectedDay, 1)); }}
-                  className={`font-black px-2 py-1 rounded-lg transition text-lg leading-none ${selectedDay >= todayYMD() ? 'text-slate-200 cursor-not-allowed' : 'text-slate-400 hover:text-slate-900 hover:bg-slate-100'}`}>›</button>
-                {selectedDay !== todayYMD() && (
-                  <button onClick={() => setSelectedDay(todayYMD())} className="ml-2 text-[10px] font-black uppercase tracking-wider text-blue-600 hover:underline whitespace-nowrap">Today</button>
-                )}
-              </div>
+            <div className="mb-5">
             </div>
 
             {/* Dept Tabs */}
@@ -1234,6 +1309,7 @@ const roleBadge = {
             </div>
           </>
         )}
+      </div>
       </div>
 
      {/* ── CREATE REPORT MODAL ── */}
