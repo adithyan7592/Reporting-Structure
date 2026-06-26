@@ -293,21 +293,43 @@ const showToast = (msg, type = 'success') => {
 }[r] || 'bg-slate-100 text-slate-600');
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col md:flex-row">
+   <div className="min-h-screen bg-slate-100 flex flex-col md:flex-row">
 
       {/* Sidebar */}
-      <div className="w-full md:w-64 bg-slate-900 text-white p-6 shrink-0 flex flex-col">
-        <h1 className="text-xl font-bold text-blue-400 mb-8">Admin Panel</h1>
-        <nav className="space-y-3 flex-1">
-          <button onClick={() => navigate('/dashboard')} className="w-full text-left p-3 rounded-xl hover:bg-slate-800 transition text-slate-300 text-sm">← Back to Dashboard</button>
-          <div className="p-3 rounded-xl bg-blue-600 text-white font-semibold text-sm">User Management</div>
+      <div className="w-full md:w-56 text-white shrink-0 flex flex-col overflow-hidden relative"
+        style={{ background: 'linear-gradient(160deg, #0f172a 0%, #1e1b4b 60%, #0f172a 100%)' }}>
+        <div className="absolute -top-16 -left-16 w-48 h-48 rounded-full pointer-events-none" style={{ background: 'rgba(99,102,241,0.15)', filter: 'blur(40px)' }} />
+        <div className="absolute -bottom-12 -right-12 w-40 h-40 rounded-full pointer-events-none" style={{ background: 'rgba(59,130,246,0.12)', filter: 'blur(40px)' }} />
+
+        {/* Brand */}
+        <div className="relative z-10 p-5 border-b border-white/[0.07]">
+          <div className="flex items-center gap-2.5 mb-1">
+            <div className="w-9 h-9 rounded-xl flex items-center justify-center text-white text-xs font-black flex-shrink-0" style={{ background: 'linear-gradient(135deg,#6366f1,#3b82f6)', boxShadow: '0 0 20px rgba(99,102,241,0.45)' }}>TS</div>
+            <div>
+              <p className="text-white text-sm font-bold leading-none">Trendsetters</p>
+              <p className="text-white/35 text-[10px] mt-0.5 font-medium">Admin Panel</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Nav */}
+        <nav className="relative z-10 flex-1 p-4 space-y-1">
+          <p className="text-[9px] font-black uppercase tracking-[1.2px] text-white/25 px-1.5 mb-2">Navigation</p>
+          <button onClick={() => navigate('/dashboard')}
+            className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl transition-all group"
+            style={{ border: '1px solid transparent' }}
+            onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.06)'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.08)'; }}
+            onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.borderColor = 'transparent'; }}
+          >
+            <div className="w-7 h-7 rounded-lg flex items-center justify-center text-sm flex-shrink-0" style={{ background: 'rgba(255,255,255,0.06)' }}>←</div>
+            <span className="text-white/50 text-sm font-semibold group-hover:text-white/80 transition">Dashboard</span>
+          </button>
+          <div className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl" style={{ background: 'linear-gradient(135deg, rgba(99,102,241,0.3), rgba(59,130,246,0.2))', border: '1px solid rgba(99,102,241,0.4)' }}>
+            <div className="w-7 h-7 rounded-lg flex items-center justify-center text-sm flex-shrink-0" style={{ background: 'rgba(99,102,241,0.4)' }}>👥</div>
+            <span className="text-white text-sm font-semibold flex-1">User Management</span>
+            <div className="w-1.5 h-1.5 rounded-full bg-indigo-400" style={{ boxShadow: '0 0 6px rgba(99,102,241,0.9)' }} />
+          </div>
         </nav>
-        {/* <div className="mt-8 p-4 bg-slate-800 rounded-2xl text-[10px] text-slate-400 space-y-2 leading-relaxed">
-          <p className="font-bold text-slate-200 uppercase tracking-wider text-[9px] mb-3">Role Guide</p>
-          <p>🔵 <strong className="text-slate-300">Staff</strong> — Submits + views own dept</p>
-          <p>🟢 <strong className="text-slate-300">Manager</strong> — Views selected depts & fields</p>
-          <p>🟣 <strong className="text-slate-300">Superadmin</strong> — Full access</p>
-        </div> */}
       </div>
 
       {/* Main */}
