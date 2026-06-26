@@ -1076,7 +1076,7 @@ const roleBadge = {
   const currentAllowedFields = getAllowedFields(activeDept);
 
   return (
-    <div className="min-h-screen bg-slate-100 flex flex-col md:flex-row font-sans">
+    <div className="h-screen bg-slate-100 flex flex-col md:flex-row font-sans overflow-hidden">
 
       {/* Mobile Header */}
       <div className="md:hidden text-white p-4 flex justify-between items-center sticky top-0 z-40" style={{ background: 'linear-gradient(135deg, #0f172a, #1e1b4b)' }}>
