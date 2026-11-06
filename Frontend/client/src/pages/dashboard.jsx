@@ -458,6 +458,170 @@ const rows = Object.values(agentMap);
 }
 
 
+// ── CRM Monthly (division-wise) ──────────────────────────────────────────────
+const CRM_BRANDS = ['AYUSH', 'Bioclean', 'Theertha'];
+
+function shiftMonth(ym, delta) {
+  const [y, m] = ym.split('-').map(Number);
+  const d = new Date(y, m - 1 + delta, 1);
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+}
+
+function crmRate(totals) {
+  const calls = totals['Total No. of Calls'] || 0;
+  const conv = totals['No. of Converted Leads'] || 0;
+  return calls > 0 ? ((conv / calls) * 100).toFixed(1) : null;
+}
+
+function crmShowRate(fields) {
+  return fields.some(f => f.label === 'Total No. of Calls') && fields.some(f => f.label === 'No. of Converted Leads');
+}
+
+function aggregateCRMMonth(reports, month, allowedFields) {
+  const fields = (departmentConfig['CRM'] || []).filter(
+    f => f.type === 'number' && (!allowedFields || allowedFields.includes(f.label))
+  );
+
+  // One entry per day + agent + division (the latest), same rule as the daily table
+  const latest = {};
+  reports.forEach(r => {
+    if (r.department !== 'CRM') return;
+    const day = toYMD(new Date(r.createdAt));
+    if (!day.startsWith(month)) return;
+    const brand = r.data?.['Brand'];
+    if (!CRM_BRANDS.includes(brand)) return;
+    const key = `${day}__${r.staffName}__${brand}`;
+    if (!latest[key] || new Date(r.createdAt) > new Date(latest[key].createdAt)) latest[key] = r;
+  });
+
+  const divisions = CRM_BRANDS.map(brand => ({ brand, agents: {}, totals: {}, days: new Set() }));
+  Object.values(latest).forEach(r => {
+    const div = divisions.find(d => d.brand === r.data['Brand']);
+    const name = r.staffName || 'Unknown';
+    const day = toYMD(new Date(r.createdAt));
+    if (!div.agents[name]) div.agents[name] = { name, days: new Set(), totals: {} };
+    div.agents[name].days.add(day);
+    div.days.add(day);
+    fields.forEach(f => {
+      const v = parseFloat(r.data?.[f.label]) || 0;
+      div.agents[name].totals[f.label] = (div.agents[name].totals[f.label] || 0) + v;
+      div.totals[f.label] = (div.totals[f.label] || 0) + v;
+    });
+  });
+
+  return {
+    fields,
+    divisions: divisions.map(d => ({
+      brand: d.brand,
+      totals: d.totals,
+      activeDays: d.days.size,
+      agents: Object.values(d.agents)
+        .map(a => ({ name: a.name, days: a.days.size, totals: a.totals }))
+        .sort((x, y) => x.name.localeCompare(y.name)),
+    })),
+  };
+}
+
+function downloadCRMMonthlyCSV(reports, month, allowedFields) {
+  const { fields, divisions } = aggregateCRMMonth(reports, month, allowedFields);
+  const showRate = crmShowRate(fields);
+  const q = v => `"${String(v ?? '').replace(/"/g, '""')}"`;
+  const lines = [['Division', 'Agent', 'Days Reported', ...fields.map(f => f.label), ...(showRate ? ['Conversion %'] : [])].map(q).join(',')];
+
+  divisions.forEach(d => {
+    d.agents.forEach(a => lines.push(
+      [d.brand, a.name, a.days, ...fields.map(f => a.totals[f.label] || 0), ...(showRate ? [crmRate(a.totals) ?? ''] : [])].map(q).join(',')
+    ));
+    if (d.agents.length) lines.push(
+      [d.brand, 'TOTAL', d.activeDays, ...fields.map(f => d.totals[f.label] || 0), ...(showRate ? [crmRate(d.totals) ?? ''] : [])].map(q).join(',')
+    );
+  });
+
+  if (lines.length === 1) { alert('No CRM reports for this month.'); return; }
+  const blob = new Blob(['\uFEFF' + lines.join('\n')], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = `CRM_Monthly_${month}.csv`;
+  link.click();
+  URL.revokeObjectURL(url);
+}
+
+function CRMMonthlyReport({ reports, month, allowedFields }) {
+  const { fields, divisions } = aggregateCRMMonth(reports, month, allowedFields);
+  const showRate = crmShowRate(fields);
+  const badge = { AYUSH: 'bg-emerald-600', Bioclean: 'bg-blue-600', Theertha: 'bg-purple-600' };
+  const fmt = v => (v > 0 ? v.toLocaleString('en-IN') : <span className="text-slate-300">—</span>);
+  const rateChip = rate => rate === null
+    ? <span className="text-slate-300">—</span>
+    : <span className={`px-2 py-1 rounded-lg text-xs font-black ${parseFloat(rate) >= 50 ? 'bg-emerald-100 text-emerald-700' : parseFloat(rate) >= 25 ? 'bg-amber-100 text-amber-700' : 'bg-red-100 text-red-600'}`}>{rate}%</span>;
+
+  if (!divisions.some(d => d.agents.length > 0)) {
+    return (
+      <div className="flex flex-col items-center justify-center py-20 text-slate-400">
+        <div className="text-5xl mb-4">📋</div>
+        <p className="font-semibold text-lg">No CRM reports for this month</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="divide-y divide-slate-100">
+      {divisions.map(div => (
+        <div key={div.brand}>
+          <div className="px-6 py-3 bg-slate-50 border-b border-slate-200 flex items-center gap-3 flex-wrap">
+            <span className={`px-3 py-1 rounded-full text-xs font-black text-white ${badge[div.brand]}`}>{div.brand}</span>
+            <span className="text-slate-400 text-xs">
+              {div.agents.length} agent{div.agents.length !== 1 ? 's' : ''} · {div.activeDays} active day{div.activeDays !== 1 ? 's' : ''}
+            </span>
+          </div>
+
+          {div.agents.length === 0 ? (
+            <div className="px-6 py-4 text-slate-400 text-sm italic">No reports for {div.brand} this month.</div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-left border-collapse text-sm min-w-max">
+                <thead>
+                  <tr className="bg-slate-900 text-white">
+                    <th className="px-5 py-3 text-[10px] uppercase tracking-widest font-black sticky left-0 bg-slate-900 z-10 min-w-[160px]">Agent Name</th>
+                    <th className="px-5 py-3 text-[10px] uppercase tracking-widest font-black whitespace-nowrap">Days Reported</th>
+                    {fields.map(f => (
+                      <th key={f.label} className="px-5 py-3 text-[10px] uppercase tracking-widest font-black whitespace-nowrap">{f.label}</th>
+                    ))}
+                    {showRate && <th className="px-5 py-3 text-[10px] uppercase tracking-widest font-black whitespace-nowrap">Conversion %</th>}
+                  </tr>
+                </thead>
+                <tbody>
+                  {div.agents.map(a => (
+                    <tr key={a.name} className="border-b border-slate-100 hover:bg-blue-50/60 transition group">
+                      <td className="px-5 py-4 font-bold text-slate-900 sticky left-0 bg-white group-hover:bg-blue-50/60 z-10">{a.name}</td>
+                      <td className="px-5 py-4 text-slate-500 font-semibold tabular-nums">{a.days}</td>
+                      {fields.map(f => (
+                        <td key={f.label} className="px-5 py-4 text-slate-700 font-semibold tabular-nums">{fmt(a.totals[f.label] || 0)}</td>
+                      ))}
+                      {showRate && <td className="px-5 py-4">{rateChip(crmRate(a.totals))}</td>}
+                    </tr>
+                  ))}
+                </tbody>
+                <tfoot>
+                  <tr className="bg-slate-50 border-t-2 border-slate-200">
+                    <td className="px-5 py-3 font-black text-slate-900 uppercase text-xs tracking-wider sticky left-0 bg-slate-50 z-10">Total</td>
+                    <td className="px-5 py-3 font-black text-slate-900 tabular-nums">{div.activeDays}</td>
+                    {fields.map(f => (
+                      <td key={f.label} className="px-5 py-3 font-black text-slate-900 tabular-nums">{fmt(div.totals[f.label] || 0)}</td>
+                    ))}
+                    {showRate && <td className="px-5 py-3">{rateChip(crmRate(div.totals))}</td>}
+                  </tr>
+                </tfoot>
+              </table>
+            </div>
+          )}
+        </div>
+      ))}
+    </div>
+  );
+}
+
 // ── Agent Drill-down Modal ────────────────────────────────────────────────────
 
 function AgentDrillModal({ agent, dept, allowedFields, onClose, onEditReport, onDeleteReport }) {
@@ -630,7 +794,7 @@ function AgentDrillModal({ agent, dept, allowedFields, onClose, onEditReport, on
 
         {/* Footer */}
    {/* Footer */}
-        <div className="p-6 bg-slate-50 border-t border-slate-100 flex-shrink-0 flex gap-3">
+        <div className="p-4 sm:p-6 bg-slate-50 border-t border-slate-100 flex-shrink-0 flex flex-col sm:flex-row gap-2">
           {selectedEntry && (role === 'manager' || role === 'superadmin') && (
             <button
               onClick={() => { onClose(); onEditReport(selectedEntry); }}
@@ -830,7 +994,7 @@ function SalesManagerForm({ reportTitle, setReportTitle, onSubmit, onClose }) {
               placeholder="..." value={otherWorks.staffTraining}
               onChange={e => setOtherWorks({ ...otherWorks, staffTraining: e.target.value })} />
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Total Weekly Purchase Entries</label>
               <input type="number" className={inputCls} placeholder="0" value={otherWorks.weeklyPurchaseEntries}
@@ -965,6 +1129,8 @@ export default function Dashboard() {
   const [selectedDay, setSelectedDay] = useState(todayYMD());
   const [editingReport, setEditingReport] = useState(null);
   const [editData, setEditData] = useState({});
+  const [viewMode, setViewMode] = useState('daily');
+  const [selectedMonth, setSelectedMonth] = useState(todayYMD().slice(0, 7));
 
   const dept     = localStorage.getItem('dept');
   const role     = localStorage.getItem('role');
@@ -1005,22 +1171,42 @@ const viewableDepts = (role === 'superadmin' || role === 'management') ? ALL_DEP
 
   const handleCreateReport = async (e) => {
     e.preventDefault();
-    const res = await fetch('https://reporting-structure.onrender.com/api/reports', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${localStorage.getItem('token')}` },
-      body: JSON.stringify({ title: reportTitle, data: dynamicData }),
-    });
-    if (res.ok) { setIsModalOpen(false); setReportTitle(''); setDynamicData({}); fetchReports(); }
+    try {
+      const res = await fetch('https://reporting-structure.onrender.com/api/reports', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${localStorage.getItem('token')}` },
+        body: JSON.stringify({ title: reportTitle, data: dynamicData }),
+      });
+      if (res.ok) {
+        setIsModalOpen(false); setReportTitle(''); setDynamicData({}); fetchReports();
+      } else {
+        const d = await res.json().catch(() => ({}));
+        if (res.status === 401) { localStorage.clear(); navigate('/login'); }
+        else alert(`Failed to save: ${d.msg || 'Unknown error'}`);
+      }
+    } catch {
+      alert('Network error — please check your connection and try again.');
+    }
   };
 
   const handleEditReport = async (e) => {
     e.preventDefault();
-    const res = await fetch(`https://reporting-structure.onrender.com/api/reports/${editingReport._id}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${localStorage.getItem('token')}` },
-      body: JSON.stringify({ data: editData }),
-    });
-    if (res.ok) { setEditingReport(null); setEditData({}); fetchReports(); }
+    try {
+      const res = await fetch(`https://reporting-structure.onrender.com/api/reports/${editingReport._id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${localStorage.getItem('token')}` },
+        body: JSON.stringify({ data: editData }),
+      });
+      if (res.ok) {
+        setEditingReport(null); setEditData({}); fetchReports();
+      } else {
+        const d = await res.json().catch(() => ({}));
+        if (res.status === 401) { localStorage.clear(); navigate('/login'); }
+        else alert(`Failed to save changes: ${d.msg || 'Please try again.'}`);
+      }
+    } catch {
+      alert('Network error — please check your connection and try again.');
+    }
   };
 
   const handleDeleteReport = async (report) => {
@@ -1074,6 +1260,7 @@ const roleBadge = {
 }[role] || { label: dept, bg: 'bg-blue-600' };
 
   const currentAllowedFields = getAllowedFields(activeDept);
+  const isMonthly = viewMode === 'monthly' && activeDept === 'CRM';
 
   return (
     <div className="h-screen bg-slate-100 flex flex-col md:flex-row font-sans overflow-hidden">
@@ -1086,6 +1273,11 @@ const roleBadge = {
         </div>
         <button onClick={() => setIsMenuOpen(!isMenuOpen)} className="p-2 text-xl text-white/70 hover:text-white transition">{isMenuOpen ? '✕' : '☰'}</button>
       </div>
+
+      {/* Mobile menu overlay */}
+      {isMenuOpen && (
+        <div className="fixed inset-0 bg-black/50 z-20 md:hidden" onClick={() => setIsMenuOpen(false)} />
+      )}
 
       {/* Sidebar */}
       <div
@@ -1182,15 +1374,15 @@ const roleBadge = {
         {isViewer && (
           <div className="bg-white border-b border-slate-200 px-6 py-3.5 flex items-center justify-between gap-4 flex-shrink-0">
             <div>
-              <h2 className="text-lg font-black text-slate-900 tracking-tight leading-none">Daily Report Summary</h2>
+              <h2 className="text-lg font-black text-slate-900 tracking-tight leading-none">{isMonthly ? 'Monthly Report Summary' : 'Daily Report Summary'}</h2>
               <p className="text-slate-400 text-xs mt-1 font-medium">
-                {formatDateLabel(selectedDay)} · {activeDept}
+                {isMonthly ? new Date(selectedMonth + '-01T00:00:00').toLocaleDateString('en-IN', { month: 'long', year: 'numeric' }) : formatDateLabel(selectedDay)} · {activeDept}
                 {currentAllowedFields && (
                   <span className="ml-2 text-[10px] font-bold text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full">{currentAllowedFields.length} fields visible</span>
                 )}
               </p>
             </div>
-            <div className="flex items-center gap-2.5">
+            <div className={`flex items-center gap-2.5 ${isMonthly ? 'hidden' : ''}`}>
               <div className="flex items-center gap-1.5 bg-slate-50 border border-slate-200 rounded-xl px-3 py-2">
                 <button onClick={() => setSelectedDay(shiftDate(selectedDay, -1))} className="w-6 h-6 rounded-lg bg-white border border-slate-200 flex items-center justify-center text-slate-500 hover:text-slate-900 hover:bg-slate-100 transition font-black text-base leading-none">‹</button>
                 <input type="date" value={selectedDay} max={todayYMD()} onChange={e => setSelectedDay(e.target.value)}
@@ -1210,9 +1402,6 @@ const roleBadge = {
         {/* ══ MANAGER / SUPERADMIN: Daily View ══ */}
         {isViewer && (
           <>
-            <div className="mb-5">
-            </div>
-
             {/* Dept Tabs */}
             {viewableDepts.length > 1 && (
               <div className="flex items-center gap-2 mb-6 overflow-x-auto pb-2 no-scrollbar">
@@ -1225,9 +1414,44 @@ const roleBadge = {
               </div>
             )}
 
+            {/* CRM Daily / Monthly toggle */}
+            {activeDept === 'CRM' && (
+              <div className="flex flex-wrap items-center gap-3 mb-4">
+                <div className="inline-flex bg-white border border-slate-200 rounded-xl p-1">
+                  {['daily', 'monthly'].map(m => (
+                    <button key={m} onClick={() => setViewMode(m)}
+                      className={`px-4 py-1.5 rounded-lg text-xs font-bold capitalize transition ${viewMode === m ? 'bg-slate-900 text-white' : 'text-slate-500 hover:text-slate-900'}`}>
+                      {m}
+                    </button>
+                  ))}
+                </div>
+
+                {isMonthly && (
+                  <>
+                    <div className="flex items-center gap-1.5 bg-white border border-slate-200 rounded-xl px-2 py-1.5">
+                      <button onClick={() => setSelectedMonth(shiftMonth(selectedMonth, -1))}
+                        className="w-6 h-6 rounded-lg bg-slate-50 border border-slate-200 flex items-center justify-center text-slate-500 hover:text-slate-900 hover:bg-slate-100 transition font-black text-base leading-none">‹</button>
+                      <input type="month" value={selectedMonth} max={todayYMD().slice(0, 7)}
+                        onChange={e => e.target.value && setSelectedMonth(e.target.value)}
+                        className="text-sm font-bold text-slate-700 bg-transparent outline-none cursor-pointer" />
+                      <button onClick={() => { if (selectedMonth < todayYMD().slice(0, 7)) setSelectedMonth(shiftMonth(selectedMonth, 1)); }}
+                        className={`w-6 h-6 rounded-lg bg-slate-50 border border-slate-200 flex items-center justify-center font-black text-base leading-none transition ${selectedMonth >= todayYMD().slice(0, 7) ? 'text-slate-200 cursor-not-allowed' : 'text-slate-500 hover:text-slate-900 hover:bg-slate-100'}`}>›</button>
+                    </div>
+
+                    {canSeeAdminPanel && (
+                      <button onClick={() => downloadCRMMonthlyCSV(reports, selectedMonth, currentAllowedFields)}
+                        className="flex items-center gap-2 bg-emerald-600 text-white text-xs font-bold px-4 py-2 rounded-xl hover:bg-emerald-700 transition whitespace-nowrap">
+                        ⬇ Monthly CSV
+                      </button>
+                    )}
+                  </>
+                )}
+              </div>
+            )}
+
             {/* Table card */}
             <div className="bg-white rounded-[2rem] shadow-sm border border-slate-200 overflow-hidden">
-            <div className="px-6 py-4 border-b border-slate-100 flex justify-between items-center gap-3">
+            <div className={`px-6 py-4 border-b border-slate-100 flex justify-between items-center gap-3 ${isMonthly ? 'hidden' : ''}`}>
   <div>
     <span className="text-sm font-black text-slate-900">{activeDept}</span>
     <span className="text-slate-400 text-xs ml-2">
@@ -1252,13 +1476,17 @@ const roleBadge = {
     )}
   </div>
 </div>
-              <DailyTable
-                reports={reports}
-                dept={activeDept}
-                selectedDay={selectedDay}
-                allowedFields={currentAllowedFields}
-                onRowClick={setSelectedAgent}
-              />
+              {isMonthly ? (
+                <CRMMonthlyReport reports={reports} month={selectedMonth} allowedFields={currentAllowedFields} />
+              ) : (
+                <DailyTable
+                  reports={reports}
+                  dept={activeDept}
+                  selectedDay={selectedDay}
+                  allowedFields={currentAllowedFields}
+                  onRowClick={setSelectedAgent}
+                />
+              )}
             </div>
 
             <div className="mt-6 flex justify-end">
@@ -1275,15 +1503,17 @@ const roleBadge = {
                 <h2 className="text-2xl font-black text-slate-900 tracking-tight">My Reports</h2>
                 <p className="text-slate-400 text-sm mt-0.5">{dept}</p>
               </div>
-              <div className="flex gap-3 items-center w-full lg:w-auto">
-                <input type="text" placeholder="Search..." className="px-4 py-3 bg-white border border-slate-200 rounded-2xl outline-none focus:ring-2 focus:ring-blue-500 shadow-sm font-medium text-sm flex-1 lg:w-48"
-                  value={searchQuery} onChange={e => setSearchQuery(e.target.value)} />
-                <input type="date" className="px-4 py-3 bg-white border border-slate-200 rounded-2xl outline-none focus:ring-2 focus:ring-blue-500 shadow-sm font-medium text-sm cursor-pointer"
-                  value={selectedDate} onChange={e => setSelectedDate(e.target.value)} />
-                {(searchQuery || selectedDate) && (
-                  <button onClick={() => { setSearchQuery(''); setSelectedDate(''); }} className="text-xs text-red-500 font-bold hover:underline whitespace-nowrap">Clear</button>
-                )}
-                <button onClick={() => setIsModalOpen(true)} className="bg-blue-600 text-white px-6 py-3 rounded-2xl shadow-xl hover:bg-blue-700 transition font-bold active:scale-95 whitespace-nowrap">+ New Entry</button>
+              <div className="flex flex-col sm:flex-row gap-2 w-full lg:w-auto">
+                <div className="flex gap-2 flex-1">
+                  <input type="text" placeholder="Search..." className="px-4 py-3 bg-white border border-slate-200 rounded-2xl outline-none focus:ring-2 focus:ring-blue-500 shadow-sm font-medium text-sm flex-1"
+                    value={searchQuery} onChange={e => setSearchQuery(e.target.value)} />
+                  <input type="date" className="px-3 py-3 bg-white border border-slate-200 rounded-2xl outline-none focus:ring-2 focus:ring-blue-500 shadow-sm font-medium text-sm cursor-pointer"
+                    value={selectedDate} onChange={e => setSelectedDate(e.target.value)} />
+                  {(searchQuery || selectedDate) && (
+                    <button onClick={() => { setSearchQuery(''); setSelectedDate(''); }} className="text-xs text-red-500 font-bold hover:underline whitespace-nowrap px-1">Clear</button>
+                  )}
+                </div>
+                <button onClick={() => setIsModalOpen(true)} className="bg-blue-600 text-white px-6 py-3 rounded-2xl shadow-xl hover:bg-blue-700 transition font-bold active:scale-95 whitespace-nowrap w-full sm:w-auto">+ New Entry</button>
               </div>
             </div>
             <div className="bg-white rounded-[2rem] shadow-sm border border-slate-200 overflow-hidden">
@@ -1354,12 +1584,12 @@ const roleBadge = {
           <input type="text" className="w-full bg-slate-50 border border-slate-200 p-4 rounded-2xl outline-none focus:ring-2 focus:ring-blue-500 font-semibold"
             placeholder="e.g. Daily Report – 20 Apr" value={reportTitle} onChange={e => setReportTitle(e.target.value)} required />
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           {fields.map(field => {
             // Report type selector — full width, updates dynamicData
             if (field.type === 'report_selector') {
               return (
-                <div key={field.label} className="md:col-span-2">
+                <div key={field.label} className="sm:col-span-2">
                   <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">{field.label}</label>
                   <div className="flex gap-3">
                     {field.options.map(opt => (
@@ -1385,7 +1615,7 @@ const roleBadge = {
             if (field.reportType && dynamicData['Report Type'] !== field.reportType) return null;
 
             return (
-              <div key={field.label} className={field.type === 'textarea' ? 'md:col-span-2' : ''}>
+              <div key={field.label} className={field.type === 'textarea' ? 'sm:col-span-2' : ''}>
                 <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">{field.label}</label>
              {field.type === 'textarea' ? (
   <textarea
@@ -1398,6 +1628,7 @@ const roleBadge = {
                   <select
                     className="w-full bg-slate-50 border border-slate-200 p-4 rounded-2xl outline-none focus:ring-2 focus:ring-blue-500 font-semibold"
                     defaultValue=""
+                    required={field.label === 'Brand'}
                     onChange={e => setDynamicData({ ...dynamicData, [field.label]: e.target.value })}
                   >
                     <option value="" disabled>Select...</option>
@@ -1483,9 +1714,9 @@ const roleBadge = {
               {editingReport.staffName} · {new Date(editingReport.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })}
             </p>
             <form onSubmit={handleEditReport} className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {(departmentConfig[editingReport.department] || []).map(field => (
-                  <div key={field.label} className={field.type === 'textarea' ? 'md:col-span-2' : ''}>
+                  <div key={field.label} className={field.type === 'textarea' ? 'sm:col-span-2' : ''}>
                     <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">{field.label}</label>
                     {field.type === 'textarea' ? (
                       <textarea
@@ -1493,6 +1724,15 @@ const roleBadge = {
                         value={editData[field.label] || ''}
                         onChange={e => setEditData({ ...editData, [field.label]: e.target.value })}
                       />
+                    ) : field.type === 'select' ? (
+                      <select
+                        className="w-full bg-slate-50 border border-slate-200 p-4 rounded-2xl outline-none focus:ring-2 focus:ring-emerald-500 font-semibold"
+                        value={editData[field.label] || ''}
+                        onChange={e => setEditData({ ...editData, [field.label]: e.target.value })}
+                      >
+                        <option value="" disabled>Select...</option>
+                        {field.options.map(opt => <option key={opt} value={opt}>{opt}</option>)}
+                      </select>
                     ) : (
                       <input
                         type={field.type}
@@ -1516,5 +1756,8 @@ const roleBadge = {
     </div>
   );
 }
+
+
+
 
 
