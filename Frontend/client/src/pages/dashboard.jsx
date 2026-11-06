@@ -6,6 +6,9 @@ function toYMD(d) {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 }
 function todayYMD() { return toYMD(new Date()); }
+const MAX_BACKDATE_DAYS = 7;   // keep the same number as MAX_BACKDATE_DAYS in server.js
+// The day a report is FOR (older reports without a report date fall back to the day they were submitted)
+function reportDay(r) { return r.reportDate || toYMD(new Date(r.createdAt)); }
 function shiftDate(ymd, days) {
   const [y, m, d] = ymd.split('-').map(Number);
   const date = new Date(y, m - 1, d + days);
@@ -245,7 +248,7 @@ function DailyTable({ reports, dept, selectedDay, allowedFields, onRowClick }) {
 
   const dayReports = reports.filter(r =>
   r.department === dept &&
-  toYMD(new Date(r.createdAt)) === selectedDay
+  reportDay(r) === selectedDay
 );
  const agentMap = {};
 dayReports.forEach(r => {
@@ -324,7 +327,10 @@ const rows = Object.values(agentMap);
                               {agent.entries.length > 1 && (
                                 <span className="text-[10px] font-black text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full">{agent.entries.length} entries</span>
                               )}
-                              {agent.latest?.isEdited && (
+                              {agent.latest?.isLate && (
+                    <span className="text-[10px] font-black text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full ml-1">⏰ Late</span>
+                  )}
+                  {agent.latest?.isEdited && (
                                 <span className="text-[10px] font-black text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full ml-1">✏️ Edited</span>
                               )}
                             </td>
@@ -394,6 +400,9 @@ const rows = Object.values(agentMap);
                   {agent.entries.length > 1 && (
                     <span className="text-[10px] font-black text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full">{agent.entries.length} entries</span>
                   )}
+                  {agent.latest?.isLate && (
+                    <span className="text-[10px] font-black text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full ml-1">⏰ Late</span>
+                  )}
                   {agent.latest?.isEdited && (
                     <span className="text-[10px] font-black text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full ml-1">✏️ Edited</span>
                   )}
@@ -458,107 +467,454 @@ const rows = Object.values(agentMap);
 }
 
 
-// ── CRM Monthly (division-wise) ──────────────────────────────────────────────
+// ── CRM monthly analytics (division-wise) ────────────────────────────────────
 const CRM_BRANDS = ['AYUSH', 'Bioclean', 'Theertha'];
+const CRM_CALLS = 'Total No. of Calls';
+const CRM_CONV  = 'No. of Converted Leads';
+const CRM_SALES = 'Total Sales Value';
+const CRM_COLORS = { AYUSH: '#059669', Bioclean: '#2563eb', Theertha: '#9333ea' };
+const CRM_BADGE  = { AYUSH: 'bg-emerald-600', Bioclean: 'bg-blue-600', Theertha: 'bg-purple-600' };
 
 function shiftMonth(ym, delta) {
   const [y, m] = ym.split('-').map(Number);
   const d = new Date(y, m - 1 + delta, 1);
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
 }
+function daysInMonth(ym) { const [y, m] = ym.split('-').map(Number); return new Date(y, m, 0).getDate(); }
+function monthLabel(ym, long) {
+  const [y, m] = ym.split('-').map(Number);
+  return new Date(y, m - 1, 1).toLocaleDateString('en-IN', long ? { month: 'long', year: 'numeric' } : { month: 'short', year: '2-digit' });
+}
+const pct = (a, b) => (b > 0 ? (a / b) * 100 : null);
+const inr = v => `₹${Math.round(v).toLocaleString('en-IN')}`;
+const inrShort = v => v >= 1e7 ? `₹${(v / 1e7).toFixed(2)}Cr` : v >= 1e5 ? `₹${(v / 1e5).toFixed(2)}L` : v >= 1e3 ? `₹${(v / 1e3).toFixed(1)}K` : `₹${Math.round(v)}`;
 
-function crmRate(totals) {
-  const calls = totals['Total No. of Calls'] || 0;
-  const conv = totals['No. of Converted Leads'] || 0;
-  return calls > 0 ? ((conv / calls) * 100).toFixed(1) : null;
+const crmNumLabels = () => (departmentConfig['CRM'] || []).filter(f => f.type === 'number').map(f => f.label);
+const visibleNums = allowedFields => crmNumLabels().filter(l => !allowedFields || allowedFields.includes(l));
+function sumVals(list, labels) {
+  const t = {};
+  labels.forEach(l => { t[l] = 0; });
+  list.forEach(e => labels.forEach(l => { t[l] += e.vals[l] || 0; }));
+  return t;
 }
 
-function crmShowRate(fields) {
-  return fields.some(f => f.label === 'Total No. of Calls') && fields.some(f => f.label === 'No. of Converted Leads');
-}
-
-function aggregateCRMMonth(reports, month, allowedFields) {
-  const fields = (departmentConfig['CRM'] || []).filter(
-    f => f.type === 'number' && (!allowedFields || allowedFields.includes(f.label))
-  );
-
-  // One entry per day + agent + division (the latest), same rule as the daily table
+// One entry per day + agent + division (the latest one) — same rule as the daily table
+function crmEntries(reports) {
+  const nums = crmNumLabels();
   const latest = {};
   reports.forEach(r => {
     if (r.department !== 'CRM') return;
-    const day = toYMD(new Date(r.createdAt));
-    if (!day.startsWith(month)) return;
     const brand = r.data?.['Brand'];
     if (!CRM_BRANDS.includes(brand)) return;
-    const key = `${day}__${r.staffName}__${brand}`;
+    const key = `${reportDay(r)}__${r.staffName}__${brand}`;
     if (!latest[key] || new Date(r.createdAt) > new Date(latest[key].createdAt)) latest[key] = r;
   });
+  return Object.values(latest).map(r => {
+    const day = reportDay(r);
+    const vals = {};
+    nums.forEach(l => { vals[l] = parseFloat(r.data?.[l]) || 0; });
+    return { brand: r.data['Brand'], day, month: day.slice(0, 7), agent: r.staffName || 'Unknown', vals };
+  });
+}
 
-  const divisions = CRM_BRANDS.map(brand => ({ brand, agents: {}, totals: {}, days: new Set() }));
-  Object.values(latest).forEach(r => {
-    const div = divisions.find(d => d.brand === r.data['Brand']);
-    const name = r.staffName || 'Unknown';
-    const day = toYMD(new Date(r.createdAt));
-    if (!div.agents[name]) div.agents[name] = { name, days: new Set(), totals: {} };
-    div.agents[name].days.add(day);
-    div.days.add(day);
-    fields.forEach(f => {
-      const v = parseFloat(r.data?.[f.label]) || 0;
-      div.agents[name].totals[f.label] = (div.agents[name].totals[f.label] || 0) + v;
-      div.totals[f.label] = (div.totals[f.label] || 0) + v;
-    });
+// Everything the charts need for one division in one month
+function crmDivisionStats(entries, brand, month) {
+  const mine = entries.filter(e => e.brand === brand);
+  const inMonth = mine.filter(e => e.month === month);
+  const nums = crmNumLabels();
+  const totals = sumVals(inMonth, nums);
+  const dim = daysInMonth(month);
+
+  const byDay = {};
+  inMonth.forEach(e => { (byDay[e.day] = byDay[e.day] || []).push(e); });
+  const daily = Array.from({ length: dim }, (_, i) => {
+    const date = `${month}-${String(i + 1).padStart(2, '0')}`;
+    const t = sumVals(byDay[date] || [], [CRM_CALLS, CRM_CONV, CRM_SALES]);
+    return { day: i + 1, date, sales: t[CRM_SALES], conv: t[CRM_CONV], calls: t[CRM_CALLS] };
+  });
+  const peakDay = daily.reduce((b, d) => (d.sales > (b ? b.sales : 0) ? d : b), null);
+
+  // Weeks: 1–7, 8–14, 15–21, 22–28, 29–end
+  const weeks = Array.from({ length: Math.ceil(dim / 7) }, (_, i) => {
+    const from = i * 7 + 1, to = Math.min((i + 1) * 7, dim);
+    const ds = daily.filter(d => d.day >= from && d.day <= to);
+    const sales = ds.reduce((s, d) => s + d.sales, 0);
+    const conv = ds.reduce((s, d) => s + d.conv, 0);
+    const calls = ds.reduce((s, d) => s + d.calls, 0);
+    return { n: i + 1, from, to, sales, conv, calls, share: totals[CRM_SALES] > 0 ? (sales / totals[CRM_SALES]) * 100 : null };
+  });
+  const bestWeek = weeks.reduce((b, w) => (w.sales > (b ? b.sales : 0) ? w : b), null);
+
+  const trend = [-5, -4, -3, -2, -1, 0].map(k => {
+    const m = shiftMonth(month, k);
+    const t = sumVals(mine.filter(e => e.month === m), [CRM_CALLS, CRM_CONV, CRM_SALES]);
+    return { month: m, label: monthLabel(m), rate: pct(t[CRM_CONV], t[CRM_CALLS]), sales: t[CRM_SALES] };
   });
 
   return {
-    fields,
-    divisions: divisions.map(d => ({
-      brand: d.brand,
-      totals: d.totals,
-      activeDays: d.days.size,
-      agents: Object.values(d.agents)
-        .map(a => ({ name: a.name, days: a.days.size, totals: a.totals }))
-        .sort((x, y) => x.name.localeCompare(y.name)),
-    })),
+    brand, month, totals,
+    rate: pct(totals[CRM_CONV], totals[CRM_CALLS]),
+    prevRate: trend[4].rate,
+    prevLabel: trend[4].label,
+    activeDays: new Set(inMonth.map(e => e.day)).size,
+    daily, peakDay, weeks, bestWeek, trend,
   };
 }
 
-function downloadCRMMonthlyCSV(reports, month, allowedFields) {
-  const { fields, divisions } = aggregateCRMMonth(reports, month, allowedFields);
-  const showRate = crmShowRate(fields);
+// Rows for the CSV export: type = summary | weekly | daily | agent
+function buildCRMCsvRows(entries, { type, division, fromMonth, toMonth, allowedFields }) {
+  let from = fromMonth, to = toMonth;
+  if (from > to) { const t = from; from = to; to = t; }
+  const months = [];
+  for (let m = from; m <= to && months.length < 24; m = shiftMonth(m, 1)) months.push(m);
+  const brands = division === 'All' ? CRM_BRANDS : [division];
+  const fields = visibleNums(allowedFields);
+  const hasSales = fields.includes(CRM_SALES);
+  const hasRate = fields.includes(CRM_CALLS) && fields.includes(CRM_CONV);
+  const rateOf = t => { const p = pct(t[CRM_CONV], t[CRM_CALLS]); return p === null ? '' : p.toFixed(1); };
+  const pad = n => String(n).padStart(2, '0');
+  const header = [];
+  const rows = [];
+
+  if (type === 'summary') {
+    header.push('Division', 'Month', 'Active Days', ...fields);
+    if (hasRate) header.push('Conversion %');
+    if (hasSales) header.push('Peak Sales Day', 'Peak Day Sales', 'Best Week', 'Best Week Sales', 'Best Week % of Month');
+    brands.forEach(brand => months.forEach(month => {
+      const st = crmDivisionStats(entries, brand, month);
+      if (!st.activeDays) return;
+      const row = [brand, month, st.activeDays, ...fields.map(f => st.totals[f] || 0)];
+      if (hasRate) row.push(rateOf(st.totals));
+      if (hasSales) row.push(
+        st.peakDay ? st.peakDay.date : '', st.peakDay ? st.peakDay.sales : '',
+        st.bestWeek ? `Week ${st.bestWeek.n} (${st.bestWeek.from}-${st.bestWeek.to})` : '',
+        st.bestWeek ? st.bestWeek.sales : '',
+        st.bestWeek && st.bestWeek.share !== null ? st.bestWeek.share.toFixed(1) : ''
+      );
+      rows.push(row);
+    }));
+  }
+
+  if (type === 'weekly') {
+    header.push('Division', 'Month', 'Week', 'Dates');
+    if (fields.includes(CRM_CALLS)) header.push(CRM_CALLS);
+    if (fields.includes(CRM_CONV)) header.push(CRM_CONV);
+    if (hasRate) header.push('Conversion %');
+    if (hasSales) header.push(CRM_SALES, '% of Month Sales');
+    brands.forEach(brand => months.forEach(month => {
+      const st = crmDivisionStats(entries, brand, month);
+      if (!st.activeDays) return;
+      st.weeks.forEach(w => {
+        const row = [brand, month, `Week ${w.n}`, `${month}-${pad(w.from)} to ${month}-${pad(w.to)}`];
+        if (fields.includes(CRM_CALLS)) row.push(w.calls);
+        if (fields.includes(CRM_CONV)) row.push(w.conv);
+        if (hasRate) { const p = pct(w.conv, w.calls); row.push(p === null ? '' : p.toFixed(1)); }
+        if (hasSales) row.push(w.sales, w.share === null ? '' : w.share.toFixed(1));
+        rows.push(row);
+      });
+    }));
+  }
+
+  if (type === 'daily') {
+    header.push('Division', 'Date', 'Agents Reported', ...fields);
+    if (hasRate) header.push('Conversion %');
+    brands.forEach(brand => {
+      const mine = entries.filter(e => e.brand === brand && e.month >= from && e.month <= to);
+      [...new Set(mine.map(e => e.day))].sort().forEach(day => {
+        const es = mine.filter(e => e.day === day);
+        const t = sumVals(es, fields);
+        const row = [brand, day, new Set(es.map(e => e.agent)).size, ...fields.map(f => t[f] || 0)];
+        if (hasRate) row.push(rateOf(t));
+        rows.push(row);
+      });
+    });
+  }
+
+  if (type === 'agent') {
+    header.push('Division', 'Month', 'Agent', 'Days Reported', ...fields);
+    if (hasRate) header.push('Conversion %');
+    brands.forEach(brand => months.forEach(month => {
+      const es = entries.filter(e => e.brand === brand && e.month === month);
+      if (!es.length) return;
+      [...new Set(es.map(e => e.agent))].sort((a, b) => a.localeCompare(b)).forEach(agent => {
+        const mine = es.filter(e => e.agent === agent);
+        const t = sumVals(mine, fields);
+        const row = [brand, month, agent, new Set(mine.map(e => e.day)).size, ...fields.map(f => t[f] || 0)];
+        if (hasRate) row.push(rateOf(t));
+        rows.push(row);
+      });
+      const t = sumVals(es, fields);
+      const total = [brand, month, 'TOTAL', new Set(es.map(e => e.day)).size, ...fields.map(f => t[f] || 0)];
+      if (hasRate) total.push(rateOf(t));
+      rows.push(total);
+    }));
+  }
+
+  return { header, rows, from, to };
+}
+
+function downloadCRMCsv(entries, opts) {
+  const { header, rows, from, to } = buildCRMCsvRows(entries, opts);
+  if (!rows.length) { alert('No CRM reports found for these filters.'); return; }
   const q = v => `"${String(v ?? '').replace(/"/g, '""')}"`;
-  const lines = [['Division', 'Agent', 'Days Reported', ...fields.map(f => f.label), ...(showRate ? ['Conversion %'] : [])].map(q).join(',')];
-
-  divisions.forEach(d => {
-    d.agents.forEach(a => lines.push(
-      [d.brand, a.name, a.days, ...fields.map(f => a.totals[f.label] || 0), ...(showRate ? [crmRate(a.totals) ?? ''] : [])].map(q).join(',')
-    ));
-    if (d.agents.length) lines.push(
-      [d.brand, 'TOTAL', d.activeDays, ...fields.map(f => d.totals[f.label] || 0), ...(showRate ? [crmRate(d.totals) ?? ''] : [])].map(q).join(',')
-    );
-  });
-
-  if (lines.length === 1) { alert('No CRM reports for this month.'); return; }
-  const blob = new Blob(['\uFEFF' + lines.join('\n')], { type: 'text/csv;charset=utf-8;' });
+  const csv = [header, ...rows].map(r => r.map(q).join(',')).join('\n');
+  const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
   const url = URL.createObjectURL(blob);
   const link = document.createElement('a');
   link.href = url;
-  link.download = `CRM_Monthly_${month}.csv`;
+  link.download = `CRM_${opts.type}_${opts.division}_${from}_to_${to}.csv`;
   link.click();
   URL.revokeObjectURL(url);
 }
 
-function CRMMonthlyReport({ reports, month, allowedFields }) {
-  const { fields, divisions } = aggregateCRMMonth(reports, month, allowedFields);
-  const showRate = crmShowRate(fields);
-  const badge = { AYUSH: 'bg-emerald-600', Bioclean: 'bg-blue-600', Theertha: 'bg-purple-600' };
-  const fmt = v => (v > 0 ? v.toLocaleString('en-IN') : <span className="text-slate-300">—</span>);
-  const rateChip = rate => rate === null
-    ? <span className="text-slate-300">—</span>
-    : <span className={`px-2 py-1 rounded-lg text-xs font-black ${parseFloat(rate) >= 50 ? 'bg-emerald-100 text-emerald-700' : parseFloat(rate) >= 25 ? 'bg-amber-100 text-amber-700' : 'bg-red-100 text-red-600'}`}>{rate}%</span>;
+// Agent-wise monthly table data (one block per division)
+function crmAgentTable(entries, month, allowedFields) {
+  const fields = visibleNums(allowedFields);
+  const divisions = CRM_BRANDS.map(brand => {
+    const es = entries.filter(e => e.brand === brand && e.month === month);
+    const byAgent = {};
+    es.forEach(e => {
+      if (!byAgent[e.agent]) byAgent[e.agent] = { name: e.agent, days: new Set(), list: [] };
+      byAgent[e.agent].days.add(e.day);
+      byAgent[e.agent].list.push(e);
+    });
+    return {
+      brand,
+      totals: sumVals(es, fields),
+      activeDays: new Set(es.map(e => e.day)).size,
+      agents: Object.values(byAgent)
+        .map(a => ({ name: a.name, days: a.days.size, totals: sumVals(a.list, fields) }))
+        .sort((x, y) => x.name.localeCompare(y.name)),
+    };
+  });
+  return { fields, divisions };
+}
 
-  if (!divisions.some(d => d.agents.length > 0)) {
+// ── Charts (plain SVG — no extra library) ────────────────────────────────────
+function BarChart({ items, color = '#6366f1', highlight = -1, showValues = false, valueLines = 1, fmt = v => String(v), W = 360, H = 170 }) {
+  const padL = 8, padR = 8, padT = showValues ? 12 + valueLines * 13 : 10, padB = 24;
+  const max = Math.max(0, ...items.map(i => i.value));
+  const n = items.length || 1;
+  const slot = (W - padL - padR) / n;
+  const barW = Math.min(slot * 0.68, 56);
+  const chartH = H - padT - padB;
+  return (
+    <svg viewBox={`0 0 ${W} ${H}`} className="w-full h-auto" role="img" aria-label="Bar chart">
+      <line x1={padL} x2={W - padR} y1={H - padB} y2={H - padB} stroke="#e2e8f0" />
+      {items.map((it, i) => {
+        const h = max > 0 ? (it.value / max) * chartH : 0;
+        const x = padL + slot * i + (slot - barW) / 2;
+        const y = H - padB - h;
+        const lines = showValues && it.value > 0 ? [].concat(it.top ?? fmt(it.value)).filter(Boolean) : [];
+        return (
+          <g key={i}>
+            <title>{`${it.label}: ${fmt(it.value)}${it.sub ? ' · ' + it.sub : ''}`}</title>
+            {it.value > 0 && <rect x={x} y={y} width={barW} height={Math.max(h, 2)} rx="4" fill={i === highlight ? '#f59e0b' : color} />}
+            {lines.map((t, li) => (
+              <text key={li} x={x + barW / 2} y={y - 6 - (lines.length - 1 - li) * 13} textAnchor="middle" fontSize="11" fontWeight="700" fill="#334155">{t}</text>
+            ))}
+            <text x={x + barW / 2} y={H - 8} textAnchor="middle" fontSize="10" fill={i === highlight ? '#b45309' : '#94a3b8'} fontWeight={i === highlight ? 700 : 400}>{it.short ?? it.label}</text>
+          </g>
+        );
+      })}
+    </svg>
+  );
+}
+
+function LineChart({ points, color = '#6366f1', W = 380, H = 190 }) {
+  const padL = 34, padR = 16, padT = 26, padB = 30;
+  const vals = points.map(p => p.value).filter(v => v !== null);
+  const top = Math.max(10, Math.ceil(Math.max(0, ...vals) / 10) * 10);
+  const n = points.length;
+  const x = i => padL + (n === 1 ? (W - padL - padR) / 2 : (i / (n - 1)) * (W - padL - padR));
+  const y = v => padT + (1 - v / top) * (H - padT - padB);
+  const pts = points.map((p, i) => (p.value === null ? null : { x: x(i), y: y(p.value), p, i })).filter(Boolean);
+  const path = pts.map((q, k) => `${k === 0 ? 'M' : 'L'}${q.x.toFixed(1)} ${q.y.toFixed(1)}`).join(' ');
+  return (
+    <svg viewBox={`0 0 ${W} ${H}`} className="w-full h-auto" role="img" aria-label="Conversion trend">
+      {[0, 0.5, 1].map(f => (
+        <g key={f}>
+          <line x1={padL} x2={W - padR} y1={y(top * f)} y2={y(top * f)} stroke="#f1f5f9" />
+          <text x={padL - 6} y={y(top * f) + 3} textAnchor="end" fontSize="9" fill="#94a3b8">{Math.round(top * f)}%</text>
+        </g>
+      ))}
+      {pts.length > 1 && <path d={path} fill="none" stroke={color} strokeWidth="2.5" strokeLinejoin="round" strokeLinecap="round" />}
+      {pts.map(q => (
+        <g key={q.i}>
+          <title>{`${q.p.label}: ${q.p.value.toFixed(1)}%`}</title>
+          <circle cx={q.x} cy={q.y} r={q.i === n - 1 ? 5 : 3.5} fill={q.i === n - 1 ? color : '#fff'} stroke={color} strokeWidth="2" />
+          <text x={q.x} y={q.y - 9} textAnchor="middle" fontSize="10" fontWeight="700" fill="#334155">{q.p.value.toFixed(1)}%</text>
+        </g>
+      ))}
+      {points.map((p, i) => (
+        <text key={i} x={x(i)} y={H - 10} textAnchor="middle" fontSize="10" fill={i === n - 1 ? '#334155' : '#94a3b8'} fontWeight={i === n - 1 ? 700 : 400}>{p.label}</text>
+      ))}
+    </svg>
+  );
+}
+
+// ── One division's analytics card ────────────────────────────────────────────
+function CRMDivisionCard({ stats, canSales, canRate }) {
+  const color = CRM_COLORS[stats.brand];
+  const kpi = (label, value, sub, tone) => (
+    <div className="bg-slate-50 border border-slate-200 rounded-xl p-3 min-w-0">
+      <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">{label}</p>
+      <p className={`text-lg sm:text-xl font-black mt-1 truncate ${tone || 'text-slate-900'}`}>{value}</p>
+      {sub && <p className="text-[11px] font-semibold text-slate-400 mt-0.5">{sub}</p>}
+    </div>
+  );
+  const header = (
+    <div className="px-5 py-3 border-b border-slate-100 flex items-center gap-3 flex-wrap">
+      <span className={`px-3 py-1 rounded-full text-xs font-black text-white ${CRM_BADGE[stats.brand]}`}>{stats.brand}</span>
+      <span className="text-slate-400 text-xs font-semibold">{monthLabel(stats.month, true)}</span>
+    </div>
+  );
+
+  if (!stats.activeDays) {
     return (
-      <div className="flex flex-col items-center justify-center py-20 text-slate-400">
+      <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden">
+        {header}
+        <p className="px-5 py-6 text-sm text-slate-400 italic">No reports for {stats.brand} in {monthLabel(stats.month, true)}.</p>
+      </div>
+    );
+  }
+
+  const delta = stats.rate !== null && stats.prevRate !== null ? stats.rate - stats.prevRate : null;
+  const rateTone = stats.rate === null ? '' : stats.rate >= 50 ? 'text-emerald-600' : stats.rate >= 25 ? 'text-amber-600' : 'text-red-500';
+  const peak = stats.peakDay;
+  const best = stats.bestWeek;
+  const peakLabel = peak ? new Date(peak.date + 'T00:00:00').toLocaleDateString('en-IN', { day: 'numeric', month: 'short', weekday: 'short' }) : '—';
+
+  return (
+    <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden">
+      {header}
+      <div className="p-4 sm:p-5 space-y-5">
+
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+          {canSales && kpi('Month Sales', inr(stats.totals[CRM_SALES]), `${stats.activeDays} active day${stats.activeDays !== 1 ? 's' : ''}`)}
+          {canRate && kpi('Conversion',
+            stats.rate === null ? '—' : `${stats.rate.toFixed(1)}%`,
+            <>
+              {stats.totals[CRM_CONV]} of {stats.totals[CRM_CALLS]} calls
+              {delta !== null && (
+                <span className={`block ${delta >= 0 ? 'text-emerald-600' : 'text-red-500'}`}>
+                  {delta >= 0 ? '▲' : '▼'} {Math.abs(delta).toFixed(1)} pts vs {stats.prevLabel}
+                </span>
+              )}
+            </>, rateTone)}
+          {canSales && kpi('Highest Sale Day', peak ? peakLabel : '—', peak ? `${inr(peak.sales)} · ${peak.conv} conversions` : 'No sales recorded')}
+          {canSales && kpi('Best Week', best ? `Week ${best.n} (${best.from}–${best.to})` : '—',
+            best ? `${inr(best.sales)}${best.share !== null ? ` · ${best.share.toFixed(0)}% of month` : ''}` : 'No sales recorded')}
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          {canRate && (
+            <div className="border border-slate-200 rounded-xl p-4">
+              <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">Conversion % · last 6 months</p>
+              <LineChart color={color} points={stats.trend.map(t => ({ label: t.label, value: t.rate }))} />
+            </div>
+          )}
+          {canSales && (
+            <div className="border border-slate-200 rounded-xl p-4">
+              <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">Sales by week · amount and % of month</p>
+              <BarChart color={color} showValues valueLines={2} highlight={best ? best.n - 1 : -1}
+                items={stats.weeks.map(w => ({
+                  label: `Week ${w.n} (${w.from}–${w.to})`, short: `W${w.n}`, value: w.sales,
+                  top: [inrShort(w.sales), w.share === null ? '' : `${w.share.toFixed(0)}%`], sub: `${w.conv} conversions`,
+                }))}
+                fmt={inr} />
+            </div>
+          )}
+        </div>
+
+        {canSales && (
+          <div className="border border-slate-200 rounded-xl p-4">
+            <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">Daily sales · highest day in amber</p>
+            <div className="overflow-x-auto">
+              <div className="min-w-[520px]">
+                <BarChart color={color} W={620} H={170} highlight={peak ? peak.day - 1 : -1} fmt={inr}
+                  items={stats.daily.map(d => ({
+                    label: new Date(d.date + 'T00:00:00').toLocaleDateString('en-IN', { day: 'numeric', month: 'short' }),
+                    short: String(d.day), value: d.sales, sub: `${d.conv} conversions`,
+                  }))} />
+              </div>
+            </div>
+          </div>
+        )}
+
+        {canSales && (
+          <div className="overflow-x-auto rounded-xl border border-slate-200">
+            <table className="w-full text-sm min-w-max">
+              <thead className="bg-slate-900 text-white">
+                <tr>
+                  {['Week', 'Dates', 'Sales', '% of Month', 'Conversions', ...(canRate ? ['Conversion %'] : [])].map(h => (
+                    <th key={h} className="px-4 py-2.5 text-[10px] uppercase tracking-widest font-black text-left whitespace-nowrap">{h}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {stats.weeks.map(w => {
+                  const wr = pct(w.conv, w.calls);
+                  return (
+                    <tr key={w.n} className={best && best.n === w.n ? 'bg-amber-50/60' : ''}>
+                      <td className="px-4 py-2.5 font-bold text-slate-900 whitespace-nowrap">Week {w.n}{best && best.n === w.n ? ' ★' : ''}</td>
+                      <td className="px-4 py-2.5 text-slate-500 whitespace-nowrap">{w.from}–{w.to} {monthLabel(stats.month)}</td>
+                      <td className="px-4 py-2.5 font-semibold text-slate-700 tabular-nums">{inr(w.sales)}</td>
+                      <td className="px-4 py-2.5 min-w-[130px]">
+                        <div className="flex items-center gap-2">
+                          <div className="flex-1 h-1.5 bg-slate-100 rounded-full overflow-hidden">
+                            <div className="h-full rounded-full" style={{ width: `${w.share || 0}%`, background: color }} />
+                          </div>
+                          <span className="text-xs font-bold text-slate-600 tabular-nums w-10 text-right">{w.share === null ? '—' : `${w.share.toFixed(1)}%`}</span>
+                        </div>
+                      </td>
+                      <td className="px-4 py-2.5 text-slate-700 font-semibold tabular-nums">{w.conv}</td>
+                      {canRate && <td className="px-4 py-2.5 text-slate-500 font-semibold tabular-nums">{wr === null ? '—' : `${wr.toFixed(1)}%`}</td>}
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
+
+        {!canSales && (
+          <p className="text-xs text-slate-400 italic">Sales value isn't included in your field access, so sales charts are hidden.</p>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function CRMAnalytics({ entries, month, brands, allowedFields }) {
+  const canSales = !allowedFields || allowedFields.includes(CRM_SALES);
+  const canRate = !allowedFields || (allowedFields.includes(CRM_CALLS) && allowedFields.includes(CRM_CONV));
+  if (!canSales && !canRate) return null;
+  return (
+    <div className="p-4 md:p-6 space-y-5 bg-slate-50 border-b border-slate-200">
+      {brands.map(b => (
+        <CRMDivisionCard key={b} stats={crmDivisionStats(entries, b, month)} canSales={canSales} canRate={canRate} />
+      ))}
+    </div>
+  );
+}
+
+// ── Agent-wise table for the month ───────────────────────────────────────────
+function CRMMonthlyReport({ entries, month, brands, allowedFields }) {
+  const { fields, divisions } = crmAgentTable(entries, month, allowedFields);
+  const shown = divisions.filter(d => brands.includes(d.brand));
+  const showRate = fields.includes(CRM_CALLS) && fields.includes(CRM_CONV);
+  const fmt = v => (v > 0 ? v.toLocaleString('en-IN') : <span className="text-slate-300">—</span>);
+  const rateChip = t => {
+    const p = pct(t[CRM_CONV], t[CRM_CALLS]);
+    return p === null
+      ? <span className="text-slate-300">—</span>
+      : <span className={`px-2 py-1 rounded-lg text-xs font-black ${p >= 50 ? 'bg-emerald-100 text-emerald-700' : p >= 25 ? 'bg-amber-100 text-amber-700' : 'bg-red-100 text-red-600'}`}>{p.toFixed(1)}%</span>;
+  };
+
+  if (!shown.some(d => d.agents.length > 0)) {
+    return (
+      <div className="flex flex-col items-center justify-center py-16 text-slate-400">
         <div className="text-5xl mb-4">📋</div>
         <p className="font-semibold text-lg">No CRM reports for this month</p>
       </div>
@@ -567,10 +923,10 @@ function CRMMonthlyReport({ reports, month, allowedFields }) {
 
   return (
     <div className="divide-y divide-slate-100">
-      {divisions.map(div => (
+      {shown.map(div => (
         <div key={div.brand}>
           <div className="px-6 py-3 bg-slate-50 border-b border-slate-200 flex items-center gap-3 flex-wrap">
-            <span className={`px-3 py-1 rounded-full text-xs font-black text-white ${badge[div.brand]}`}>{div.brand}</span>
+            <span className={`px-3 py-1 rounded-full text-xs font-black text-white ${CRM_BADGE[div.brand]}`}>{div.brand}</span>
             <span className="text-slate-400 text-xs">
               {div.agents.length} agent{div.agents.length !== 1 ? 's' : ''} · {div.activeDays} active day{div.activeDays !== 1 ? 's' : ''}
             </span>
@@ -586,7 +942,7 @@ function CRMMonthlyReport({ reports, month, allowedFields }) {
                     <th className="px-5 py-3 text-[10px] uppercase tracking-widest font-black sticky left-0 bg-slate-900 z-10 min-w-[160px]">Agent Name</th>
                     <th className="px-5 py-3 text-[10px] uppercase tracking-widest font-black whitespace-nowrap">Days Reported</th>
                     {fields.map(f => (
-                      <th key={f.label} className="px-5 py-3 text-[10px] uppercase tracking-widest font-black whitespace-nowrap">{f.label}</th>
+                      <th key={f} className="px-5 py-3 text-[10px] uppercase tracking-widest font-black whitespace-nowrap">{f}</th>
                     ))}
                     {showRate && <th className="px-5 py-3 text-[10px] uppercase tracking-widest font-black whitespace-nowrap">Conversion %</th>}
                   </tr>
@@ -597,9 +953,9 @@ function CRMMonthlyReport({ reports, month, allowedFields }) {
                       <td className="px-5 py-4 font-bold text-slate-900 sticky left-0 bg-white group-hover:bg-blue-50/60 z-10">{a.name}</td>
                       <td className="px-5 py-4 text-slate-500 font-semibold tabular-nums">{a.days}</td>
                       {fields.map(f => (
-                        <td key={f.label} className="px-5 py-4 text-slate-700 font-semibold tabular-nums">{fmt(a.totals[f.label] || 0)}</td>
+                        <td key={f} className="px-5 py-4 text-slate-700 font-semibold tabular-nums">{fmt(a.totals[f] || 0)}</td>
                       ))}
-                      {showRate && <td className="px-5 py-4">{rateChip(crmRate(a.totals))}</td>}
+                      {showRate && <td className="px-5 py-4">{rateChip(a.totals)}</td>}
                     </tr>
                   ))}
                 </tbody>
@@ -608,9 +964,9 @@ function CRMMonthlyReport({ reports, month, allowedFields }) {
                     <td className="px-5 py-3 font-black text-slate-900 uppercase text-xs tracking-wider sticky left-0 bg-slate-50 z-10">Total</td>
                     <td className="px-5 py-3 font-black text-slate-900 tabular-nums">{div.activeDays}</td>
                     {fields.map(f => (
-                      <td key={f.label} className="px-5 py-3 font-black text-slate-900 tabular-nums">{fmt(div.totals[f.label] || 0)}</td>
+                      <td key={f} className="px-5 py-3 font-black text-slate-900 tabular-nums">{fmt(div.totals[f] || 0)}</td>
                     ))}
-                    {showRate && <td className="px-5 py-3">{rateChip(crmRate(div.totals))}</td>}
+                    {showRate && <td className="px-5 py-3">{rateChip(div.totals)}</td>}
                   </tr>
                 </tfoot>
               </table>
@@ -643,7 +999,7 @@ function AgentDrillModal({ agent, dept, allowedFields, onClose, onEditReport, on
             <div>
               <span className="bg-blue-600 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-tighter">{dept}</span>
               <h3 className="text-2xl font-black mt-3">{agent.staffName}</h3>
-              <p className="text-slate-400 text-sm">{agent.entries.length} {agent.entries.length === 1 ? 'entry' : 'entries'} today</p>
+              <p className="text-slate-400 text-sm">{agent.entries.length} {agent.entries.length === 1 ? 'entry' : 'entries'} on this date</p>
               {allowedFields && (
                 <p className="text-slate-500 text-[10px] mt-1">Showing {allowedFields.length} of {(departmentConfig[dept] || []).length} fields</p>
               )}
@@ -658,9 +1014,14 @@ function AgentDrillModal({ agent, dept, allowedFields, onClose, onEditReport, on
             <div>
               <button onClick={() => setSelectedEntry(null)} className="text-blue-600 font-bold text-sm mb-6 hover:underline">← Back to all entries</button>
               <p className="text-xs text-slate-400 font-bold uppercase tracking-wider mb-1">
-                {new Date(selectedEntry.createdAt).toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long' })}
+                {new Date(reportDay(selectedEntry) + 'T00:00:00').toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long' })}
               </p>
               <p className="font-black text-slate-900 text-xl mb-2">{selectedEntry.title}</p>
+              {selectedEntry.isLate && (
+                <p className="text-[10px] font-bold text-amber-600 mb-2">
+                  ⏰ Late entry — submitted on {new Date(selectedEntry.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })} at {new Date(selectedEntry.createdAt).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}
+                </p>
+              )}
               {selectedEntry.isEdited && (
                 <p className="text-[10px] font-bold text-blue-500 mb-6">
                   ✏️ Edited by {selectedEntry.editedBy} · {new Date(selectedEntry.editedAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })} {new Date(selectedEntry.editedAt).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}
@@ -765,7 +1126,7 @@ function AgentDrillModal({ agent, dept, allowedFields, onClose, onEditReport, on
             </div>
           ) : (
             <div>
-              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4">All Entries Today</p>
+              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4">All Entries on this Date</p>
               <div className="space-y-3">
                 {agent.entries.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)).map(entry => (
                   <button key={entry._id} onClick={() => setSelectedEntry(entry)}
@@ -774,6 +1135,9 @@ function AgentDrillModal({ agent, dept, allowedFields, onClose, onEditReport, on
                       <div>
                         <div className="flex items-center gap-2 flex-wrap">
                           <p className="font-bold text-slate-900 group-hover:text-blue-700">{entry.title}</p>
+                          {entry.isLate && (
+                            <span className="text-[10px] font-black text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full">⏰ Late</span>
+                          )}
                           {entry.isEdited && (
                             <span className="text-[10px] font-black text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full">✏️ Edited</span>
                           )}
@@ -825,7 +1189,7 @@ function AgentDrillModal({ agent, dept, allowedFields, onClose, onEditReport, on
 }
 
 // ── Assistant Sales Manager Form ─────────────────────────────────────────────
-function SalesManagerForm({ reportTitle, setReportTitle, onSubmit, onClose }) {
+function SalesManagerForm({ reportTitle, setReportTitle, onSubmit, onClose, isSaving }) {
   const [reportType, setReportType] = useState('Outlet Sales');
   const [outletSalesRows, setOutletSalesRows] = useState([{ outlet: '', district: '', totalSales: '' }]);
   const [outletPurchaseRows, setOutletPurchaseRows] = useState([{ outlet: '', district: '', totalSales: '' }]);
@@ -1021,14 +1385,14 @@ function SalesManagerForm({ reportTitle, setReportTitle, onSubmit, onClose }) {
 
       <div className="flex justify-end gap-4 pt-4">
         <button type="button" onClick={onClose} className="px-6 py-3 text-slate-400 font-bold">Cancel</button>
-        <button type="submit" className="px-10 py-4 bg-blue-600 text-white rounded-2xl font-bold hover:bg-blue-700 transition shadow-lg">Save Entry</button>
+        <button type="submit" disabled={isSaving} className="px-10 py-4 bg-blue-600 text-white rounded-2xl font-bold hover:bg-blue-700 transition shadow-lg disabled:opacity-60 disabled:cursor-not-allowed">{isSaving ? 'Saving…' : 'Save Entry'}</button>
       </div>
     </form>
   );
 }
 
 // ── Marketing Task Entry Form ─────────────────────────────────────────────────
-function MarketingTaskForm({ reportTitle, setReportTitle, onSubmit, onClose }) {
+function MarketingTaskForm({ reportTitle, setReportTitle, onSubmit, onClose, isSaving }) {
   const [tasks, setTasks] = useState([{ task: '', timeTaken: '' }]);
   const [issues, setIssues] = useState('');
   const [orderStatus, setOrderStatus] = useState('');
@@ -1107,7 +1471,7 @@ function MarketingTaskForm({ reportTitle, setReportTitle, onSubmit, onClose }) {
 
       <div className="flex justify-end gap-4 pt-4">
         <button type="button" onClick={onClose} className="px-6 py-3 text-slate-400 font-bold">Cancel</button>
-        <button type="submit" className="px-10 py-4 bg-blue-600 text-white rounded-2xl font-bold hover:bg-blue-700 transition shadow-lg">Save Entry</button>
+        <button type="submit" disabled={isSaving} className="px-10 py-4 bg-blue-600 text-white rounded-2xl font-bold hover:bg-blue-700 transition shadow-lg disabled:opacity-60 disabled:cursor-not-allowed">{isSaving ? 'Saving…' : 'Save Entry'}</button>
       </div>
     </form>
   );
@@ -1131,6 +1495,15 @@ export default function Dashboard() {
   const [editData, setEditData] = useState({});
   const [viewMode, setViewMode] = useState('daily');
   const [selectedMonth, setSelectedMonth] = useState(todayYMD().slice(0, 7));
+  const [isSaving, setIsSaving] = useState(false);
+  const [reportDate, setReportDate] = useState(todayYMD());
+  const [clientId, setClientId] = useState('');
+  const [crmDivision, setCrmDivision] = useState('All');
+  const [exportOpen, setExportOpen] = useState(false);
+  const [exportType, setExportType] = useState('summary');
+  const [exportDivision, setExportDivision] = useState('All');
+  const [exportFrom, setExportFrom] = useState(todayYMD().slice(0, 7));
+  const [exportTo, setExportTo] = useState(todayYMD().slice(0, 7));
 
   const dept     = localStorage.getItem('dept');
   const role     = localStorage.getItem('role');
@@ -1169,13 +1542,28 @@ const viewableDepts = (role === 'superadmin' || role === 'management') ? ALL_DEP
     if (res.ok) setReports(await res.json());
   };
 
-  const handleCreateReport = async (e) => {
-    e.preventDefault();
+  // Opens the "new entry" form. A fresh clientId per opening lets the server ignore accidental repeats of the same save.
+  const openNewEntry = () => {
+    setClientId(
+      typeof crypto !== 'undefined' && crypto.randomUUID
+        ? crypto.randomUUID()
+        : `${Date.now()}-${Math.random().toString(16).slice(2)}`
+    );
+    setReportDate(todayYMD());
+    setReportTitle('');
+    setDynamicData({});
+    setIsMenuOpen(false);
+    setIsModalOpen(true);
+  };
+
+  const submitReport = async (title, data) => {
+    if (isSaving) return;                         // ignore double-taps while a save is in flight
+    setIsSaving(true);
     try {
       const res = await fetch('https://reporting-structure.onrender.com/api/reports', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${localStorage.getItem('token')}` },
-        body: JSON.stringify({ title: reportTitle, data: dynamicData }),
+        body: JSON.stringify({ title, data, reportDate, clientId }),
       });
       if (res.ok) {
         setIsModalOpen(false); setReportTitle(''); setDynamicData({}); fetchReports();
@@ -1185,8 +1573,17 @@ const viewableDepts = (role === 'superadmin' || role === 'management') ? ALL_DEP
         else alert(`Failed to save: ${d.msg || 'Unknown error'}`);
       }
     } catch {
-      alert('Network error — please check your connection and try again.');
+      // The same clientId is reused on retry, so tapping Save again can never create a second copy
+      alert('Network problem — your entry has not been lost. Check your connection and tap Save again.');
+      fetchReports().catch(() => {});
+    } finally {
+      setIsSaving(false);
     }
+  };
+
+  const handleCreateReport = (e) => {
+    e.preventDefault();
+    submitReport(reportTitle, dynamicData);
   };
 
   const handleEditReport = async (e) => {
@@ -1248,7 +1645,7 @@ const filteredReports = useMemo(() => reports.filter(r => {
   if (role === 'staff' && r.staffName !== userName) return false;
   const matchesSearch = r.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
     (r.staffName && r.staffName.toLowerCase().includes(searchQuery.toLowerCase()));
- const matchesDate = !selectedDate || toYMD(new Date(r.createdAt)) === selectedDate;
+ const matchesDate = !selectedDate || reportDay(r) === selectedDate;
   return matchesSearch && matchesDate;
 }), [reports, searchQuery, selectedDate, role, userName]);  
 
@@ -1261,6 +1658,9 @@ const roleBadge = {
 
   const currentAllowedFields = getAllowedFields(activeDept);
   const isMonthly = viewMode === 'monthly' && activeDept === 'CRM';
+  const crmAllEntries = useMemo(() => crmEntries(reports), [reports]);
+  const crmBrandsShown = crmDivision === 'All' ? CRM_BRANDS : [crmDivision];
+  const existingForDate = reports.filter(r => r.department === dept && r.staffName === userName && reportDay(r) === reportDate).length;
 
   return (
     <div className="h-screen bg-slate-100 flex flex-col md:flex-row font-sans overflow-hidden">
@@ -1332,7 +1732,7 @@ const roleBadge = {
           )}
 
           {role === 'staff' && (
-            <button onClick={() => { setIsMenuOpen(false); setIsModalOpen(true); }}
+            <button onClick={openNewEntry}
               className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl mt-2 transition-all"
               style={{ background: 'linear-gradient(135deg, rgba(16,185,129,0.25), rgba(5,150,105,0.2))', border: '1px solid rgba(16,185,129,0.35)' }}
             >
@@ -1438,11 +1838,60 @@ const roleBadge = {
                         className={`w-6 h-6 rounded-lg bg-slate-50 border border-slate-200 flex items-center justify-center font-black text-base leading-none transition ${selectedMonth >= todayYMD().slice(0, 7) ? 'text-slate-200 cursor-not-allowed' : 'text-slate-500 hover:text-slate-900 hover:bg-slate-100'}`}>›</button>
                     </div>
 
+                    <div className="inline-flex bg-white border border-slate-200 rounded-xl p-1 max-w-full overflow-x-auto">
+                      {['All', ...CRM_BRANDS].map(b => (
+                        <button key={b} onClick={() => setCrmDivision(b)}
+                          className={`px-3 py-1.5 rounded-lg text-xs font-bold whitespace-nowrap transition ${crmDivision === b ? 'bg-slate-900 text-white' : 'text-slate-500 hover:text-slate-900'}`}>
+                          {b}
+                        </button>
+                      ))}
+                    </div>
+
                     {canSeeAdminPanel && (
-                      <button onClick={() => downloadCRMMonthlyCSV(reports, selectedMonth, currentAllowedFields)}
+                      <button
+                        onClick={() => { setExportDivision(crmDivision); setExportFrom(selectedMonth); setExportTo(selectedMonth); setExportOpen(o => !o); }}
                         className="flex items-center gap-2 bg-emerald-600 text-white text-xs font-bold px-4 py-2 rounded-xl hover:bg-emerald-700 transition whitespace-nowrap">
-                        ⬇ Monthly CSV
+                        ⬇ Export CSV
                       </button>
+                    )}
+
+                    {canSeeAdminPanel && exportOpen && (
+                      <div className="basis-full bg-white border border-slate-200 rounded-2xl p-4 grid grid-cols-2 md:grid-cols-5 gap-3 items-end">
+                        <label className="block">
+                          <span className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Division</span>
+                          <select value={exportDivision} onChange={e => setExportDivision(e.target.value)}
+                            className="w-full bg-slate-50 border border-slate-200 p-2.5 rounded-xl text-sm font-semibold outline-none focus:ring-2 focus:ring-blue-500">
+                            {['All', ...CRM_BRANDS].map(b => <option key={b} value={b}>{b === 'All' ? 'All divisions' : b}</option>)}
+                          </select>
+                        </label>
+                        <label className="block">
+                          <span className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">From month</span>
+                          <input type="month" value={exportFrom} max={todayYMD().slice(0, 7)}
+                            onChange={e => e.target.value && setExportFrom(e.target.value)}
+                            className="w-full bg-slate-50 border border-slate-200 p-2.5 rounded-xl text-sm font-semibold outline-none focus:ring-2 focus:ring-blue-500" />
+                        </label>
+                        <label className="block">
+                          <span className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">To month</span>
+                          <input type="month" value={exportTo} max={todayYMD().slice(0, 7)}
+                            onChange={e => e.target.value && setExportTo(e.target.value)}
+                            className="w-full bg-slate-50 border border-slate-200 p-2.5 rounded-xl text-sm font-semibold outline-none focus:ring-2 focus:ring-blue-500" />
+                        </label>
+                        <label className="block col-span-2 md:col-span-1">
+                          <span className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Report</span>
+                          <select value={exportType} onChange={e => setExportType(e.target.value)}
+                            className="w-full bg-slate-50 border border-slate-200 p-2.5 rounded-xl text-sm font-semibold outline-none focus:ring-2 focus:ring-blue-500">
+                            <option value="summary">Monthly summary (peak day, best week)</option>
+                            <option value="weekly">Week-wise sales</option>
+                            <option value="daily">Day-wise</option>
+                            <option value="agent">Agent-wise</option>
+                          </select>
+                        </label>
+                        <button
+                          onClick={() => downloadCRMCsv(crmAllEntries, { type: exportType, division: exportDivision, fromMonth: exportFrom, toMonth: exportTo, allowedFields: currentAllowedFields })}
+                          className="col-span-2 md:col-span-1 bg-slate-900 text-white text-sm font-bold px-4 py-2.5 rounded-xl hover:bg-slate-800 transition">
+                          Download CSV
+                        </button>
+                      </div>
                     )}
                   </>
                 )}
@@ -1465,7 +1914,7 @@ const roleBadge = {
         onClick={() => {
           const deptReports = reports.filter(r =>
   r.department === activeDept &&
-  toYMD(new Date(r.createdAt)) === selectedDay
+  reportDay(r) === selectedDay
 );
           downloadCSV(deptReports, activeDept);
         }}
@@ -1477,7 +1926,11 @@ const roleBadge = {
   </div>
 </div>
               {isMonthly ? (
-                <CRMMonthlyReport reports={reports} month={selectedMonth} allowedFields={currentAllowedFields} />
+                <>
+                  <CRMAnalytics entries={crmAllEntries} month={selectedMonth} brands={crmBrandsShown} allowedFields={currentAllowedFields} />
+                  <div className="px-6 py-3 border-b border-slate-100 text-[10px] font-black uppercase tracking-widest text-slate-400">Agent-wise detail</div>
+                  <CRMMonthlyReport entries={crmAllEntries} month={selectedMonth} brands={crmBrandsShown} allowedFields={currentAllowedFields} />
+                </>
               ) : (
                 <DailyTable
                   reports={reports}
@@ -1490,7 +1943,7 @@ const roleBadge = {
             </div>
 
             <div className="mt-6 flex justify-end">
-              <button onClick={() => setIsModalOpen(true)} className="bg-blue-600 text-white px-8 py-3 rounded-2xl shadow-xl hover:bg-blue-700 transition font-bold active:scale-95">+ New Entry</button>
+              <button onClick={openNewEntry} className="bg-blue-600 text-white px-8 py-3 rounded-2xl shadow-xl hover:bg-blue-700 transition font-bold active:scale-95">+ New Entry</button>
             </div>
           </>
         )}
@@ -1513,7 +1966,7 @@ const roleBadge = {
                     <button onClick={() => { setSearchQuery(''); setSelectedDate(''); }} className="text-xs text-red-500 font-bold hover:underline whitespace-nowrap px-1">Clear</button>
                   )}
                 </div>
-                <button onClick={() => setIsModalOpen(true)} className="bg-blue-600 text-white px-6 py-3 rounded-2xl shadow-xl hover:bg-blue-700 transition font-bold active:scale-95 whitespace-nowrap w-full sm:w-auto">+ New Entry</button>
+                <button onClick={openNewEntry} className="bg-blue-600 text-white px-6 py-3 rounded-2xl shadow-xl hover:bg-blue-700 transition font-bold active:scale-95 whitespace-nowrap w-full sm:w-auto">+ New Entry</button>
               </div>
             </div>
             <div className="bg-white rounded-[2rem] shadow-sm border border-slate-200 overflow-hidden">
@@ -1526,7 +1979,10 @@ const roleBadge = {
                     {filteredReports.map(r => (
                       <tr key={r._id} className="hover:bg-blue-50/30 transition">
                         <td className="p-5 font-bold text-slate-900">{r.title}</td>
-                        <td className="p-5 text-slate-500">{new Date(r.createdAt).toLocaleDateString('en-IN')}</td>
+                        <td className="p-5 text-slate-500">
+                          {new Date(reportDay(r) + 'T00:00:00').toLocaleDateString('en-IN')}
+                          {r.isLate && <span className="ml-2 text-[10px] font-black text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full">⏰ Late</span>}
+                        </td>
                         <td className="p-5 text-center">
                           <button onClick={() => setSelectedReport(r)} className="bg-slate-100 text-slate-700 px-5 py-2 rounded-xl text-xs font-bold hover:bg-slate-900 hover:text-white transition">View</button>
                         </td>
@@ -1546,36 +2002,40 @@ const roleBadge = {
 {isModalOpen && (
   <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-md flex items-center justify-center p-4 z-50">
     <div className="bg-white rounded-[2.5rem] p-8 md:p-10 w-full max-w-2xl max-h-[90vh] overflow-y-auto shadow-2xl">
-     <h2 className="text-3xl font-black text-slate-900 mb-8">{dept} Report</h2> 
+     <h2 className="text-3xl font-black text-slate-900 mb-6">{dept} Report</h2>
+
+      <div className="mb-6 space-y-2">
+        <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest">Report Date</label>
+        <input type="date" value={reportDate}
+          min={shiftDate(todayYMD(), -MAX_BACKDATE_DAYS)} max={todayYMD()}
+          onChange={e => setReportDate(e.target.value || todayYMD())}
+          className="w-full sm:w-56 bg-slate-50 border border-slate-200 p-3 rounded-2xl outline-none focus:ring-2 focus:ring-blue-500 font-semibold" />
+        {reportDate !== todayYMD() && (
+          <p className="text-xs font-bold text-amber-700 bg-amber-50 border border-amber-200 rounded-xl px-3 py-2">
+            ⏰ Late entry — this will be filed under {new Date(reportDate + 'T00:00:00').toLocaleDateString('en-IN', { day: 'numeric', month: 'long' })} and marked as late.
+          </p>
+        )}
+        {existingForDate > 0 && (
+          <p className="text-xs font-bold text-blue-700 bg-blue-50 border border-blue-200 rounded-xl px-3 py-2">
+            ℹ️ You already have {existingForDate} {existingForDate === 1 ? 'entry' : 'entries'} for this date. Saving will add another one.
+          </p>
+        )}
+      </div> 
    {dept === 'Assistant Sales Manager' ? (
   <SalesManagerForm
+    isSaving={isSaving}
     reportTitle={reportTitle}
     setReportTitle={setReportTitle}
     onClose={() => { setIsModalOpen(false); setDynamicData({}); }}
-    onSubmit={async (data) => {
-      const res = await fetch('https://reporting-structure.onrender.com/api/reports', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${localStorage.getItem('token')}` },
-        body: JSON.stringify({ title: reportTitle, data }),
-      });
-      if (res.ok) { setIsModalOpen(false); setReportTitle(''); fetchReports(); }
-      else { const d = await res.json(); alert(`Failed: ${d.msg}`); }
-    }}
+    onSubmit={(data) => submitReport(reportTitle, data)}
   />
 ) : dept === 'Marketing' ? (
   <MarketingTaskForm
+          isSaving={isSaving}
           reportTitle={reportTitle}
           setReportTitle={setReportTitle}
           onClose={() => { setIsModalOpen(false); setDynamicData({}); }}
-          onSubmit={async (data) => {
-            const res = await fetch('https://reporting-structure.onrender.com/api/reports', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${localStorage.getItem('token')}` },
-              body: JSON.stringify({ title: reportTitle, data }),
-            });
-            if (res.ok) { setIsModalOpen(false); setReportTitle(''); fetchReports(); }
-            else { const d = await res.json(); alert(`Failed: ${d.msg}`); }
-          }}
+          onSubmit={(data) => submitReport(reportTitle, data)}
         />
       ) : (
       <form onSubmit={handleCreateReport} className="space-y-6">
@@ -1649,7 +2109,7 @@ const roleBadge = {
         </div>
         <div className="flex justify-end gap-4 pt-4">
           <button type="button" onClick={() => { setIsModalOpen(false); setDynamicData({}); }} className="px-6 py-3 text-slate-400 font-bold">Cancel</button>
-          <button type="submit" className="px-10 py-4 bg-blue-600 text-white rounded-2xl font-bold hover:bg-blue-700 transition shadow-lg">Save Entry</button>
+          <button type="submit" disabled={isSaving} className="px-10 py-4 bg-blue-600 text-white rounded-2xl font-bold hover:bg-blue-700 transition shadow-lg disabled:opacity-60 disabled:cursor-not-allowed">{isSaving ? 'Saving…' : 'Save Entry'}</button>
         </div>
    </form>
       )}
@@ -1677,7 +2137,7 @@ const roleBadge = {
               ))}
               <div className="pt-4 flex justify-between text-[10px] font-bold text-slate-400 uppercase">
                 <span>Entry Date</span>
-                <span>{new Date(selectedReport.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })}</span>
+                <span>{new Date(reportDay(selectedReport) + 'T00:00:00').toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })}{selectedReport.isLate ? ' · late entry' : ''}</span>
               </div>
             </div>
             <div className="p-6 bg-slate-50 border-t border-slate-100 flex-shrink-0">
@@ -1711,7 +2171,7 @@ const roleBadge = {
               <button onClick={() => setEditingReport(null)} className="text-slate-400 hover:text-slate-700 text-xl">✕</button>
             </div>
             <p className="text-slate-400 text-sm mb-8">
-              {editingReport.staffName} · {new Date(editingReport.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })}
+              {editingReport.staffName} · {new Date(reportDay(editingReport) + 'T00:00:00').toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })}
             </p>
             <form onSubmit={handleEditReport} className="space-y-6">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -1756,7 +2216,6 @@ const roleBadge = {
     </div>
   );
 }
-
 
 
 
