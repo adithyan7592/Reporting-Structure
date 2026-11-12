@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState, useMemo, Fragment } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 // ── Date helpers ──────────────────────────────────────────────────────────────
@@ -22,6 +22,28 @@ function formatDateLabel(ymd) {
   return d.toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
 }
 
+// ── CRM products (items sold) ─────────────────────────────────────────────────
+// To add a product: add its name here, and add 'Items Sold – <Division> – <name>' to DEPT_FIELDS['CRM'] in AdminUserMgmt.jsx
+const CRM_PRODUCTS = {
+  AYUSH:    ['Amritha Poornam', 'Millet Combo'],
+  Bioclean: ['Binset', 'Bricks'],
+  Theertha: ['1 kg', '5 kg'],
+};
+const crmProductLabel = (brand, name) => `Items Sold – ${brand} – ${name}`;
+const CRM_PRODUCT_FIELDS = Object.entries(CRM_PRODUCTS).flatMap(([brand, names]) =>
+  names.map(name => ({ label: crmProductLabel(brand, name), display: name, type: 'number', brand }))
+);
+const CRM_PRODUCT_BRAND = {};   // field label -> division
+const CRM_PRODUCT_NAME = {};    // field label -> product name
+CRM_PRODUCT_FIELDS.forEach(f => { CRM_PRODUCT_BRAND[f.label] = f.brand; CRM_PRODUCT_NAME[f.label] = f.display; });
+const crmShort = l => (CRM_PRODUCT_NAME[l] ? `Sold · ${CRM_PRODUCT_NAME[l]}` : l);
+// Drops items-sold values that belong to a different division than the one selected
+function pruneCrmProducts(data) {
+  const out = { ...data };
+  Object.keys(out).forEach(k => { if (CRM_PRODUCT_BRAND[k] && CRM_PRODUCT_BRAND[k] !== out['Brand']) delete out[k]; });
+  return out;
+}
+
 // ── Dept field config ─────────────────────────────────────────────────────────
 const departmentConfig = {
  'CRM':  [
@@ -31,6 +53,7 @@ const departmentConfig = {
   { label: 'No. of Converted Leads',   type: 'number' },
   { label: 'No. of Follow-ups',        type: 'number' },
   { label: 'Total Sales Value',        type: 'number' },
+  ...CRM_PRODUCT_FIELDS,
   { label: 'Remarks if Any',           type: 'textarea' },
 ],
 'KP – (CRM)': [
@@ -286,9 +309,10 @@ const rows = Object.values(agentMap);
     return (
       <div className="divide-y divide-slate-100">
         {brands.map(brand => {
+          const bf = numericFields.filter(f => !f.brand || f.brand === brand);
          const brandRows = rows.filter(a => a.brand === brand);
           const brandTotals = {};
-          numericFields.forEach(f => {
+          bf.forEach(f => {
             brandTotals[f.label] = brandRows.reduce((sum, a) => sum + (parseFloat(a.latest?.data?.[f.label]) || 0), 0);
           });
           return (
@@ -309,8 +333,8 @@ const rows = Object.values(agentMap);
                       <tr className="bg-slate-900 text-white">
                         <th className="px-5 py-3 text-[10px] uppercase tracking-widest font-black sticky left-0 bg-slate-900 z-10 min-w-[40px]">Sl.</th>
                         <th className="px-5 py-3 text-[10px] uppercase tracking-widest font-black sticky left-[56px] bg-slate-900 z-10 min-w-[160px]">Agent Name</th>
-                        {numericFields.map(f => (
-                          <th key={f.label} className="px-5 py-3 text-[10px] uppercase tracking-widest font-black whitespace-nowrap">{f.label}</th>
+                        {bf.map(f => (
+                          <th key={f.label} className="px-5 py-3 text-[10px] uppercase tracking-widest font-black whitespace-nowrap">{crmShort(f.label)}</th>
                         ))}
                         <th className="px-5 py-3 text-[10px] uppercase tracking-widest font-black sticky right-0 bg-slate-900 z-10">Action</th>
                       </tr>
@@ -334,7 +358,7 @@ const rows = Object.values(agentMap);
                                 <span className="text-[10px] font-black text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full ml-1">✏️ Edited</span>
                               )}
                             </td>
-                            {numericFields.map(f => (
+                            {bf.map(f => (
                               <td key={f.label} className="px-5 py-4 text-slate-700 font-semibold tabular-nums">
                                 {parseFloat(data[f.label]) > 0
                                   ? parseFloat(data[f.label]).toLocaleString('en-IN')
@@ -352,7 +376,7 @@ const rows = Object.values(agentMap);
                       <tr className="bg-slate-50 border-t-2 border-slate-200">
                         <td className="px-5 py-3 sticky left-0 bg-slate-50 z-10"></td>
                         <td className="px-5 py-3 font-black text-slate-900 uppercase text-xs tracking-wider sticky left-[56px] bg-slate-50 z-10">Total</td>
-                        {numericFields.map(f => (
+                        {bf.map(f => (
                           <td key={f.label} className="px-5 py-3 font-black text-slate-900 tabular-nums">
                             {brandTotals[f.label] > 0 ? brandTotals[f.label].toLocaleString('en-IN') : <span className="text-slate-300">—</span>}
                           </td>
@@ -491,6 +515,8 @@ const inrShort = v => v >= 1e7 ? `₹${(v / 1e7).toFixed(2)}Cr` : v >= 1e5 ? `�
 
 const crmNumLabels = () => (departmentConfig['CRM'] || []).filter(f => f.type === 'number').map(f => f.label);
 const visibleNums = allowedFields => crmNumLabels().filter(l => !allowedFields || allowedFields.includes(l));
+// a division's own columns: the common fields plus only that division's products
+const fieldsForBrand = (brand, labels) => labels.filter(l => !CRM_PRODUCT_BRAND[l] || CRM_PRODUCT_BRAND[l] === brand);
 function sumVals(list, labels) {
   const t = {};
   labels.forEach(l => { t[l] = 0; });
@@ -517,11 +543,17 @@ function crmEntries(reports) {
   });
 }
 
-// Everything the charts need for one division in one month
-function crmDivisionStats(entries, brand, month) {
+// Everything the charts need for one division in one month.
+// allowedFields (managers) limits which products are counted.
+function crmDivisionStats(entries, brand, month, allowedFields) {
   const mine = entries.filter(e => e.brand === brand);
   const inMonth = mine.filter(e => e.month === month);
   const nums = crmNumLabels();
+  const brandProducts = (CRM_PRODUCTS[brand] || [])
+    .map(name => ({ name, label: crmProductLabel(brand, name) }))
+    .filter(p => !allowedFields || allowedFields.includes(p.label));
+  const itemsOf = vals => brandProducts.reduce((s, p) => s + (vals[p.label] || 0), 0);
+
   const totals = sumVals(inMonth, nums);
   const dim = daysInMonth(month);
 
@@ -529,27 +561,35 @@ function crmDivisionStats(entries, brand, month) {
   inMonth.forEach(e => { (byDay[e.day] = byDay[e.day] || []).push(e); });
   const daily = Array.from({ length: dim }, (_, i) => {
     const date = `${month}-${String(i + 1).padStart(2, '0')}`;
-    const t = sumVals(byDay[date] || [], [CRM_CALLS, CRM_CONV, CRM_SALES]);
-    return { day: i + 1, date, sales: t[CRM_SALES], conv: t[CRM_CONV], calls: t[CRM_CALLS] };
+    const vals = sumVals(byDay[date] || [], nums);
+    return { day: i + 1, date, vals, sales: vals[CRM_SALES], conv: vals[CRM_CONV], calls: vals[CRM_CALLS], items: itemsOf(vals) };
   });
   const peakDay = daily.reduce((b, d) => (d.sales > (b ? b.sales : 0) ? d : b), null);
 
   // Weeks: 1–7, 8–14, 15–21, 22–28, 29–end
   const weeks = Array.from({ length: Math.ceil(dim / 7) }, (_, i) => {
     const from = i * 7 + 1, to = Math.min((i + 1) * 7, dim);
-    const ds = daily.filter(d => d.day >= from && d.day <= to);
-    const sales = ds.reduce((s, d) => s + d.sales, 0);
-    const conv = ds.reduce((s, d) => s + d.conv, 0);
-    const calls = ds.reduce((s, d) => s + d.calls, 0);
-    return { n: i + 1, from, to, sales, conv, calls, share: totals[CRM_SALES] > 0 ? (sales / totals[CRM_SALES]) * 100 : null };
+    const vals = sumVals(daily.filter(d => d.day >= from && d.day <= to), nums);
+    return {
+      n: i + 1, from, to, vals,
+      sales: vals[CRM_SALES], conv: vals[CRM_CONV], calls: vals[CRM_CALLS], items: itemsOf(vals),
+      share: totals[CRM_SALES] > 0 ? (vals[CRM_SALES] / totals[CRM_SALES]) * 100 : null,
+    };
   });
   const bestWeek = weeks.reduce((b, w) => (w.sales > (b ? b.sales : 0) ? w : b), null);
 
   const trend = [-5, -4, -3, -2, -1, 0].map(k => {
     const m = shiftMonth(month, k);
-    const t = sumVals(mine.filter(e => e.month === m), [CRM_CALLS, CRM_CONV, CRM_SALES]);
-    return { month: m, label: monthLabel(m), rate: pct(t[CRM_CONV], t[CRM_CALLS]), sales: t[CRM_SALES] };
+    const vv = sumVals(mine.filter(e => e.month === m), nums);
+    return { month: m, label: monthLabel(m), rate: pct(vv[CRM_CONV], vv[CRM_CALLS]), sales: vv[CRM_SALES], items: itemsOf(vv) };
   });
+
+  const itemsTotal = itemsOf(totals);
+  const products = brandProducts.map(p => {
+    const qty = totals[p.label] || 0;
+    return { ...p, qty, share: itemsTotal > 0 ? (qty / itemsTotal) * 100 : null };
+  });
+  const topProduct = products.reduce((b, p) => (p.qty > (b ? b.qty : 0) ? p : b), null);
 
   return {
     brand, month, totals,
@@ -558,6 +598,7 @@ function crmDivisionStats(entries, brand, month) {
     prevLabel: trend[4].label,
     activeDays: new Set(inMonth.map(e => e.day)).size,
     daily, peakDay, weeks, bestWeek, trend,
+    itemsTotal, products, topProduct,
   };
 }
 
@@ -568,22 +609,30 @@ function buildCRMCsvRows(entries, { type, division, fromMonth, toMonth, allowedF
   const months = [];
   for (let m = from; m <= to && months.length < 24; m = shiftMonth(m, 1)) months.push(m);
   const brands = division === 'All' ? CRM_BRANDS : [division];
-  const fields = visibleNums(allowedFields);
-  const hasSales = fields.includes(CRM_SALES);
-  const hasRate = fields.includes(CRM_CALLS) && fields.includes(CRM_CONV);
+  const all = visibleNums(allowedFields);
+  // one division: only its products. All divisions: every product column, left blank where it doesn't apply.
+  const cols = division === 'All' ? all : fieldsForBrand(division, all);
+  const prodCols = cols.filter(f => CRM_PRODUCT_BRAND[f]);
+  const hasSales = all.includes(CRM_SALES);
+  const hasRate = all.includes(CRM_CALLS) && all.includes(CRM_CONV);
+  const hasItems = prodCols.length > 0;
+  const cell = (t, f, brand) => (CRM_PRODUCT_BRAND[f] && CRM_PRODUCT_BRAND[f] !== brand ? '' : (t[f] || 0));
+  const itemsIn = (t, brand) => fieldsForBrand(brand, all).filter(f => CRM_PRODUCT_BRAND[f]).reduce((s, f) => s + (t[f] || 0), 0);
   const rateOf = t => { const p = pct(t[CRM_CONV], t[CRM_CALLS]); return p === null ? '' : p.toFixed(1); };
   const pad = n => String(n).padStart(2, '0');
   const header = [];
   const rows = [];
 
   if (type === 'summary') {
-    header.push('Division', 'Month', 'Active Days', ...fields);
+    header.push('Division', 'Month', 'Active Days', ...cols);
+    if (hasItems) header.push('Items Sold (Total)');
     if (hasRate) header.push('Conversion %');
     if (hasSales) header.push('Peak Sales Day', 'Peak Day Sales', 'Best Week', 'Best Week Sales', 'Best Week % of Month');
     brands.forEach(brand => months.forEach(month => {
-      const st = crmDivisionStats(entries, brand, month);
+      const st = crmDivisionStats(entries, brand, month, allowedFields);
       if (!st.activeDays) return;
-      const row = [brand, month, st.activeDays, ...fields.map(f => st.totals[f] || 0)];
+      const row = [brand, month, st.activeDays, ...cols.map(f => cell(st.totals, f, brand))];
+      if (hasItems) row.push(itemsIn(st.totals, brand));
       if (hasRate) row.push(rateOf(st.totals));
       if (hasSales) row.push(
         st.peakDay ? st.peakDay.date : '', st.peakDay ? st.peakDay.sales : '',
@@ -597,33 +646,37 @@ function buildCRMCsvRows(entries, { type, division, fromMonth, toMonth, allowedF
 
   if (type === 'weekly') {
     header.push('Division', 'Month', 'Week', 'Dates');
-    if (fields.includes(CRM_CALLS)) header.push(CRM_CALLS);
-    if (fields.includes(CRM_CONV)) header.push(CRM_CONV);
+    if (all.includes(CRM_CALLS)) header.push(CRM_CALLS);
+    if (all.includes(CRM_CONV)) header.push(CRM_CONV);
     if (hasRate) header.push('Conversion %');
     if (hasSales) header.push(CRM_SALES, '% of Month Sales');
+    if (hasItems) header.push(...prodCols, 'Items Sold (Total)');
     brands.forEach(brand => months.forEach(month => {
-      const st = crmDivisionStats(entries, brand, month);
+      const st = crmDivisionStats(entries, brand, month, allowedFields);
       if (!st.activeDays) return;
       st.weeks.forEach(w => {
         const row = [brand, month, `Week ${w.n}`, `${month}-${pad(w.from)} to ${month}-${pad(w.to)}`];
-        if (fields.includes(CRM_CALLS)) row.push(w.calls);
-        if (fields.includes(CRM_CONV)) row.push(w.conv);
+        if (all.includes(CRM_CALLS)) row.push(w.calls);
+        if (all.includes(CRM_CONV)) row.push(w.conv);
         if (hasRate) { const p = pct(w.conv, w.calls); row.push(p === null ? '' : p.toFixed(1)); }
         if (hasSales) row.push(w.sales, w.share === null ? '' : w.share.toFixed(1));
+        if (hasItems) row.push(...prodCols.map(f => cell(w.vals, f, brand)), itemsIn(w.vals, brand));
         rows.push(row);
       });
     }));
   }
 
   if (type === 'daily') {
-    header.push('Division', 'Date', 'Agents Reported', ...fields);
+    header.push('Division', 'Date', 'Agents Reported', ...cols);
+    if (hasItems) header.push('Items Sold (Total)');
     if (hasRate) header.push('Conversion %');
     brands.forEach(brand => {
       const mine = entries.filter(e => e.brand === brand && e.month >= from && e.month <= to);
       [...new Set(mine.map(e => e.day))].sort().forEach(day => {
         const es = mine.filter(e => e.day === day);
-        const t = sumVals(es, fields);
-        const row = [brand, day, new Set(es.map(e => e.agent)).size, ...fields.map(f => t[f] || 0)];
+        const t = sumVals(es, all);
+        const row = [brand, day, new Set(es.map(e => e.agent)).size, ...cols.map(f => cell(t, f, brand))];
+        if (hasItems) row.push(itemsIn(t, brand));
         if (hasRate) row.push(rateOf(t));
         rows.push(row);
       });
@@ -631,20 +684,23 @@ function buildCRMCsvRows(entries, { type, division, fromMonth, toMonth, allowedF
   }
 
   if (type === 'agent') {
-    header.push('Division', 'Month', 'Agent', 'Days Reported', ...fields);
+    header.push('Division', 'Month', 'Agent', 'Days Reported', ...cols);
+    if (hasItems) header.push('Items Sold (Total)');
     if (hasRate) header.push('Conversion %');
     brands.forEach(brand => months.forEach(month => {
       const es = entries.filter(e => e.brand === brand && e.month === month);
       if (!es.length) return;
       [...new Set(es.map(e => e.agent))].sort((a, b) => a.localeCompare(b)).forEach(agent => {
         const mine = es.filter(e => e.agent === agent);
-        const t = sumVals(mine, fields);
-        const row = [brand, month, agent, new Set(mine.map(e => e.day)).size, ...fields.map(f => t[f] || 0)];
+        const t = sumVals(mine, all);
+        const row = [brand, month, agent, new Set(mine.map(e => e.day)).size, ...cols.map(f => cell(t, f, brand))];
+        if (hasItems) row.push(itemsIn(t, brand));
         if (hasRate) row.push(rateOf(t));
         rows.push(row);
       });
-      const t = sumVals(es, fields);
-      const total = [brand, month, 'TOTAL', new Set(es.map(e => e.day)).size, ...fields.map(f => t[f] || 0)];
+      const t = sumVals(es, all);
+      const total = [brand, month, 'TOTAL', new Set(es.map(e => e.day)).size, ...cols.map(f => cell(t, f, brand))];
+      if (hasItems) total.push(itemsIn(t, brand));
       if (hasRate) total.push(rateOf(t));
       rows.push(total);
     }));
@@ -667,10 +723,11 @@ function downloadCRMCsv(entries, opts) {
   URL.revokeObjectURL(url);
 }
 
-// Agent-wise monthly table data (one block per division)
+// Agent-wise monthly table data (one block per division, each with its own columns)
 function crmAgentTable(entries, month, allowedFields) {
-  const fields = visibleNums(allowedFields);
+  const all = visibleNums(allowedFields);
   const divisions = CRM_BRANDS.map(brand => {
+    const fields = fieldsForBrand(brand, all);
     const es = entries.filter(e => e.brand === brand && e.month === month);
     const byAgent = {};
     es.forEach(e => {
@@ -679,7 +736,7 @@ function crmAgentTable(entries, month, allowedFields) {
       byAgent[e.agent].list.push(e);
     });
     return {
-      brand,
+      brand, fields,
       totals: sumVals(es, fields),
       activeDays: new Set(es.map(e => e.day)).size,
       agents: Object.values(byAgent)
@@ -687,7 +744,7 @@ function crmAgentTable(entries, month, allowedFields) {
         .sort((x, y) => x.name.localeCompare(y.name)),
     };
   });
-  return { fields, divisions };
+  return { divisions };
 }
 
 // ── Charts (plain SVG — no extra library) ────────────────────────────────────
@@ -754,8 +811,9 @@ function LineChart({ points, color = '#6366f1', W = 380, H = 190 }) {
 }
 
 // ── One division's analytics card ────────────────────────────────────────────
-function CRMDivisionCard({ stats, canSales, canRate }) {
+function CRMDivisionCard({ stats, canSales, canRate, canConv }) {
   const color = CRM_COLORS[stats.brand];
+  const canItems = stats.products.length > 0;
   const kpi = (label, value, sub, tone) => (
     <div className="bg-slate-50 border border-slate-200 rounded-xl p-3 min-w-0">
       <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">{label}</p>
@@ -782,15 +840,25 @@ function CRMDivisionCard({ stats, canSales, canRate }) {
   const delta = stats.rate !== null && stats.prevRate !== null ? stats.rate - stats.prevRate : null;
   const rateTone = stats.rate === null ? '' : stats.rate >= 50 ? 'text-emerald-600' : stats.rate >= 25 ? 'text-amber-600' : 'text-red-500';
   const peak = stats.peakDay;
-  const best = stats.bestWeek;
+  const best = canSales ? stats.bestWeek : null;
   const peakLabel = peak ? new Date(peak.date + 'T00:00:00').toLocaleDateString('en-IN', { day: 'numeric', month: 'short', weekday: 'short' }) : '—';
+  const bestMonthIdx = (() => {
+    let idx = -1, max = 0;
+    stats.trend.forEach((t, i) => { if (t.items > max) { max = t.items; idx = i; } });
+    return idx;
+  })();
+  const weekHeads = ['Week', 'Dates',
+    ...(canSales ? ['Sales', '% of Month'] : []),
+    ...(canConv ? ['Conversions'] : []),
+    ...(canRate ? ['Conversion %'] : []),
+    ...(canItems ? ['Items Sold', ...stats.products.map(p => p.name)] : [])];
 
   return (
     <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden">
       {header}
       <div className="p-4 sm:p-5 space-y-5">
 
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+        <div className={`grid grid-cols-2 ${canItems ? 'lg:grid-cols-5' : 'lg:grid-cols-4'} gap-3`}>
           {canSales && kpi('Month Sales', inr(stats.totals[CRM_SALES]), `${stats.activeDays} active day${stats.activeDays !== 1 ? 's' : ''}`)}
           {canRate && kpi('Conversion',
             stats.rate === null ? '—' : `${stats.rate.toFixed(1)}%`,
@@ -802,9 +870,12 @@ function CRMDivisionCard({ stats, canSales, canRate }) {
                 </span>
               )}
             </>, rateTone)}
-          {canSales && kpi('Highest Sale Day', peak ? peakLabel : '—', peak ? `${inr(peak.sales)} · ${peak.conv} conversions` : 'No sales recorded')}
+          {canSales && kpi('Highest Sale Day', peak ? peakLabel : '—',
+            peak ? `${inr(peak.sales)}${canConv ? ` · ${peak.conv} conversions` : ''}` : 'No sales recorded')}
           {canSales && kpi('Best Week', best ? `Week ${best.n} (${best.from}–${best.to})` : '—',
             best ? `${inr(best.sales)}${best.share !== null ? ` · ${best.share.toFixed(0)}% of month` : ''}` : 'No sales recorded')}
+          {canItems && kpi('Items Sold', stats.itemsTotal.toLocaleString('en-IN'),
+            stats.topProduct ? `Top: ${stats.topProduct.name} (${stats.topProduct.qty.toLocaleString('en-IN')})` : 'No items recorded')}
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
@@ -820,56 +891,81 @@ function CRMDivisionCard({ stats, canSales, canRate }) {
               <BarChart color={color} showValues valueLines={2} highlight={best ? best.n - 1 : -1}
                 items={stats.weeks.map(w => ({
                   label: `Week ${w.n} (${w.from}–${w.to})`, short: `W${w.n}`, value: w.sales,
-                  top: [inrShort(w.sales), w.share === null ? '' : `${w.share.toFixed(0)}%`], sub: `${w.conv} conversions`,
+                  top: [inrShort(w.sales), w.share === null ? '' : `${w.share.toFixed(0)}%`],
+                  sub: canConv ? `${w.conv} conversions` : '',
                 }))}
                 fmt={inr} />
             </div>
           )}
+          {canItems && (
+            <div className="border border-slate-200 rounded-xl p-4">
+              <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-3">Items sold by product · units and % share</p>
+              {stats.itemsTotal === 0 ? (
+                <p className="text-sm text-slate-400 italic py-6">No items recorded this month.</p>
+              ) : (
+                <div className="space-y-3">
+                  {stats.products.map(p => (
+                    <div key={p.label}>
+                      <div className="flex items-baseline justify-between gap-2 text-sm">
+                        <span className="font-bold text-slate-800 truncate">{p.name}</span>
+                        <span className="font-black text-slate-900 tabular-nums whitespace-nowrap">
+                          {p.qty.toLocaleString('en-IN')}
+                          <span className="text-xs font-bold text-slate-400">{p.share === null ? '' : ` · ${p.share.toFixed(1)}%`}</span>
+                        </span>
+                      </div>
+                      <div className="h-2 bg-slate-100 rounded-full overflow-hidden mt-1">
+                        <div className="h-full rounded-full" style={{ width: `${p.share || 0}%`, background: color }} />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+          {canItems && (
+            <div className="border border-slate-200 rounded-xl p-4">
+              <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">Items sold · last 6 months</p>
+              <BarChart color={color} showValues highlight={bestMonthIdx} fmt={v => `${v} units`}
+                items={stats.trend.map(t => ({ label: monthLabel(t.month, true), short: t.label.split(' ')[0], value: t.items, top: String(t.items) }))} />
+            </div>
+          )}
         </div>
 
-        {canSales && (
-          <div className="border border-slate-200 rounded-xl p-4">
-            <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">Daily sales · highest day in amber</p>
-            <div className="overflow-x-auto">
-              <div className="min-w-[520px]">
-                <BarChart color={color} W={620} H={170} highlight={peak ? peak.day - 1 : -1} fmt={inr}
-                  items={stats.daily.map(d => ({
-                    label: new Date(d.date + 'T00:00:00').toLocaleDateString('en-IN', { day: 'numeric', month: 'short' }),
-                    short: String(d.day), value: d.sales, sub: `${d.conv} conversions`,
-                  }))} />
-              </div>
-            </div>
-          </div>
-        )}
-
-        {canSales && (
+        {(canSales || canItems) && (
           <div className="overflow-x-auto rounded-xl border border-slate-200">
             <table className="w-full text-sm min-w-max">
               <thead className="bg-slate-900 text-white">
                 <tr>
-                  {['Week', 'Dates', 'Sales', '% of Month', 'Conversions', ...(canRate ? ['Conversion %'] : [])].map(h => (
-                    <th key={h} className="px-4 py-2.5 text-[10px] uppercase tracking-widest font-black text-left whitespace-nowrap">{h}</th>
+                  {weekHeads.map((h, i) => (
+                    <th key={`${h}-${i}`} className="px-4 py-2.5 text-[10px] uppercase tracking-widest font-black text-left whitespace-nowrap">{h}</th>
                   ))}
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
                 {stats.weeks.map(w => {
                   const wr = pct(w.conv, w.calls);
+                  const isBest = best && best.n === w.n;
                   return (
-                    <tr key={w.n} className={best && best.n === w.n ? 'bg-amber-50/60' : ''}>
-                      <td className="px-4 py-2.5 font-bold text-slate-900 whitespace-nowrap">Week {w.n}{best && best.n === w.n ? ' ★' : ''}</td>
+                    <tr key={w.n} className={isBest ? 'bg-amber-50/60' : ''}>
+                      <td className="px-4 py-2.5 font-bold text-slate-900 whitespace-nowrap">Week {w.n}{isBest ? ' ★' : ''}</td>
                       <td className="px-4 py-2.5 text-slate-500 whitespace-nowrap">{w.from}–{w.to} {monthLabel(stats.month)}</td>
-                      <td className="px-4 py-2.5 font-semibold text-slate-700 tabular-nums">{inr(w.sales)}</td>
-                      <td className="px-4 py-2.5 min-w-[130px]">
-                        <div className="flex items-center gap-2">
-                          <div className="flex-1 h-1.5 bg-slate-100 rounded-full overflow-hidden">
-                            <div className="h-full rounded-full" style={{ width: `${w.share || 0}%`, background: color }} />
+                      {canSales && <td className="px-4 py-2.5 font-semibold text-slate-700 tabular-nums">{inr(w.sales)}</td>}
+                      {canSales && (
+                        <td className="px-4 py-2.5 min-w-[130px]">
+                          <div className="flex items-center gap-2">
+                            <div className="flex-1 h-1.5 bg-slate-100 rounded-full overflow-hidden">
+                              <div className="h-full rounded-full" style={{ width: `${w.share || 0}%`, background: color }} />
+                            </div>
+                            <span className="text-xs font-bold text-slate-600 tabular-nums w-10 text-right">{w.share === null ? '—' : `${w.share.toFixed(1)}%`}</span>
                           </div>
-                          <span className="text-xs font-bold text-slate-600 tabular-nums w-10 text-right">{w.share === null ? '—' : `${w.share.toFixed(1)}%`}</span>
-                        </div>
-                      </td>
-                      <td className="px-4 py-2.5 text-slate-700 font-semibold tabular-nums">{w.conv}</td>
+                        </td>
+                      )}
+                      {canConv && <td className="px-4 py-2.5 text-slate-700 font-semibold tabular-nums">{w.conv}</td>}
                       {canRate && <td className="px-4 py-2.5 text-slate-500 font-semibold tabular-nums">{wr === null ? '—' : `${wr.toFixed(1)}%`}</td>}
+                      {canItems && <td className="px-4 py-2.5 font-black text-slate-900 tabular-nums">{w.items}</td>}
+                      {canItems && stats.products.map(p => (
+                        <td key={p.label} className="px-4 py-2.5 text-slate-600 font-semibold tabular-nums">{w.vals[p.label] || 0}</td>
+                      ))}
                     </tr>
                   );
                 })}
@@ -888,12 +984,14 @@ function CRMDivisionCard({ stats, canSales, canRate }) {
 
 function CRMAnalytics({ entries, month, brands, allowedFields }) {
   const canSales = !allowedFields || allowedFields.includes(CRM_SALES);
+  const canConv = !allowedFields || allowedFields.includes(CRM_CONV);
   const canRate = !allowedFields || (allowedFields.includes(CRM_CALLS) && allowedFields.includes(CRM_CONV));
-  if (!canSales && !canRate) return null;
+  const anyItems = CRM_BRANDS.some(b => (CRM_PRODUCTS[b] || []).some(n => !allowedFields || allowedFields.includes(crmProductLabel(b, n))));
+  if (!canSales && !canRate && !anyItems) return null;
   return (
     <div className="p-4 md:p-6 space-y-5 bg-slate-50 border-b border-slate-200">
       {brands.map(b => (
-        <CRMDivisionCard key={b} stats={crmDivisionStats(entries, b, month)} canSales={canSales} canRate={canRate} />
+        <CRMDivisionCard key={b} stats={crmDivisionStats(entries, b, month, allowedFields)} canSales={canSales} canRate={canRate} canConv={canConv} />
       ))}
     </div>
   );
@@ -901,9 +999,8 @@ function CRMAnalytics({ entries, month, brands, allowedFields }) {
 
 // ── Agent-wise table for the month ───────────────────────────────────────────
 function CRMMonthlyReport({ entries, month, brands, allowedFields }) {
-  const { fields, divisions } = crmAgentTable(entries, month, allowedFields);
+  const { divisions } = crmAgentTable(entries, month, allowedFields);
   const shown = divisions.filter(d => brands.includes(d.brand));
-  const showRate = fields.includes(CRM_CALLS) && fields.includes(CRM_CONV);
   const fmt = v => (v > 0 ? v.toLocaleString('en-IN') : <span className="text-slate-300">—</span>);
   const rateChip = t => {
     const p = pct(t[CRM_CONV], t[CRM_CALLS]);
@@ -923,57 +1020,60 @@ function CRMMonthlyReport({ entries, month, brands, allowedFields }) {
 
   return (
     <div className="divide-y divide-slate-100">
-      {shown.map(div => (
-        <div key={div.brand}>
-          <div className="px-6 py-3 bg-slate-50 border-b border-slate-200 flex items-center gap-3 flex-wrap">
-            <span className={`px-3 py-1 rounded-full text-xs font-black text-white ${CRM_BADGE[div.brand]}`}>{div.brand}</span>
-            <span className="text-slate-400 text-xs">
-              {div.agents.length} agent{div.agents.length !== 1 ? 's' : ''} · {div.activeDays} active day{div.activeDays !== 1 ? 's' : ''}
-            </span>
-          </div>
-
-          {div.agents.length === 0 ? (
-            <div className="px-6 py-4 text-slate-400 text-sm italic">No reports for {div.brand} this month.</div>
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-left border-collapse text-sm min-w-max">
-                <thead>
-                  <tr className="bg-slate-900 text-white">
-                    <th className="px-5 py-3 text-[10px] uppercase tracking-widest font-black sticky left-0 bg-slate-900 z-10 min-w-[160px]">Agent Name</th>
-                    <th className="px-5 py-3 text-[10px] uppercase tracking-widest font-black whitespace-nowrap">Days Reported</th>
-                    {fields.map(f => (
-                      <th key={f} className="px-5 py-3 text-[10px] uppercase tracking-widest font-black whitespace-nowrap">{f}</th>
-                    ))}
-                    {showRate && <th className="px-5 py-3 text-[10px] uppercase tracking-widest font-black whitespace-nowrap">Conversion %</th>}
-                  </tr>
-                </thead>
-                <tbody>
-                  {div.agents.map(a => (
-                    <tr key={a.name} className="border-b border-slate-100 hover:bg-blue-50/60 transition group">
-                      <td className="px-5 py-4 font-bold text-slate-900 sticky left-0 bg-white group-hover:bg-blue-50/60 z-10">{a.name}</td>
-                      <td className="px-5 py-4 text-slate-500 font-semibold tabular-nums">{a.days}</td>
-                      {fields.map(f => (
-                        <td key={f} className="px-5 py-4 text-slate-700 font-semibold tabular-nums">{fmt(a.totals[f] || 0)}</td>
-                      ))}
-                      {showRate && <td className="px-5 py-4">{rateChip(a.totals)}</td>}
-                    </tr>
-                  ))}
-                </tbody>
-                <tfoot>
-                  <tr className="bg-slate-50 border-t-2 border-slate-200">
-                    <td className="px-5 py-3 font-black text-slate-900 uppercase text-xs tracking-wider sticky left-0 bg-slate-50 z-10">Total</td>
-                    <td className="px-5 py-3 font-black text-slate-900 tabular-nums">{div.activeDays}</td>
-                    {fields.map(f => (
-                      <td key={f} className="px-5 py-3 font-black text-slate-900 tabular-nums">{fmt(div.totals[f] || 0)}</td>
-                    ))}
-                    {showRate && <td className="px-5 py-3">{rateChip(div.totals)}</td>}
-                  </tr>
-                </tfoot>
-              </table>
+      {shown.map(div => {
+        const showRate = div.fields.includes(CRM_CALLS) && div.fields.includes(CRM_CONV);
+        return (
+          <div key={div.brand}>
+            <div className="px-6 py-3 bg-slate-50 border-b border-slate-200 flex items-center gap-3 flex-wrap">
+              <span className={`px-3 py-1 rounded-full text-xs font-black text-white ${CRM_BADGE[div.brand]}`}>{div.brand}</span>
+              <span className="text-slate-400 text-xs">
+                {div.agents.length} agent{div.agents.length !== 1 ? 's' : ''} · {div.activeDays} active day{div.activeDays !== 1 ? 's' : ''}
+              </span>
             </div>
-          )}
-        </div>
-      ))}
+
+            {div.agents.length === 0 ? (
+              <div className="px-6 py-4 text-slate-400 text-sm italic">No reports for {div.brand} this month.</div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full text-left border-collapse text-sm min-w-max">
+                  <thead>
+                    <tr className="bg-slate-900 text-white">
+                      <th className="px-5 py-3 text-[10px] uppercase tracking-widest font-black sticky left-0 bg-slate-900 z-10 min-w-[160px]">Agent Name</th>
+                      <th className="px-5 py-3 text-[10px] uppercase tracking-widest font-black whitespace-nowrap">Days Reported</th>
+                      {div.fields.map(f => (
+                        <th key={f} className="px-5 py-3 text-[10px] uppercase tracking-widest font-black whitespace-nowrap">{crmShort(f)}</th>
+                      ))}
+                      {showRate && <th className="px-5 py-3 text-[10px] uppercase tracking-widest font-black whitespace-nowrap">Conversion %</th>}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {div.agents.map(a => (
+                      <tr key={a.name} className="border-b border-slate-100 hover:bg-blue-50/60 transition group">
+                        <td className="px-5 py-4 font-bold text-slate-900 sticky left-0 bg-white group-hover:bg-blue-50/60 z-10">{a.name}</td>
+                        <td className="px-5 py-4 text-slate-500 font-semibold tabular-nums">{a.days}</td>
+                        {div.fields.map(f => (
+                          <td key={f} className="px-5 py-4 text-slate-700 font-semibold tabular-nums">{fmt(a.totals[f] || 0)}</td>
+                        ))}
+                        {showRate && <td className="px-5 py-4">{rateChip(a.totals)}</td>}
+                      </tr>
+                    ))}
+                  </tbody>
+                  <tfoot>
+                    <tr className="bg-slate-50 border-t-2 border-slate-200">
+                      <td className="px-5 py-3 font-black text-slate-900 uppercase text-xs tracking-wider sticky left-0 bg-slate-50 z-10">Total</td>
+                      <td className="px-5 py-3 font-black text-slate-900 tabular-nums">{div.activeDays}</td>
+                      {div.fields.map(f => (
+                        <td key={f} className="px-5 py-3 font-black text-slate-900 tabular-nums">{fmt(div.totals[f] || 0)}</td>
+                      ))}
+                      {showRate && <td className="px-5 py-3">{rateChip(div.totals)}</td>}
+                    </tr>
+                  </tfoot>
+                </table>
+              </div>
+            )}
+          </div>
+        );
+      })}
     </div>
   );
 }
@@ -1583,7 +1683,7 @@ const viewableDepts = (role === 'superadmin' || role === 'management') ? ALL_DEP
 
   const handleCreateReport = (e) => {
     e.preventDefault();
-    submitReport(reportTitle, dynamicData);
+    submitReport(reportTitle, dept === 'CRM' ? pruneCrmProducts(dynamicData) : dynamicData);
   };
 
   const handleEditReport = async (e) => {
@@ -1592,7 +1692,7 @@ const viewableDepts = (role === 'superadmin' || role === 'management') ? ALL_DEP
       const res = await fetch(`https://reporting-structure.onrender.com/api/reports/${editingReport._id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${localStorage.getItem('token')}` },
-        body: JSON.stringify({ data: editData }),
+        body: JSON.stringify({ data: editingReport.department === 'CRM' ? pruneCrmProducts(editData) : editData }),
       });
       if (res.ok) {
         setEditingReport(null); setEditData({}); fetchReports();
@@ -2071,6 +2171,36 @@ const roleBadge = {
               );
             }
 
+            // Items-sold inputs: only the chosen division's products are shown
+            if (field.brand) {
+              const chosen = dynamicData['Brand'];
+              if (chosen !== field.brand) {
+                return !chosen && fields.find(f => f.brand) === field ? (
+                  <p key="items-hint" className="sm:col-span-2 text-xs font-semibold text-slate-400 bg-slate-50 border border-slate-200 rounded-xl px-3 py-2">
+                    Select a division above to enter the items sold.
+                  </p>
+                ) : null;
+              }
+              return (
+                <Fragment key={field.label}>
+                  {fields.find(f => f.brand === field.brand) === field && (
+                    <div className="sm:col-span-2 flex items-center gap-3 pt-2">
+                      <div className="flex-1 h-px bg-slate-200" />
+                      <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest whitespace-nowrap">Items sold · {field.brand}</span>
+                      <div className="flex-1 h-px bg-slate-200" />
+                    </div>
+                  )}
+                  <div>
+                    <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">{field.display}</label>
+                    <input type="number" min="0" inputMode="numeric" placeholder="0"
+                      className="w-full bg-slate-50 border border-slate-200 p-4 rounded-2xl outline-none focus:ring-2 focus:ring-blue-500 font-semibold"
+                      value={dynamicData[field.label] ?? ''}
+                      onChange={e => setDynamicData({ ...dynamicData, [field.label]: e.target.value })} />
+                  </div>
+                </Fragment>
+              );
+            }
+
             // Skip fields that belong to a different report type
             if (field.reportType && dynamicData['Report Type'] !== field.reportType) return null;
 
@@ -2089,7 +2219,7 @@ const roleBadge = {
                     className="w-full bg-slate-50 border border-slate-200 p-4 rounded-2xl outline-none focus:ring-2 focus:ring-blue-500 font-semibold"
                     defaultValue=""
                     required={field.label === 'Brand'}
-                    onChange={e => setDynamicData({ ...dynamicData, [field.label]: e.target.value })}
+                    onChange={e => setDynamicData(pruneCrmProducts({ ...dynamicData, [field.label]: e.target.value }))}
                   >
                     <option value="" disabled>Select...</option>
                     {field.options.map(opt => <option key={opt} value={opt}>{opt}</option>)}
@@ -2175,9 +2305,9 @@ const roleBadge = {
             </p>
             <form onSubmit={handleEditReport} className="space-y-6">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {(departmentConfig[editingReport.department] || []).map(field => (
+                {(departmentConfig[editingReport.department] || []).filter(f => !f.brand || f.brand === editData['Brand']).map(field => (
                   <div key={field.label} className={field.type === 'textarea' ? 'sm:col-span-2' : ''}>
-                    <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">{field.label}</label>
+                    <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">{field.display ? `Items sold · ${field.display}` : field.label}</label>
                     {field.type === 'textarea' ? (
                       <textarea
                         className="w-full bg-slate-50 border border-slate-200 p-4 rounded-2xl outline-none focus:ring-2 focus:ring-emerald-500 h-28 font-semibold"
@@ -2188,7 +2318,7 @@ const roleBadge = {
                       <select
                         className="w-full bg-slate-50 border border-slate-200 p-4 rounded-2xl outline-none focus:ring-2 focus:ring-emerald-500 font-semibold"
                         value={editData[field.label] || ''}
-                        onChange={e => setEditData({ ...editData, [field.label]: e.target.value })}
+                        onChange={e => setEditData(pruneCrmProducts({ ...editData, [field.label]: e.target.value }))}
                       >
                         <option value="" disabled>Select...</option>
                         {field.options.map(opt => <option key={opt} value={opt}>{opt}</option>)}
@@ -2216,6 +2346,9 @@ const roleBadge = {
     </div>
   );
 }
+
+
+
 
 
 
